@@ -2,6 +2,7 @@
 #+feature dynamic-literals
 package sm83
 
+import "base:builtin"
 import "core:fmt"
 import "../mmu"
 
@@ -335,8 +336,8 @@ ldd_A_HLmem :: proc(
     addr := get_register(ctx, REG16.HL)
     val := mmu.get(bus, u8, addr)
     set_register(ctx, REG8.A, val)
-    add_register(ctx, REG16.HL, 1)
-    return 0
+    add_register(ctx, REG16.HL, -1)
+    return 2
 }
 
 /*
@@ -352,7 +353,11 @@ ldd_HLmem_A :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> (cycles: u32) {
-    return 0
+    addr := get_register(ctx, REG16.HL)
+    val := get_register(ctx, REG8.A)
+    mmu.put(bus, val, addr)
+    add_register(ctx, REG16.HL, -1)
+    return 2
 }
 
 /*
@@ -368,7 +373,11 @@ ldi_A_HLmem :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> (cycles: u32) {
-    return 0
+    addr := get_register(ctx, REG16.HL)
+    val := mmu.get(bus, u8, addr)
+    set_register(ctx, REG8.A, val)
+    add_register(ctx, REG16.HL, 1)
+    return 2
 }
 
 /*
@@ -384,7 +393,11 @@ ldi_HLmem_A :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> (cycles: u32) {
-    return 0
+    addr := get_register(ctx, REG16.HL)
+    val := get_register(ctx, REG8.A)
+    mmu.put(bus, val, addr)
+    add_register(ctx, REG16.HL, 1)
+    return 2
 }
 
 /*
@@ -400,7 +413,10 @@ ld_SP_imm16mem :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> (cycles: u32) {
-    return 0
+    addr := bu16(ins.opbytes)
+    val := get_register(ctx, REG16.SP)
+    mmu.put(bus, val, addr)
+    return 5
 }
 
 /*
@@ -416,7 +432,9 @@ ld_SP_HL :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> (cycles: u32) {
-    return 0
+    val := get_register(ctx, REG16.HL)
+    set_register(ctx, REG16.SP, val)
+    return 2
 }
 
 /*
@@ -432,7 +450,10 @@ ld_HL_SPe :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> (cycles: u32) {
-    return 0
+    e := transmute(i8) ins.opbytes[1]
+    ival: i16 = i16(get_register(ctx, REG16.SP)) + i16(e)
+    set_register(ctx, REG16.HL, u16(ival))
+   return 3
 }
 
 /*
@@ -449,7 +470,12 @@ push_r16 :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> (cycles: u32) {
-    return 0
+    reg := R16_IDX_S[ins.x]
+    val: u16 = get_register(ctx, reg)
+    addr := get_register(ctx, REG16.SP)
+    mmu.put(bus, val, addr)
+    add_register(ctx, REG16.SP, -2)
+    return 4
 }
 
 /*
@@ -466,5 +492,10 @@ pop_r16 :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> (cycles: u32) {
-    return 0
+    reg := R16_IDX_S[ins.x]
+    addr := get_register(ctx, REG16.SP)
+    val := mmu.get(bus, u16, addr)
+    set_register(ctx, reg, val)
+    add_register(ctx, REG16.SP, 2)
+    return 4
 }

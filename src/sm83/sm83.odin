@@ -39,8 +39,6 @@ step :: proc(
     }
 
     cycles := op_handler.handler(ctx, bus, op_data)
-    pc := get_register_u16(ctx, .PC)
-    pc += u16(op_handler.length)
-    set_register_u16(ctx, .PC, pc)
+    add_register(ctx, REG16.PC, int(op_handler.length))
     return cycles
 }

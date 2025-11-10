@@ -129,6 +129,7 @@ ld_r8_HLmem :: proc(
 ) -> (cycles: u32) {
     reg := R8_IDX[ins.a]
     val := mmu.get(bus, u8, get_register(ctx, REG16.HL))
+    set_register(ctx, reg, val)
     return 2
 }
 
@@ -145,7 +146,7 @@ ld_HLmem_r8 :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> (cycles: u32) {
-    reg := R8_IDX[ins.a]
+    reg := R8_IDX[ins.b]
     mmu.put(bus, get_register(ctx, reg), get_register(ctx, REG16.HL))
     return 2
 }

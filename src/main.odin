@@ -7,6 +7,8 @@ import "core:fmt"
 import rl "vendor:raylib"
 
 import "sm83"
+import "mmu"
+import "cartridge"
 
 EmuArgs :: struct {
     bios: os.Handle `args:"pos=0,required,file=r" usage:"bios-rom."`,
@@ -16,34 +18,34 @@ EmuArgs :: struct {
 EmuContext :: struct {
     args: EmuArgs,
     cpu: sm83.CPU,
+    cart: cartridge.Cartridge,
+    bus: mmu.MMU
+}
+
+prepare_debug :: proc() {
+
 }
 
 main :: proc() {
     ctx: EmuContext
-    make_emu_context(&ctx)
+    if !make_emu_context(&ctx) {
+        fmt.eprintfln("[OdinGB] Failed to initialize, shutting down")
+        return 
+    }
     defer delete_emu_context(&ctx)
+
+    // Setup Debug context (skip boot rom)
+    mmu.put(&ctx.bus, 0xFF, u16(mmu.IO_REGS.BANK))
+    fmt.printfln("[DEBUG] Set BANK_REGISTER to %#02X", mmu.get(&ctx.bus, u8, u16(mmu.IO_REGS.BANK)))
 
     rl.InitWindow(480, 432, "OdinGB")
     defer rl.CloseWindow()
 
-    /*  ====== DEBUG
-
-    sm83.set_register(&ctx.cpu, sm83.REG8.A, 0xA7)
-    sm83.set_register(&ctx.cpu, sm83.REG16.PC, 0xFFA7)
-
-    val1 := sm83.get_register(&ctx.cpu, sm83.REG8.A)
-    val2 := sm83.get_register(&ctx.cpu, sm83.REG16.PC)
-
-    fmt.printfln("%#02X", val1)
-    fmt.printfln("%#04X", val2)
-    
-    */
-
     for !rl.WindowShouldClose() {
         elapsed_cycles : u32 = 0
         for elapsed_cycles < 70224 {    // Execute instructions for roughly one frame (60Hz refresh), each cycle = 1T = 1/4 M
-            cycles := sm83.step(&ctx.cpu)
-            // Update APU and other modules with cycles
+            cycles := sm83.step(&ctx.cpu, &ctx.bus)
+            // Update PPU and other modules with cycles
             elapsed_cycles += cycles
         }
 
@@ -55,17 +57,29 @@ main :: proc() {
     }
 }
 
-make_emu_context :: proc(ctx: ^EmuContext) {
+make_emu_context :: proc(ctx: ^EmuContext) -> bool {
     when ODIN_DEBUG { fmt.printfln("Initializing Emulator") }
 
     style : flags.Parsing_Style = .Odin
     flags.parse_or_exit(&ctx.args, os.args, style);
 
     sm83.init(&ctx.cpu)
-    //gbmem.mem_init(&ctx.mem, ctx.args.bios, ctx.args.rom)
+
+    if !cartridge.init(&ctx.cart, ctx.args.rom) {
+        when ODIN_DEBUG do fmt.eprintfln("[OdinGB-Init] Failed to initialize Cartridge")
+        return false
+    }
+
+    if !mmu.init(&ctx.bus, ctx.args.bios, &ctx.cart) {
+        when ODIN_DEBUG do fmt.eprintfln("[OdinGB-Init] Failed to initialize MMU")
+        return false
+    }
+
+    return true
 }
 
 delete_emu_context :: proc(ctx: ^EmuContext) {
-    //gbmem.mem_deinit(ctx.mem)
     sm83.deinit(&ctx.cpu)
+    mmu.deinit(&ctx.bus)
+    cartridge.deinit(&ctx.cart)
 }

@@ -79,6 +79,7 @@ InsData :: struct {
 
 init_instructions :: proc() {
     register_load_instructions()
+    register_arith_instructions()
 }
 
 /*

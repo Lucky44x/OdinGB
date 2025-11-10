@@ -41,10 +41,8 @@ r16m_do_hl_increment_if_needed :: proc(
     idx: u8,
 ) {
     if idx < 2 do return 
-    prev: u16 = get_register(ctx, REG16.HL)
-    if idx == 2 do prev += 1
-    else do prev -= 1
-    set_register(ctx, REG16.HL, prev)
+    if idx == 2 do add_register(ctx, REG16.HL, 1)
+    else do add_register(ctx, REG16.HL, -1)
 }
 
 bu16 :: proc(

@@ -1,5 +1,6 @@
 package sm83
 
+import "core:math"
 import "core:fmt"
 import "core:mem"
 
@@ -16,6 +17,34 @@ REG8 :: enum(u8) {
 
 REG16 :: enum(u8) {
     PC = 0, SP = 2, AF = 4, BC = 6, DE = 8, HL = 10, NONE = 15
+}
+
+/*
+    Register Math
+*/
+add_register :: proc {
+    add_register_u8,
+    add_register_u16
+}
+
+add_register_u8 :: proc(
+    ctx: ^CPU,
+    reg: REG8,
+    val: int,
+) {
+    if val < 0 do ctx.registers[u8(reg)] -= u8(abs(val))
+    else do ctx.registers[u8(reg)] += u8(abs(val))
+}
+
+add_register_u16 :: proc(
+    ctx: ^CPU,
+    reg: REG16,
+    val: int,
+) {
+    prev: u16 = get_register_u16(ctx, reg)
+    if val < 0 do prev -= u16(abs(val))
+    else do prev += u16(abs(val))
+    set_register_u16(ctx, reg, prev)
 }
 
 /*

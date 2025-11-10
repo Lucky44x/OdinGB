@@ -256,7 +256,10 @@ ldh_A_Cmem :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> (cycles: u32) {
-    return 0
+    addr : u16 = 0xFF00 + u16(get_register(ctx, REG8.C))
+    val := mmu.get(bus, u8, addr)
+    set_register(ctx, REG8.A, val)
+    return 2
 }
 
 /*
@@ -272,7 +275,10 @@ ldh_Cmem_A :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> (cycles: u32) {
-    return 0
+    addr : u16 = 0xFF00 + u16(get_register(ctx, REG8.C))
+    val := get_register(ctx, REG8.A)
+    mmu.put(bus, val, addr)
+    return 2
 }
 
 /*
@@ -288,7 +294,10 @@ ldh_A_imm8mem :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> (cycles: u32) {
-    return 0
+    addr : u16 = 0xFF00 + u16(ins.opbytes[1])
+    val := mmu.get(bus, u8, addr)
+    set_register(ctx, REG8.A, val)
+    return 3
 }
 
 /*
@@ -304,7 +313,10 @@ ldh_imm8mem_A :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> (cycles: u32) {
-    return 0
+    addr : u16 = 0xFF00 + u16(ins.opbytes[1])
+    val := get_register(ctx, REG8.A)
+    mmu.put(bus, val, addr)
+    return 3
 }
 
 /*
@@ -320,6 +332,10 @@ ldd_A_HLmem :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> (cycles: u32) {
+    addr := get_register(ctx, REG16.HL)
+    val := mmu.get(bus, u8, addr)
+    set_register(ctx, REG8.A, val)
+    add_register(ctx, REG16.HL, 1)
     return 0
 }
 

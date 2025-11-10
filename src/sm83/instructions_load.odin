@@ -109,7 +109,7 @@ ld_r16_imm16 :: proc(
     ins: InsData
 ) -> (cycles: u32) {
     reg := R16_IDX[ins.x]
-    total := (u16(ins.opbytes[2]) << 8) | u16(ins.opbytes[1])
+    total := bu16(ins.opbytes)
     set_register(ctx, reg, total)
     return 3
 }
@@ -211,7 +211,7 @@ ld_r16mem_A :: proc(
 
     opc: 0b11111010 / 0xFA
     dur: 4 cycle
-    len: 3 byte -> op + lsb(nn) + msb(nn)
+    len: 3 byte -> op + msb(nn) + lsb(nn)
     flg: -
 */
 ld_A_imm16mem :: proc(
@@ -219,7 +219,9 @@ ld_A_imm16mem :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> (cycles: u32) {
-
+    addr := bu16(ins.opbytes)
+    val := mmu.get(bus, u8, addr)
+    set_register(ctx, REG8.A, val)
     return 4
 }
 
@@ -228,7 +230,7 @@ ld_A_imm16mem :: proc(
 
     opc: 0b11101010 / 0xEA
     dur: 4 cycle
-    len: 3 byte -> op + lsb(nn) + msb(nn)
+    len: 3 byte -> op + msb(nn) + lsb(nn)
     flg: -
 */
 ld_imm16mem_A :: proc(
@@ -236,7 +238,9 @@ ld_imm16mem_A :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> (cycles: u32) {
-    return 0
+    addr := bu16(ins.opbytes)
+    mmu.put(bus, get_register(ctx, REG8.A), addr)
+    return 4
 }
 
 /*

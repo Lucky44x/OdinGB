@@ -47,6 +47,14 @@ r16m_do_hl_increment_if_needed :: proc(
     set_register(ctx, REG16.HL, prev)
 }
 
+bu16 :: proc(
+    bytes: []u8
+) -> u16 {
+    if len(bytes) < 2 do return 0x00
+    total : u16 = (u16(bytes[len(bytes) - 1]) << 8) | u16(bytes[len(bytes) - 2])
+    return total
+}
+
 OPCODE_HANDLERS: [256]Instruction
 PREFIXED_OPCODES: [256]Instruction
 

@@ -50,9 +50,12 @@ set_register_u16 :: proc(
         return 
     }
 
-    local_val : u16 = u16(val)
+    local_val : u16le = u16le(val)
+
     dst := mem.ptr_offset(ctx.registers, u8(reg))
-    mem.copy(dst, &local_val, size_of(u16))
+    mem.copy(dst, &local_val, size_of(u16le))
+    
+    val_af_set := get_register_u16(ctx, reg)
 }
 
 /*
@@ -90,7 +93,7 @@ get_register_u16 :: proc(
     }
 
     dst := mem.ptr_offset(ctx.registers, u8(reg))
-    return u16(mem.reinterpret_copy(u16, dst))
+    return u16(mem.reinterpret_copy(u16le, dst))
 }
 
 set_flag :: proc(

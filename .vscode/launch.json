@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "cppvsdbg",
+            "request": "launch",
+            "preLaunchTask": "Build",
+            "name": "Debug",
+            "program": "${workspaceRoot}/build/debug.exe",
+            "args": [".\\roms\\bios\\dmg_boot.bin", ".\\roms\\tests\\dmg-acid2\\dmg-acid2.gb"],
+            "cwd": "${workspaceRoot}"
+        }
+    ]
+}

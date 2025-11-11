@@ -65,5 +65,6 @@ get_rom :: proc(
     addr: u16 = 0
 ) -> T {
     p := mem.ptr_offset(ctx.rom_data, addr)
-    return mem.reinterpret_copy(T, p)
+    val := mem.reinterpret_copy(T, p)
+    return val
 }

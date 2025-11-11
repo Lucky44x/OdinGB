@@ -57,7 +57,8 @@ stop :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
+    ctx.running = false
+    return 2
 }
 
 /*

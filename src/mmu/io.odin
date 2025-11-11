@@ -25,8 +25,8 @@ IO_REGS :: enum(u16) {
 @(private = "file")
 NO_READ_REGS : []u16 : {
     u16(IO_REGS.NR13), u16(IO_REGS.NR23), u16(IO_REGS.NR31), u16(IO_REGS.NR33),
-    u16(IO_REGS.NR41), u16(IO_REGS.BANK), u16(IO_REGS.HDMA1), u16(IO_REGS.HDMA2),
-    u16(IO_REGS.HDMA3), u16(IO_REGS.HDMA4)
+    u16(IO_REGS.NR41), u16(IO_REGS.HDMA1), u16(IO_REGS.HDMA2),
+    u16(IO_REGS.HDMA3), u16(IO_REGS.HDMA4), u16(IO_REGS.BANK)
 }
 
 @(private = "file")
@@ -87,8 +87,8 @@ io_put :: proc(
     if find_in_numeric_array(NO_WRITE_REGS, acOff) do return
 
     // Do specific calls:
-    fmt.printfln("Setting IO: %#02X = %#02X", acOff, val)
     if acOff == 0x02 do do_transfer(ctx, io_get(ctx, u8, 0x02), io_get(ctx, u8, 0x01))
+    else if acOff == 0x50 do ctx.banked = true
 
     dst := mem.ptr_offset(ctx.io_registers, acOff)
     value: T = val

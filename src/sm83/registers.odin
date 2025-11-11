@@ -42,8 +42,10 @@ add_register_u16 :: proc(
     val: int,
 ) {
     prev: u16 = get_register_u16(ctx, reg)
+    //fmt.printfln("Reg %i before add: %#04X", reg, prev)
     if val < 0 do prev -= u16(abs(val))
     else do prev += u16(abs(val))
+    //fmt.printfln("Reg %i after adding %i: %#04X", reg, val, prev)
     set_register_u16(ctx, reg, prev)
 }
 
@@ -74,6 +76,7 @@ set_register_u16 :: proc(
     reg: REG16,
     val: u16
 ) {
+    //fmt.printfln("Setting reg %i to %#04X", reg, val)
     if reg == .NONE {
         when ODIN_DEBUG do fmt.eprintfln("[REGISTER-SETTER] Cannot set 16-Bit Register NONE...")
         return 
@@ -107,7 +110,8 @@ get_register_u8 :: proc(
         return 0x00
     }
 
-    return ctx.registers[u8(reg)]
+    val = ctx.registers[u8(reg)]
+    return 
 }
 
 get_register_u16 :: proc(
@@ -122,7 +126,8 @@ get_register_u16 :: proc(
     }
 
     dst := mem.ptr_offset(ctx.registers, u8(reg))
-    return u16(mem.reinterpret_copy(u16le, dst))
+    val = u16(mem.reinterpret_copy(u16, dst))
+    return 
 }
 
 set_flag :: proc(

@@ -2,3 +2,5 @@ roms/
 build/
 *.exe
 *.pdb
+*.log
+*.txt

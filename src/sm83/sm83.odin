@@ -6,6 +6,7 @@ import "base:builtin"
 import "../mmu"
 
 CPU :: struct {
+    running: bool,
     registers: [^]u8
 }
 
@@ -17,6 +18,7 @@ init :: proc(
 
     // Make Registers
     ctx.registers = make([^]u8, 16)
+    ctx.running = true
 }
 
 deinit :: proc(
@@ -25,65 +27,26 @@ deinit :: proc(
     free(ctx.registers)
 }
 
-push_stack :: proc{
-    push16,
-    push8
-}
-
-pop_stack :: proc {
-    pop16,
-    pop8
-}
-
-// --- 8-bit push/pop ---
-
-push8 :: proc(ctx: ^CPU, bus: ^mmu.MMU, b: u8) {
-    // SP := SP - 1 ; [SP] = b
+push_stack :: proc(
+    ctx: ^CPU,
+    bus: ^mmu.MMU,
+    val: u16
+) {
     sp := get_register(ctx, REG16.SP)
-    mmu.put(bus, b, sp - 1)
-    add_register(ctx, REG16.SP, -1)
+    mmu.put(bus, val, sp - 1)
+    sp -= 0x02
+    set_register(ctx, REG16.SP, sp)
 }
 
-pop8 :: proc(ctx: ^CPU, bus: ^mmu.MMU) -> u8 {
-    // b := [SP] ; SP := SP + 1
+pop_stack :: proc(
+    ctx: ^CPU,
+    bus: ^mmu.MMU
+) -> u16 {
     sp := get_register(ctx, REG16.SP)
-    b  := mmu.get(bus, u8, sp)
-    add_register(ctx, REG16.SP, 1)
-    return b
-}
-
-
-// --- 16-bit push/pop (SM83 order!) ---
-// PUSH: write HIGH first at SP-1, then LOW at (new SP-1)
-// POP:  read LOW from SP, then HIGH from SP+1
-
-push16 :: proc(ctx: ^CPU, bus: ^mmu.MMU, v: u16) {
-    hi := u8((v >> 8) & 0xFF)
-    lo := u8(v & 0xFF)
-
-    // write HI at SP-1
-    sp := get_register(ctx, REG16.SP)
-    mmu.put(bus, hi, sp - 1)
-    add_register(ctx, REG16.SP, -1)
-
-    // write LO at (new SP)-1
-    sp = get_register(ctx, REG16.SP)
-    mmu.put(bus, lo, sp - 1)
-    add_register(ctx, REG16.SP, -1)
-}
-
-pop16 :: proc(ctx: ^CPU, bus: ^mmu.MMU, _ignore := false) -> u16 {
-    // read LO at SP
-    sp := get_register(ctx, REG16.SP)
-    lo := mmu.get(bus, u8, sp)
-    add_register(ctx, REG16.SP, 1)
-
-    // read HI at (new SP)
-    sp = get_register(ctx, REG16.SP)
-    hi := mmu.get(bus, u8, sp)
-    add_register(ctx, REG16.SP, 1)
-
-    return (u16(hi) << 8) | u16(lo)
+    val := mmu.get(bus, u16, sp + 1)
+    sp += 0x02
+    set_register(ctx, REG16.SP, sp)
+    return val
 }
 
 check_ime_enable :: proc(
@@ -91,6 +54,7 @@ check_ime_enable :: proc(
 ) {
     if get_register(ctx, REG8._IME_NEXT) != 0x01 do return 
     set_register(ctx, REG8._IME_NEXT, 0x00)
+    set_register(ctx, REG8.IME, 0x01)
 }
 
 step :: proc(

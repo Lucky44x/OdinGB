@@ -16,6 +16,7 @@ WRAM_PAGE_SIZE :: 4096
 */
 MMU :: struct {
     cart: ^cartridge.Cartridge,
+    banked: bool,
     boot_rom: [^]u8,
     wram: [^]u8,
     io_registers: [^]u8,
@@ -98,7 +99,7 @@ get :: proc(
     if address < 0x4000 {
         // 0x0000 - 0x3FFF
         // ROM-Bank 00, unless boot flag not set, then boot-rom
-        if io_get_register(ctx, u8, IO_REGS.BANK) == 0x00 do return cartridge.get_rom(ctx.cart, T, address)
+        if ctx.banked do return cartridge.get_rom(ctx.cart, T, address)
         return boot_rom_get(ctx, T, address)
     }
     else if address < 0x8000 {

@@ -491,7 +491,7 @@ pop_r16 :: proc(
     ins: InsData
 ) -> (cycles: u32) {
     reg := R16_IDX_S[ins.x]
-    val := pop_stack(ctx, bus, true)
+    val := pop_stack(ctx, bus)
     set_register(ctx, reg, val)
     return 4
 }

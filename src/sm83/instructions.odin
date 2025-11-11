@@ -47,10 +47,18 @@ eval_condition :: proc(
     cond: u8
 ) -> bool {
     switch cond {
-        case 0: return get_flag(ctx, FLAGS.ZERO) == 0x00
-        case 1: return get_flag(ctx, FLAGS.ZERO) != 0x00
-        case 2: return get_flag(ctx, FLAGS.CARRY) == 0x00
-        case 3: return get_flag(ctx, FLAGS.CARRY) != 0x01
+        case 0: 
+                fnz := get_flag(ctx, FLAGS.ZERO)
+                return fnz == 0x00
+        case 1:
+                fz := get_flag(ctx, FLAGS.ZERO)
+                return fz != 0x00
+        case 2:             
+                fnc := get_flag(ctx, FLAGS.CARRY)
+                return fnc == 0x00
+        case 3: 
+                fc := get_flag(ctx, FLAGS.CARRY)
+                return fc != 0x00
     }
     return false
 }
@@ -164,7 +172,7 @@ register_const_instruction :: proc(
         OPCODE_HANDLERS[opcode] = ins
     }
 
-    when ODIN_DEBUG do fmt.printfln("[INSTRUCTION_REGISTER] Instruction: %s\nRegistered for opcode %#02X\n", ins.name, opcode)
+    //when ODIN_DEBUG do fmt.printfln("[INSTRUCTION_REGISTER] Instruction: %s\nRegistered for opcode %#02X\n", ins.name, opcode)
 }
 
 @(private="file")
@@ -208,7 +216,7 @@ register_var_instruction :: proc(
         register_const_instruction(opcode, ins, prefixed)
     }
 
-    when ODIN_DEBUG do fmt.printfln("[INSTRUCTION_REGISTER] Instruction: %s\nRegistered pattern %s\n", ins.name, pattern)
+    //when ODIN_DEBUG do fmt.printfln("[INSTRUCTION_REGISTER] Instruction: %s\nRegistered pattern %s\n", ins.name, pattern)
 }
 
 bool_to_u8 :: proc(

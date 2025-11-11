@@ -75,7 +75,9 @@ jp_CC_imm16 :: proc(
     ins: InsData
 ) -> u32 {
     cond := (ins.a >> 1) // right-shift a by one to get the marked area
-    if !eval_condition(ctx, cond) do return 3
+    if !(eval_condition(ctx, cond)) do return 3
+    
+    fmt.printfln("Jumping...")
     return jp_imm16(ctx, bus, ins)
 }
 
@@ -166,7 +168,7 @@ ret :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    addr := pop_stack(ctx, bus, true)
+    addr := pop_stack(ctx, bus)
     set_register(ctx, REG16.PC, addr)
     return 4
 }
@@ -202,7 +204,7 @@ retI :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    addr := pop_stack(ctx, bus, true)
+    addr := pop_stack(ctx, bus)
     set_register(ctx, REG16.PC, addr)
     set_register(ctx, REG8.IME, 0x01)   // Set IME = 1
     return 4

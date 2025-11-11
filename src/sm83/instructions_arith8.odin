@@ -63,7 +63,7 @@ add_A_r8 :: proc(
     a := get_register(ctx, REG8.A)
     v := get_register(ctx, reg)
 
-    result, z, hc, c := add_nums_flags(a, v)
+    result, c, hc, z := add_nums_flags(a, v)
     set_flag(ctx, FLAGS.ZERO, z)
     set_flag(ctx, FLAGS.HCARRY, hc)
     set_flag(ctx, FLAGS.CARRY, c)
@@ -89,7 +89,7 @@ add_A_HLmem :: proc(
     a := get_register(ctx, REG8.A)
     v := mmu.get(bus, u8, addr)
 
-    result, z, hc, c := add_nums_flags(a, v)
+    result, c, hc, z := add_nums_flags(a, v)
     set_flag(ctx, FLAGS.ZERO, z)
     set_flag(ctx, FLAGS.HCARRY, hc)
     set_flag(ctx, FLAGS.CARRY, c)
@@ -114,7 +114,7 @@ add_A_imm8 :: proc(
     a := get_register(ctx, REG8.A)
     v := ins.opbytes[1]
 
-    result, z, hc, c := add_nums_flags(a, v)
+    result, c, hc, z := add_nums_flags(a, v)
     set_flag(ctx, FLAGS.ZERO, z)
     set_flag(ctx, FLAGS.HCARRY, hc)
     set_flag(ctx, FLAGS.CARRY, c)
@@ -141,7 +141,7 @@ adc_A_r8 :: proc(
     a := get_register(ctx, REG8.A) + get_flag(ctx, FLAGS.CARRY) // Might induce uninteded behaviour
     v := get_register(ctx, reg)
 
-    result, z, hc, c := add_nums_flags(a, v)
+    result, c, hc, z := add_nums_flags(a, v)
     set_flag(ctx, FLAGS.ZERO, z)
     set_flag(ctx, FLAGS.HCARRY, hc)
     set_flag(ctx, FLAGS.CARRY, c)
@@ -168,7 +168,7 @@ adc_A_HLmem :: proc(
     a := get_register(ctx, REG8.A) + get_flag(ctx, FLAGS.CARRY) // Might induce uninteded behaviour
     v := mmu.get(bus, u8, addr)
 
-    result, z, hc, c := add_nums_flags(a, v)
+    result, c, hc, z := add_nums_flags(a, v)
     set_flag(ctx, FLAGS.ZERO, z)
     set_flag(ctx, FLAGS.HCARRY, hc)
     set_flag(ctx, FLAGS.CARRY, c)
@@ -194,7 +194,7 @@ adc_A_imm8 :: proc(
     a := get_register(ctx, REG8.A) + get_flag(ctx, FLAGS.CARRY) // Might induce uninteded behaviour
     v := ins.opbytes[1]
 
-    result, z, hc, c := add_nums_flags(a, v)
+    result, c, hc, z := add_nums_flags(a, v)
     set_flag(ctx, FLAGS.ZERO, z)
     set_flag(ctx, FLAGS.HCARRY, hc)
     set_flag(ctx, FLAGS.CARRY, c)
@@ -220,7 +220,7 @@ sub_A_r8 :: proc(
     a := get_register(ctx, REG8.A)
     v := get_register(ctx, reg)
 
-    result, z, hc, c := sub_nums_flags(a, v)
+    result, c, hc, z := sub_nums_flags(a, v)
     set_flag(ctx, FLAGS.ZERO, z)
     set_flag(ctx, FLAGS.HCARRY, hc)
     set_flag(ctx, FLAGS.CARRY, c)
@@ -246,7 +246,7 @@ sub_A_HLmem :: proc(
     a := get_register(ctx, REG8.A)
     v := mmu.get(bus, u8, addr)
 
-    result, z, hc, c := sub_nums_flags(a, v)
+    result, c, hc, z := sub_nums_flags(a, v)
     set_flag(ctx, FLAGS.ZERO, z)
     set_flag(ctx, FLAGS.HCARRY, hc)
     set_flag(ctx, FLAGS.CARRY, c)
@@ -271,7 +271,7 @@ sub_A_imm8 :: proc(
     a := get_register(ctx, REG8.A)
     v := ins.opbytes[1]
 
-    result, z, hc, c := sub_nums_flags(a, v)
+    result, c, hc, z := sub_nums_flags(a, v)
     set_flag(ctx, FLAGS.ZERO, z)
     set_flag(ctx, FLAGS.HCARRY, hc)
     set_flag(ctx, FLAGS.CARRY, c)
@@ -298,7 +298,7 @@ sbc_A_r8 :: proc(
     a := get_register(ctx, REG8.A) + get_flag(ctx, FLAGS.CARRY) // Might induce uninteded behaviour
     v := get_register(ctx, reg)
 
-    result, z, hc, c := sub_nums_flags(a, v)
+    result, c, hc, z := sub_nums_flags(a, v)
     set_flag(ctx, FLAGS.ZERO, z)
     set_flag(ctx, FLAGS.HCARRY, hc)
     set_flag(ctx, FLAGS.CARRY, c)
@@ -325,7 +325,7 @@ sbc_A_HLmem :: proc(
     a := get_register(ctx, REG8.A) + get_flag(ctx, FLAGS.CARRY) // Might induce uninteded behaviour
     v := mmu.get(bus, u8, addr)
 
-    result, z, hc, c := sub_nums_flags(a, v)
+    result, c, hc, z := sub_nums_flags(a, v)
     set_flag(ctx, FLAGS.ZERO, z)
     set_flag(ctx, FLAGS.HCARRY, hc)
     set_flag(ctx, FLAGS.CARRY, c)
@@ -351,7 +351,7 @@ sbc_A_imm8 :: proc(
     a := get_register(ctx, REG8.A) + get_flag(ctx, FLAGS.CARRY) // Might induce uninteded behaviour
     v := ins.opbytes[1]
 
-    result, z, hc, c := sub_nums_flags(a, v)
+    result, c, hc, z := sub_nums_flags(a, v)
     set_flag(ctx, FLAGS.ZERO, z)
     set_flag(ctx, FLAGS.HCARRY, hc)
     set_flag(ctx, FLAGS.CARRY, c)
@@ -377,7 +377,11 @@ cp_A_r8 :: proc(
     a := get_register(ctx, REG8.A)
     v := get_register(ctx, reg)
 
-    result, z, hc, c := sub_nums_flags(a, v)
+    fmt.printfln("Comparing %#02X and %#02X", a, v)
+
+    result, c, hc, z := sub_nums_flags(a, v)
+    fmt.printfln("Result of operation: %#02X", result)
+
     set_flag(ctx, FLAGS.ZERO, z)
     set_flag(ctx, FLAGS.HCARRY, hc)
     set_flag(ctx, FLAGS.CARRY, c)
@@ -402,7 +406,7 @@ cp_A_HLmem :: proc(
     a := get_register(ctx, REG8.A)
     v := mmu.get(bus, u8, addr)
 
-    result, z, hc, c := sub_nums_flags(a, v)
+    result, c, hc, z := sub_nums_flags(a, v)
     set_flag(ctx, FLAGS.ZERO, z)
     set_flag(ctx, FLAGS.HCARRY, hc)
     set_flag(ctx, FLAGS.CARRY, c)
@@ -426,7 +430,7 @@ cp_A_imm8 :: proc(
     a := get_register(ctx, REG8.A)
     v := ins.opbytes[1]
 
-    result, z, hc, c := sub_nums_flags(a, v)
+    result, c, hc, z := sub_nums_flags(a, v)
     set_flag(ctx, FLAGS.ZERO, z)
     set_flag(ctx, FLAGS.HCARRY, hc)
     set_flag(ctx, FLAGS.CARRY, c)
@@ -447,7 +451,7 @@ inc_r8 :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    reg := R8_IDX[ins.b]
+    reg := R8_IDX[ins.a]
     v := get_register(ctx, reg)
 
     result, z, hc, _ := add_nums_flags(v, 1)
@@ -495,7 +499,7 @@ dec_r8 :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    reg := R8_IDX[ins.b]
+    reg := R8_IDX[ins.a]
     v := get_register(ctx, reg)
 
     result, z, hc, _ := sub_nums_flags(v, 1)

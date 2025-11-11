@@ -31,11 +31,9 @@ main :: proc() {
     }
     defer delete_emu_context(&ctx)
 
-    /*
     // Setup Debug context (skip boot rom)
-    mmu.put(&ctx.bus, 0xFF, u16(mmu.IO_REGS.BANK))
+    mmu.put(&ctx.bus, 0x01, 0xFF50)
     fmt.printfln("[DEBUG] Set BANK_REGISTER to %#02X", mmu.get(&ctx.bus, u8, u16(mmu.IO_REGS.BANK)))
-    */
     
     rl.InitWindow(480, 432, "OdinGB")
     defer rl.CloseWindow()
@@ -49,6 +47,7 @@ main :: proc() {
             cycles := sm83.step(&ctx.cpu, &ctx.bus)
             // Update PPU and other modules with cycles
             elapsed_cycles += cycles
+            if !ctx.cpu.running do return 
         }
 
         rl.BeginDrawing()

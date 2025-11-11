@@ -22,10 +22,6 @@ EmuContext :: struct {
     bus: mmu.MMU
 }
 
-prepare_debug :: proc() {
-
-}
-
 main :: proc() {
     ctx: EmuContext
     if !make_emu_context(&ctx) {
@@ -34,10 +30,12 @@ main :: proc() {
     }
     defer delete_emu_context(&ctx)
 
+    /*
     // Setup Debug context (skip boot rom)
     mmu.put(&ctx.bus, 0xFF, u16(mmu.IO_REGS.BANK))
     fmt.printfln("[DEBUG] Set BANK_REGISTER to %#02X", mmu.get(&ctx.bus, u8, u16(mmu.IO_REGS.BANK)))
-
+    */
+    
     rl.InitWindow(480, 432, "OdinGB")
     defer rl.CloseWindow()
 

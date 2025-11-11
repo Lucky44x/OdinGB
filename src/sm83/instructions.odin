@@ -79,8 +79,10 @@ InsData :: struct {
 
 init_instructions :: proc() {
     register_load_instructions()
-    register_arith_instructions()
+    register_arith8_instructions()
+    register_arith16_instructions()
 
+    register_bitwise_instructions()
     // Register NOOP Instruction last for override
 }
 

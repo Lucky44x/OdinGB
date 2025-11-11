@@ -7,7 +7,7 @@
             "preLaunchTask": "Build",
             "name": "Debug",
             "program": "${workspaceRoot}/build/debug.exe",
-            "args": [".\\roms\\bios\\dmg_boot.bin", ".\\load_save_test.bin"],
+            "args": [".\\roms\\bios\\dmg_boot.bin", ".\\roms\\testing\\dmg-acid2\\dmg-acid2.gb"],
             "cwd": "${workspaceRoot}"
         }
     ]

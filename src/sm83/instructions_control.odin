@@ -16,7 +16,7 @@ register_control_instructions :: proc() {
     register_instruction("001xx000", Instruction{ handler=jp_CC_e, length=2, name="JP CC e"})
     register_instruction("110xx100", Instruction{ handler=call_CC_imm16, length=3, name="CALL CC imm16"})
     register_instruction("110xx000", Instruction{ handler=ret_CC, length=1, name="RET CC"})
-    register_instruction("11xxx111", Instruction{ handler=rst_n, length=2, name="RST n"})
+    register_instruction("11xxx111", Instruction{ handler=rst_n, length=1, name="RST n"})
 
     register_instruction(0xC3, Instruction{ handler=jp_imm16, length=3, name="JP imm16"})
     register_instruction(0xE9, Instruction{ handler=jp_HL, length=1, name="JP HL"})
@@ -166,7 +166,7 @@ ret :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    addr := pop_stack(ctx, bus, u16)
+    addr := pop_stack(ctx, bus, true)
     set_register(ctx, REG16.PC, addr)
     return 4
 }
@@ -202,7 +202,7 @@ retI :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    addr := pop_stack(ctx, bus, u16)
+    addr := pop_stack(ctx, bus, true)
     set_register(ctx, REG16.PC, addr)
     set_register(ctx, REG8.IME, 0x01)   // Set IME = 1
     return 4

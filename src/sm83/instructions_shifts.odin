@@ -21,8 +21,14 @@ register_shifts_instructions :: proc() {
     register_instruction("00000xxx", Instruction{ handler=rlc_r8, length=2, name="RlC r8"}, true)
     register_instruction("00001xxx", Instruction{ handler=rrc_r8, length=2, name="RRC r8"}, true)
 
-    register_instruction("00010xxx", Instruction{ handler=rl_r8, length=2, name="RLA r8"}, true)
-    register_instruction("00011xxx", Instruction{ handler=rr_r8, length=2, name="RRA r8"}, true)
+    register_instruction(0x07, Instruction{ handler=rlc_r8, length=1, name="RlCA"})
+    register_instruction(0x0F, Instruction{ handler=rrc_r8, length=1, name="RRCA"})
+
+    register_instruction("00010xxx", Instruction{ handler=rl_r8, length=2, name="RL r8"}, true)
+    register_instruction("00011xxx", Instruction{ handler=rr_r8, length=2, name="RR r8"}, true)
+
+    register_instruction(0x17, Instruction{ handler=rl_r8, length=1, name="RLA"})
+    register_instruction(0x1F, Instruction{ handler=rr_r8, length=1, name="RRA"})
     
     register_instruction("00100xxx", Instruction{ handler=sla_r8, length=2, name="SLA r8"}, true)
     register_instruction("00101xxx", Instruction{ handler=sra_r8, length=2, name="SRA r8"}, true)

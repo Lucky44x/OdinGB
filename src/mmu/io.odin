@@ -1,6 +1,8 @@
 package mmu
 
+import "core:fmt"
 import "core:mem"
+import "../serial"
 
 IO_REGS :: enum(u16) {
     JOYP = 0xFF00, SB = 0xFF01, SC = 0xFF02, DIV = 0xFF04,
@@ -84,7 +86,28 @@ io_put :: proc(
 
     if find_in_numeric_array(NO_WRITE_REGS, acOff) do return
 
+    // Do specific calls:
+    fmt.printfln("Setting IO: %#02X = %#02X", acOff, val)
+    if acOff == 0x02 do do_transfer(ctx, io_get(ctx, u8, 0x02), io_get(ctx, u8, 0x01))
+
     dst := mem.ptr_offset(ctx.io_registers, acOff)
     value: T = val
     _ = mem.copy(dst, &value, size_of(T))
+}
+
+@(private = "package")
+do_transfer :: proc(
+    ctx: ^MMU,
+    flag_byte, data_byte: u8
+) {
+    fmt.printfln("Attempting-Transfer: %r", rune(data_byte))
+    flagMask: u8 = 0x01 << 7
+    clockMask: u8 = 0x01
+    if flagMask & flag_byte == 0x00 do return
+    if clockMask & flag_byte == 0x00 do return
+    
+    val := flag_byte
+    val &= ~flagMask
+    io_put(ctx, val, 0x02)
+    fmt.printfln("Transfer: %r", rune(data_byte))
 }

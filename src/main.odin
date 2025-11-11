@@ -1,5 +1,6 @@
 package main
 
+import "core:time"
 import "core:flags"
 import "core:os"
 import "core:fmt"
@@ -39,9 +40,12 @@ main :: proc() {
     rl.InitWindow(480, 432, "OdinGB")
     defer rl.CloseWindow()
 
+    rl.SetTargetFPS(60)
+
+    rot : f32 = 0.0
     for !rl.WindowShouldClose() {
         elapsed_cycles : u32 = 0
-        for elapsed_cycles < 70224 {    // Execute instructions for roughly one frame (60Hz refresh), each cycle = 1T = 1/4 M
+        for elapsed_cycles < 512 {    // Execute instructions for roughly one frame (60Hz refresh), each cycle = 1T = 1/4 M
             cycles := sm83.step(&ctx.cpu, &ctx.bus)
             // Update PPU and other modules with cycles
             elapsed_cycles += cycles
@@ -50,7 +54,11 @@ main :: proc() {
         rl.BeginDrawing()
         
         rl.ClearBackground(rl.BLACK)
-        
+
+        rot += 1
+        if rot > 360 do rot = 0.0
+        rl.DrawRectanglePro({ 220, 196, 40, 40 }, { 0.5, 0.5 }, rot, rl.BLUE)
+
         rl.EndDrawing()
     }
 }

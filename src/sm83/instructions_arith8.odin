@@ -19,7 +19,7 @@ register_arith8_instructions :: proc() {
     register_instruction("10011xxx", Instruction{ handler=sbc_A_r8, length=1, name="SBC A r8"})
     register_instruction("10111xxx", Instruction{ handler=cp_A_r8, length=1, name="CP A r8"})
     register_instruction("00xxx100", Instruction{handler=inc_r8, length=1, name="INC r8"})
-    register_instruction("00xxx101", Instruction{handler=inc_r8, length=1, name="DEC r8"})
+    register_instruction("00xxx101", Instruction{handler=dec_r8, length=1, name="DEC r8"})
 
     register_instruction(0x86, Instruction{ handler=add_A_HLmem, length=1, name="ADD A [HL]"})
     register_instruction(0xC6, Instruction{ handler=add_A_imm8, length=2, name="ADD A imm8"})
@@ -38,12 +38,12 @@ register_arith8_instructions :: proc() {
 
     register_instruction(0x34, Instruction{handler=inc_HLmem, length=1, name="INC [HL]"})
 
-    register_instruction(0x35, Instruction{handler=inc_HLmem, length=1, name="DEc [HL]"})
+    register_instruction(0x35, Instruction{handler=dec_HLmem, length=1, name="DEc [HL]"})
 
     register_instruction(0x3F, Instruction{handler=ccf, length=1, name="CCF"})
     register_instruction(0x37, Instruction{handler=scf, length=1, name="SCF"})
     register_instruction(0x27, Instruction{handler=daa, length=1, name="DAA"})
-    register_instruction(0x2F, Instruction{handler=daa, length=1, name="CPL"})
+    register_instruction(0x2F, Instruction{handler=cpl, length=1, name="CPL"})
 }
 
 /*

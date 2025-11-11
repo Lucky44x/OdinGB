@@ -116,7 +116,7 @@ decode_instruction :: proc(
     dataByte := mmu.get(ctx_mem, u8, addr)
     ins = OPCODE_HANDLERS[dataByte]
     if dataByte == 0xCB {
-        dataByte := mmu.get(ctx_mem, u8, addr + 1)
+        dataByte = mmu.get(ctx_mem, u8, addr + 1)
         ins = PREFIXED_OPCODES[dataByte]
     } 
     if ins.length == 0 { when ODIN_DEBUG do fmt.eprintfln("[INSTRUCTION-PARSER] Instruction byte %#02X could not be mapped correctly", dataByte) }
@@ -149,8 +149,20 @@ register_const_instruction :: proc(
     ins: Instruction,
     prefixed: bool = false
 ) {
-    if prefixed do PREFIXED_OPCODES[opcode] = ins
-    else do OPCODE_HANDLERS[opcode] = ins
+    if prefixed { 
+        if PREFIXED_OPCODES[opcode].length != 0 {
+            //fmt.eprintfln("[INSTRUCTION_REGISTER] Error: Instruction %s - %#02X is trying to override %s - %#02X", ins.name, opcode, OPCODE_HANDLERS[opcode].name, opcode)
+            //panic("[ABORT]")
+        }
+        PREFIXED_OPCODES[opcode] = ins
+    }
+    else {
+        if OPCODE_HANDLERS[opcode].length != 0 {
+            //fmt.eprintfln("[INSTRUCTION_REGISTER] Error: Instruction %s - %#02X is trying to override %s - %#02X", ins.name, opcode, OPCODE_HANDLERS[opcode].name, opcode)
+            //panic("[ABORT]")
+        }
+        OPCODE_HANDLERS[opcode] = ins
+    }
 
     when ODIN_DEBUG do fmt.printfln("[INSTRUCTION_REGISTER] Instruction: %s\nRegistered for opcode %#02X\n", ins.name, opcode)
 }

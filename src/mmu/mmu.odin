@@ -66,7 +66,7 @@ init :: proc(
     /*
         127 bytes for H-RAM FF80 -  FFFE
     */
-    ctx.hram = make([^]u8, 127)
+    ctx.hram = make([^]u8, 128)
 
     return true
 }

@@ -67,8 +67,10 @@ set_register_u8 :: proc(
         when ODIN_DEBUG do fmt.eprintfln("[REGISTER-SETTER] Cannot set 16-Bit Register NONE...")
         return 
     }
+    local_val := val
+    if reg == .F do local_val &= 0xF0
 
-    ctx.registers[u8(reg)] = val
+    ctx.registers[u8(reg)] = local_val
 }
 
 set_register_u16 :: proc(
@@ -82,12 +84,18 @@ set_register_u16 :: proc(
         return 
     }
 
-    local_val : u16le = u16le(val)
+    local_val : u16 = u16(val)
+    if reg == .AF do local_val &= 0xFFF0
 
     dst := mem.ptr_offset(ctx.registers, u8(reg))
-    mem.copy(dst, &local_val, size_of(u16le))
-    
-    val_af_set := get_register_u16(ctx, reg)
+
+    mem.copy(dst, &local_val, size_of(u16))
+    /*
+    if reg != .SP do return 
+    fmt.printfln("Combined: %#04X", local_val)
+    fmt.printfln("First byte in memory: %#02X", ctx.registers[u8(reg)])
+    fmt.printfln("Second byte in memory: %#02X", ctx.registers[u8(reg) + 1])
+    */
 }
 
 /*

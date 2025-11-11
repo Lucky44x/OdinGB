@@ -2,8 +2,10 @@ package mmu
 
 import "core:fmt"
 import "core:os"
-import "../cartridge"
 import "core:mem"
+
+import "../cartridge"
+import "../rend"
 
 @(private="file")
 WRAM_PAGE_SIZE :: 4096
@@ -16,6 +18,7 @@ WRAM_PAGE_SIZE :: 4096
 */
 MMU :: struct {
     cart: ^cartridge.Cartridge,
+    ppu: ^rend.PPU,
     banked: bool,
     boot_rom: [^]u8,
     wram: [^]u8,
@@ -26,7 +29,8 @@ MMU :: struct {
 init :: proc(
     ctx: ^MMU,
     bios: os.Handle,
-    cart: ^cartridge.Cartridge
+    cart: ^cartridge.Cartridge,
+    ppu: ^rend.PPU
 ) -> bool {
     /*
         Make Boot-Rom Size, and load into memory
@@ -44,6 +48,7 @@ init :: proc(
     ctx.boot_rom = make([^]u8, boot_size)
 
     romData, boot_err1 := os.read_entire_file(bios)
+    defer delete(romData)
     if !boot_err1 {
         when ODIN_DEBUG do fmt.eprintfln("[MMU-INIT] Could not load Boot-ROM")
         return false
@@ -55,11 +60,12 @@ init :: proc(
         Set a reference to the loaded CART
     */
     ctx.cart = cart
+    ctx.ppu = ppu
     /*
         Base-Pages are 2 in the GB DMG and 8 in the GBC
         WRAM_PAGE_SIZE * (BASE_PAGES + BANK_NUM) + 512
     */
-    ctx.wram = make([^]u8, WRAM_PAGE_SIZE * 2 + 512)
+    ctx.wram = make([^]u8, WRAM_PAGE_SIZE * 2)
     /*
         128 bytes for I/O Registers FF00 -  FF7F + 1 byte for IE
     */
@@ -78,6 +84,7 @@ deinit :: proc(
     free(ctx.wram)
     free(ctx.io_registers)
     free(ctx.hram)
+    free(ctx.boot_rom)
 }
 
 boot_rom_get :: proc(
@@ -100,6 +107,8 @@ get :: proc(
         // 0x0000 - 0x3FFF
         // ROM-Bank 00, unless boot flag not set, then boot-rom
         if ctx.banked do return cartridge.get_rom(ctx.cart, T, address)
+        if address < 0x0100 do return cartridge.get_rom(ctx.cart, T, address)
+
         return boot_rom_get(ctx, T, address)
     }
     else if address < 0x8000 {
@@ -110,7 +119,7 @@ get :: proc(
     else if address < 0xA000 {
         // 0x8000 x 0x9FFF
         // V-Ram
-        // TODO Redirect PPU
+        return rend.vram_get(ctx.ppu, T, address-0x8000)
     }
     else if address <  0xC000 {
         // 0xA000 - 0xBFFF
@@ -126,7 +135,7 @@ get :: proc(
         return get(ctx, T, address - 0x2000)
     } else if address < 0xFEA0 {
         // 0xFE00 - 0xFE9F
-        // TODO OAM -> Redirect to PPU
+        return rend.oam_get(ctx.ppu, T, address-0xFE00)
     } else if address < 0xFF00 {
         //NOOP - Not usable
         // see https://gbdev.io/pandocs/Memory_Map.html#fea0feff-range for more details
@@ -155,7 +164,7 @@ put :: proc(
     else if address < 0xA000 {
         // 0x8000 x 0x9FFF
         // V-Ram
-        // TODO Redirect PPU
+        rend.vram_put(ctx.ppu, val, address - 0x8000)
     }
     else if address <  0xC000 {
         // 0xA000 - 0xBFFF
@@ -171,7 +180,7 @@ put :: proc(
         put(ctx, val, address - 0x2000)     // IDK if echo page is read-only but whatever
     } else if address < 0xFEA0 {
         // 0xFE00 - 0xFE9F
-        // TODO OAM -> Redirect to PPU
+        rend.vram_put(ctx.ppu, val, address - 0xFE00)
     } else if address < 0xFF00 {
         //NOOP - Not usable
         // see https://gbdev.io/pandocs/Memory_Map.html#fea0feff-range for more details

@@ -72,7 +72,7 @@ step :: proc(
     if op_handler.length != 0 {
         when ODIN_DEBUG {
             if ins_byte != 0x00 {
-                fmt.printfln("[SM83-STEP] Executing: %#02X - %s - len: %i - PC_of_command: %#02X ... DATA:", op_data.opbytes[0], op_handler.name, op_handler.length, get_register(ctx, REG16.PC))
+                fmt.printfln("[SM83-STEP] Executing: %#02X - %s - len: %i - PC_of_command: %#04X ... DATA:", op_data.opbytes[0], op_handler.name, op_handler.length, get_register(ctx, REG16.PC))
                 for i in 0 ..< op_handler.length do fmt.printf(" %#02X ",op_data.opbytes[i])
                 fmt.printf("\n")
             }

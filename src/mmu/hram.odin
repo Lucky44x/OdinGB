@@ -11,7 +11,7 @@ hram_get :: proc(
 ) -> T {
     p := mem.ptr_offset(ctx.hram, offset)
     val := mem.reinterpret_copy(T, p)
-    fmt.printfln("Getting from HRAM addr: %#04X = %#02X", offset + 0xFF80, val)
+    //fmt.printfln("Getting from HRAM addr: %#04X = %#02X", offset + 0xFF80, val)
     return val
 }
 
@@ -20,7 +20,7 @@ hram_put :: proc(
     val: $T,
     offset: u16 = 0
 ) {
-    fmt.printfln("Writing to HRAM addr: %#04X = %#02X", offset + 0xFF80, val)
+    //fmt.printfln("Writing to HRAM addr: %#04X = %#02X", offset + 0xFF80, val)
     dst := mem.ptr_offset(ctx.hram, offset)
     value: T = val
     _ = mem.copy(dst, &value, size_of(T))

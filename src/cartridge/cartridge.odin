@@ -21,6 +21,7 @@ init :: proc(
 
     ctx.rom_data = make([^]u8, romSize)
     romData, err1 := os.read_entire_file(rom)
+    defer delete(romData)
     if !err1 {
         when ODIN_DEBUG do fmt.eprintfln("Could not load ROM")
         return false

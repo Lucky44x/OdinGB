@@ -16,13 +16,10 @@ register_bitwise_instructions :: proc() {
     register_instruction("10101xxx", Instruction{ handler=xor_A_r8, length=1, name="XOR A r8"})
     register_instruction("10110xxx", Instruction{ handler=or_A_r8, length=1, name="OR A r8"})
 
-    register_instruction(0xA6, Instruction{ handler=and_A_HLmem, length=1, name="AND A [HL]"})
     register_instruction(0xE6, Instruction{ handler=and_A_imm8, length=2, name="AND A imm8"})
 
-    register_instruction(0xB6, Instruction{ handler=or_A_HLmem, length=1, name="OR A [HL]"})
     register_instruction(0xF6, Instruction{ handler=or_A_imm8, length=2, name="OR A imm8"})
 
-    register_instruction(0xAE, Instruction{ handler=xor_A_HLmem, length=1, name="XOR A [HL]"})
     register_instruction(0xEE, Instruction{ handler=xor_A_imm8, length=2, name="XOR A imm8"})
 }
 
@@ -39,23 +36,24 @@ and_A_r8 :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
-}
+    aval: u8 = get_register(ctx, REG8.A)
+    reg := R8_IDX[ins.b]
+    
+    val: u8 = 0
+    if reg == .NONE do val = mmu.get(bus, u8, get_register(ctx, REG16.HL))
+    else do val = get_register(ctx, reg)
 
-/*
-    Bitwise AND between A and [HL]
+    aval &= val
 
-    opc: 0b10100110 / 0xA6
-    dur: 2 cycle
-    len: 1 byte
-    flg: Z = A == 0, N = 0, H = 1, C = 0
-*/
-and_A_HLmem :: proc(
-    ctx: ^CPU,
-    bus: ^mmu.MMU,
-    ins: InsData
-) -> u32 {
-    return 0
+    set_flag(ctx, FLAGS.ZERO, aval == 0 ? 0x01 : 0x00)
+    set_flag(ctx, FLAGS.SUB, 0x00)
+    set_flag(ctx, FLAGS.HCARRY, 0x01)
+    set_flag(ctx, FLAGS.CARRY, 0x00)
+
+    if reg == .NONE do mmu.put(bus, val, get_register(ctx, REG16.HL))
+    else do set_register(ctx, reg, val)
+
+    return reg == .NONE ? 2 : 1
 }
 
 /*
@@ -71,7 +69,19 @@ and_A_imm8 :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
+    aval: u8 = get_register(ctx, REG8.A)
+    val: u8 = ins.opbytes[1]
+
+    aval &= val
+
+    set_register(ctx, REG8.A, aval)
+
+    set_flag(ctx, FLAGS.ZERO, aval == 0 ? 0x01 : 0x00)
+    set_flag(ctx, FLAGS.SUB, 0x00)
+    set_flag(ctx, FLAGS.HCARRY, 0x01)
+    set_flag(ctx, FLAGS.CARRY, 0x00)
+
+    return 2
 }
 
 /*
@@ -87,23 +97,24 @@ or_A_r8 :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
-}
+    aval: u8 = get_register(ctx, REG8.A)
+    reg := R8_IDX[ins.b]
+    
+    val: u8 = 0
+    if reg == .NONE do val = mmu.get(bus, u8, get_register(ctx, REG16.HL))
+    else do val = get_register(ctx, reg)
+    
+    aval |= val
 
-/*
-    Bitwise OR between A and [HL]
+    set_flag(ctx, FLAGS.ZERO, aval == 0 ? 0x01 : 0x00)
+    set_flag(ctx, FLAGS.SUB, 0x00)
+    set_flag(ctx, FLAGS.HCARRY, 0x01)
+    set_flag(ctx, FLAGS.CARRY, 0x00)
 
-    opc: 0b10110110 / 0xB6
-    dur: 2 cycle
-    len: 1 byte
-    flg: Z = A == 0, N = 0, H = 0, C = 0
-*/
-or_A_HLmem :: proc(
-    ctx: ^CPU,
-    bus: ^mmu.MMU,
-    ins: InsData
-) -> u32 {
-    return 0
+    if reg == .NONE do mmu.put(bus, val, get_register(ctx, REG16.HL))
+    else do set_register(ctx, reg, val)
+
+    return reg == .NONE ? 2 : 1
 }
 
 /*
@@ -119,7 +130,19 @@ or_A_imm8 :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
+    aval: u8 = get_register(ctx, REG8.A)
+    val: u8 = ins.opbytes[1]
+
+    aval |= val
+
+    set_register(ctx, REG8.A, aval)
+
+    set_flag(ctx, FLAGS.ZERO, aval == 0 ? 0x01 : 0x00)
+    set_flag(ctx, FLAGS.SUB, 0x00)
+    set_flag(ctx, FLAGS.HCARRY, 0x01)
+    set_flag(ctx, FLAGS.CARRY, 0x00)
+
+    return 2
 }
 
 /*
@@ -135,23 +158,24 @@ xor_A_r8 :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
-}
+    aval: u8 = get_register(ctx, REG8.A)
+    reg := R8_IDX[ins.b]
+    
+    val: u8 = 0
+    if reg == .NONE do val = mmu.get(bus, u8, get_register(ctx, REG16.HL))
+    else do val = get_register(ctx, reg)
+    
+    aval ~= val
 
-/*
-    Bitwise XOR between A and [HL]
+    set_flag(ctx, FLAGS.ZERO, aval == 0 ? 0x01 : 0x00)
+    set_flag(ctx, FLAGS.SUB, 0x00)
+    set_flag(ctx, FLAGS.HCARRY, 0x01)
+    set_flag(ctx, FLAGS.CARRY, 0x00)
 
-    opc: 0b10101110 / 0xAE
-    dur: 2 cycle
-    len: 1 byte
-    flg: Z = A == 0, N = 0, H = 0, C = 0
-*/
-xor_A_HLmem :: proc(
-    ctx: ^CPU,
-    bus: ^mmu.MMU,
-    ins: InsData
-) -> u32 {
-    return 0
+    if reg == .NONE do mmu.put(bus, val, get_register(ctx, REG16.HL))
+    else do set_register(ctx, reg, val)
+
+    return reg == .NONE ? 2 : 1
 }
 
 /*
@@ -167,5 +191,17 @@ xor_A_imm8 :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
+    aval: u8 = get_register(ctx, REG8.A)
+    val: u8 = ins.opbytes[1]
+
+    aval ~= val
+
+    set_register(ctx, REG8.A, aval)
+
+    set_flag(ctx, FLAGS.ZERO, aval == 0 ? 0x01 : 0x00)
+    set_flag(ctx, FLAGS.SUB, 0x00)
+    set_flag(ctx, FLAGS.HCARRY, 0x01)
+    set_flag(ctx, FLAGS.CARRY, 0x00)
+
+    return 2
 }

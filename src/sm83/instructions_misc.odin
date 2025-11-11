@@ -13,7 +13,7 @@ import "../mmu"
 */
 register_misc_instructions :: proc() {
     register_instruction(0x76, Instruction{ handler=halt, length=1, name="HALT"})
-    register_instruction(0x10, Instruction{ handler=stop, length=1, name="STOP"})
+    register_instruction(0x10, Instruction{ handler=stop, length=2, name="STOP"})
     register_instruction(0xF3, Instruction{ handler=di, length=1, name="DI"})
     register_instruction(0xFB, Instruction{ handler=ei, length=1, name="EI"})
     register_instruction(0x00, Instruction{ handler=nop, length=1, name="NOP"})
@@ -73,7 +73,8 @@ di :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
+    set_register(ctx, REG8.IME, 0x00)
+    return 1
 }
 
 /*
@@ -89,7 +90,8 @@ ei :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
+    set_register(ctx, REG8._IME_NEXT, 0x01)
+    return 1
 }
 
 /*

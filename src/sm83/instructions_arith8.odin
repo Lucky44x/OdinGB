@@ -59,7 +59,17 @@ add_A_r8 :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
+    reg := R8_IDX[ins.b]
+    a := get_register(ctx, REG8.A)
+    v := get_register(ctx, reg)
+
+    result, z, hc, c := add_nums_flags(a, v)
+    set_flag(ctx, FLAGS.ZERO, z)
+    set_flag(ctx, FLAGS.HCARRY, hc)
+    set_flag(ctx, FLAGS.CARRY, c)
+    set_flag(ctx, FLAGS.SUB, 0x00)
+    set_register(ctx, REG8.A, result)
+    return 1
 }
 
 /*
@@ -75,7 +85,17 @@ add_A_HLmem :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
+    addr := get_register(ctx, REG16.HL)
+    a := get_register(ctx, REG8.A)
+    v := mmu.get(bus, u8, addr)
+
+    result, z, hc, c := add_nums_flags(a, v)
+    set_flag(ctx, FLAGS.ZERO, z)
+    set_flag(ctx, FLAGS.HCARRY, hc)
+    set_flag(ctx, FLAGS.CARRY, c)
+    set_flag(ctx, FLAGS.SUB, 0x00)
+    set_register(ctx, REG8.A, result)
+    return 1
 }
 
 /*
@@ -91,7 +111,16 @@ add_A_imm8 :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
+    a := get_register(ctx, REG8.A)
+    v := ins.opbytes[1]
+
+    result, z, hc, c := add_nums_flags(a, v)
+    set_flag(ctx, FLAGS.ZERO, z)
+    set_flag(ctx, FLAGS.HCARRY, hc)
+    set_flag(ctx, FLAGS.CARRY, c)
+    set_flag(ctx, FLAGS.SUB, 0x00)
+    set_register(ctx, REG8.A, result)
+    return 1
 }
 
 /*
@@ -107,7 +136,18 @@ adc_A_r8 :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
+    reg := R8_IDX[ins.b]
+    // IF YOU'RE EVER SEARCHING FOR A BUG, HERE IT IS
+    a := get_register(ctx, REG8.A) + get_flag(ctx, FLAGS.CARRY) // Might induce uninteded behaviour
+    v := get_register(ctx, reg)
+
+    result, z, hc, c := add_nums_flags(a, v)
+    set_flag(ctx, FLAGS.ZERO, z)
+    set_flag(ctx, FLAGS.HCARRY, hc)
+    set_flag(ctx, FLAGS.CARRY, c)
+    set_flag(ctx, FLAGS.SUB, 0x00)
+    set_register(ctx, REG8.A, u8(result))
+    return 1
 }
 
 /*
@@ -123,7 +163,18 @@ adc_A_HLmem :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
+    addr := get_register(ctx, REG16.HL)
+    // IF YOU'RE EVER SEARCHING FOR A BUG, HERE IT IS
+    a := get_register(ctx, REG8.A) + get_flag(ctx, FLAGS.CARRY) // Might induce uninteded behaviour
+    v := mmu.get(bus, u8, addr)
+
+    result, z, hc, c := add_nums_flags(a, v)
+    set_flag(ctx, FLAGS.ZERO, z)
+    set_flag(ctx, FLAGS.HCARRY, hc)
+    set_flag(ctx, FLAGS.CARRY, c)
+    set_flag(ctx, FLAGS.SUB, 0x00)
+    set_register(ctx, REG8.A, result)
+    return 2
 }
 
 /*
@@ -139,7 +190,17 @@ adc_A_imm8 :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
+    // IF YOU'RE EVER SEARCHING FOR A BUG, HERE IT IS
+    a := get_register(ctx, REG8.A) + get_flag(ctx, FLAGS.CARRY) // Might induce uninteded behaviour
+    v := ins.opbytes[1]
+
+    result, z, hc, c := add_nums_flags(a, v)
+    set_flag(ctx, FLAGS.ZERO, z)
+    set_flag(ctx, FLAGS.HCARRY, hc)
+    set_flag(ctx, FLAGS.CARRY, c)
+    set_flag(ctx, FLAGS.SUB, 0x00)
+    set_register(ctx, REG8.A, result)
+    return 2
 }
 
 /*
@@ -148,14 +209,24 @@ adc_A_imm8 :: proc(
     opc: 0b10010xxx / var
     dur: 1 cycle
     len: 1 byte
-    flg: Z = A==0, N = 0, H = carry_per_bit[3], C = carry_per_bit[7]
+    flg: Z = A==0, N = 1, H = carry_per_bit[3], C = carry_per_bit[7]
 */
 sub_A_r8 :: proc(
     ctx: ^CPU,
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
+    reg := R8_IDX[ins.b]
+    a := get_register(ctx, REG8.A)
+    v := get_register(ctx, reg)
+
+    result, z, hc, c := sub_nums_flags(a, v)
+    set_flag(ctx, FLAGS.ZERO, z)
+    set_flag(ctx, FLAGS.HCARRY, hc)
+    set_flag(ctx, FLAGS.CARRY, c)
+    set_flag(ctx, FLAGS.SUB, 0x01)
+    set_register(ctx, REG8.A, u8(result))
+    return 1
 }
 
 /*
@@ -164,14 +235,24 @@ sub_A_r8 :: proc(
     opc: 0b10010110 / 0x96
     dur: 2 cycle
     len: 1 byte
-    flg: Z = A==0, N = 0, H = carry_per_bit[3], C = carry_per_bit[7]
+    flg: Z = A==0, N = 1, H = carry_per_bit[3], C = carry_per_bit[7]
 */
 sub_A_HLmem :: proc(
     ctx: ^CPU,
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
+    addr := get_register(ctx, REG16.HL)
+    a := get_register(ctx, REG8.A)
+    v := mmu.get(bus, u8, addr)
+
+    result, z, hc, c := sub_nums_flags(a, v)
+    set_flag(ctx, FLAGS.ZERO, z)
+    set_flag(ctx, FLAGS.HCARRY, hc)
+    set_flag(ctx, FLAGS.CARRY, c)
+    set_flag(ctx, FLAGS.SUB, 0x01)
+    set_register(ctx, REG8.A, result)
+    return 2
 }
 
 /*
@@ -180,14 +261,23 @@ sub_A_HLmem :: proc(
     opc: 0b11010110 / 0xD6
     dur: 1 cycle
     len: 2 byte
-    flg: Z = A==0, N = 0, H = carry_per_bit[3], C = carry_per_bit[7]
+    flg: Z = A==0, N = 1, H = carry_per_bit[3], C = carry_per_bit[7]
 */
 sub_A_imm8 :: proc(
     ctx: ^CPU,
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
+    a := get_register(ctx, REG8.A)
+    v := ins.opbytes[1]
+
+    result, z, hc, c := sub_nums_flags(a, v)
+    set_flag(ctx, FLAGS.ZERO, z)
+    set_flag(ctx, FLAGS.HCARRY, hc)
+    set_flag(ctx, FLAGS.CARRY, c)
+    set_flag(ctx, FLAGS.SUB, 0x01)
+    set_register(ctx, REG8.A, result)
+    return 1
 }
 
 /*
@@ -196,14 +286,25 @@ sub_A_imm8 :: proc(
     opc: 0b10011xxx /var
     dur: 1 cycle
     len: 1 byte
-    flg: Z = A==0, N = 0, H = carry_per_bit[3], C = carry_per_bit[7]
+    flg: Z = A==0, N = 1, H = carry_per_bit[3], C = carry_per_bit[7]
 */
 sbc_A_r8 :: proc(
     ctx: ^CPU,
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
+    reg := R8_IDX[ins.b]
+    // IF YOU'RE EVER SEARCHING FOR A BUG, HERE IT IS
+    a := get_register(ctx, REG8.A) + get_flag(ctx, FLAGS.CARRY) // Might induce uninteded behaviour
+    v := get_register(ctx, reg)
+
+    result, z, hc, c := sub_nums_flags(a, v)
+    set_flag(ctx, FLAGS.ZERO, z)
+    set_flag(ctx, FLAGS.HCARRY, hc)
+    set_flag(ctx, FLAGS.CARRY, c)
+    set_flag(ctx, FLAGS.SUB, 0x01)
+    set_register(ctx, REG8.A, u8(result))
+    return 1
 }
 
 /*
@@ -212,14 +313,25 @@ sbc_A_r8 :: proc(
     opc: 0b10011110 / 0x9E
     dur: 2 cycle
     len: 1 byte
-    flg: Z = A==0, N = 0, H = carry_per_bit[3], C = carry_per_bit[7]
+    flg: Z = A==0, N = 1, H = carry_per_bit[3], C = carry_per_bit[7]
 */
 sbc_A_HLmem :: proc(
     ctx: ^CPU,
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
+    // IF YOU'RE EVER SEARCHING FOR A BUG, HERE IT IS
+    addr := get_register(ctx, REG16.HL)
+    a := get_register(ctx, REG8.A) + get_flag(ctx, FLAGS.CARRY) // Might induce uninteded behaviour
+    v := mmu.get(bus, u8, addr)
+
+    result, z, hc, c := sub_nums_flags(a, v)
+    set_flag(ctx, FLAGS.ZERO, z)
+    set_flag(ctx, FLAGS.HCARRY, hc)
+    set_flag(ctx, FLAGS.CARRY, c)
+    set_flag(ctx, FLAGS.SUB, 0x01)
+    set_register(ctx, REG8.A, result)
+    return 2
 }
 
 /*
@@ -228,14 +340,24 @@ sbc_A_HLmem :: proc(
     opc: 0b11011110 / 0xDE
     dur: 2 cycle
     len: 2 byte
-    flg: Z = A==0, N = 0, H = carry_per_bit[3], C = carry_per_bit[7]
+    flg: Z = A==0, N = 1, H = carry_per_bit[3], C = carry_per_bit[7]
 */
 sbc_A_imm8 :: proc(
     ctx: ^CPU,
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
+    // IF YOU'RE EVER SEARCHING FOR A BUG, HERE IT IS
+    a := get_register(ctx, REG8.A) + get_flag(ctx, FLAGS.CARRY) // Might induce uninteded behaviour
+    v := ins.opbytes[1]
+
+    result, z, hc, c := sub_nums_flags(a, v)
+    set_flag(ctx, FLAGS.ZERO, z)
+    set_flag(ctx, FLAGS.HCARRY, hc)
+    set_flag(ctx, FLAGS.CARRY, c)
+    set_flag(ctx, FLAGS.SUB, 0x01)
+    set_register(ctx, REG8.A, result)
+    return 2
 }
 
 /*
@@ -251,7 +373,16 @@ cp_A_r8 :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
+    reg := R8_IDX[ins.b]
+    a := get_register(ctx, REG8.A)
+    v := get_register(ctx, reg)
+
+    result, z, hc, c := sub_nums_flags(a, v)
+    set_flag(ctx, FLAGS.ZERO, z)
+    set_flag(ctx, FLAGS.HCARRY, hc)
+    set_flag(ctx, FLAGS.CARRY, c)
+    set_flag(ctx, FLAGS.SUB, 0x01)
+    return 2
 }
 
 /*
@@ -267,7 +398,16 @@ cp_A_HLmem :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
+    addr := get_register(ctx, REG16.HL)
+    a := get_register(ctx, REG8.A)
+    v := mmu.get(bus, u8, addr)
+
+    result, z, hc, c := sub_nums_flags(a, v)
+    set_flag(ctx, FLAGS.ZERO, z)
+    set_flag(ctx, FLAGS.HCARRY, hc)
+    set_flag(ctx, FLAGS.CARRY, c)
+    set_flag(ctx, FLAGS.SUB, 0x01)
+    return 2
 }
 
 /*
@@ -283,7 +423,15 @@ cp_A_imm8 :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
+    a := get_register(ctx, REG8.A)
+    v := ins.opbytes[1]
+
+    result, z, hc, c := sub_nums_flags(a, v)
+    set_flag(ctx, FLAGS.ZERO, z)
+    set_flag(ctx, FLAGS.HCARRY, hc)
+    set_flag(ctx, FLAGS.CARRY, c)
+    set_flag(ctx, FLAGS.SUB, 0x00)
+    return 2
 }
 
 /*
@@ -299,7 +447,15 @@ inc_r8 :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
+    reg := R8_IDX[ins.b]
+    v := get_register(ctx, reg)
+
+    result, z, hc, _ := add_nums_flags(v, 1)
+    set_flag(ctx, FLAGS.ZERO, z)
+    set_flag(ctx, FLAGS.HCARRY, hc)
+    set_flag(ctx, FLAGS.SUB, 0x01)
+    set_register(ctx, reg, result)
+    return 1
 }
 
 /*
@@ -315,7 +471,15 @@ inc_HLmem :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
+    addr := get_register(ctx, REG16.HL)
+    v := mmu.get(bus, u8, addr)
+
+    result, z, hc, _ := add_nums_flags(v, 1)
+    set_flag(ctx, FLAGS.ZERO, z)
+    set_flag(ctx, FLAGS.HCARRY, hc)
+    set_flag(ctx, FLAGS.SUB, 0x01)
+    mmu.put(bus, result, addr)
+    return 3
 }
 
 /*
@@ -331,7 +495,15 @@ dec_r8 :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
+    reg := R8_IDX[ins.b]
+    v := get_register(ctx, reg)
+
+    result, z, hc, _ := sub_nums_flags(v, 1)
+    set_flag(ctx, FLAGS.ZERO, z)
+    set_flag(ctx, FLAGS.HCARRY, hc)
+    set_flag(ctx, FLAGS.SUB, 0x01)
+    set_register(ctx, reg, result)
+    return 1
 }
 
 /*
@@ -347,7 +519,15 @@ dec_HLmem :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
+    addr := get_register(ctx, REG16.HL)
+    v := mmu.get(bus, u8, addr)
+
+    result, z, hc, _ := sub_nums_flags(v, 1)
+    set_flag(ctx, FLAGS.ZERO, z)
+    set_flag(ctx, FLAGS.HCARRY, hc)
+    set_flag(ctx, FLAGS.SUB, 0x01)
+    mmu.put(bus, result, addr)
+    return 3
 }
 
 /*
@@ -402,6 +582,7 @@ daa :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
+    //TODO IMPLEMENT
     return 0
 }
 

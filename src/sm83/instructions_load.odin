@@ -472,9 +472,7 @@ push_r16 :: proc(
 ) -> (cycles: u32) {
     reg := R16_IDX_S[ins.x]
     val: u16 = get_register(ctx, reg)
-    addr := get_register(ctx, REG16.SP)
-    mmu.put(bus, val, addr)
-    add_register(ctx, REG16.SP, -2)
+    push_stack(ctx, bus, val)
     return 4
 }
 
@@ -493,9 +491,7 @@ pop_r16 :: proc(
     ins: InsData
 ) -> (cycles: u32) {
     reg := R16_IDX_S[ins.x]
-    addr := get_register(ctx, REG16.SP)
-    val := mmu.get(bus, u16, addr)
+    val := pop_stack(ctx, bus, u16)
     set_register(ctx, reg, val)
-    add_register(ctx, REG16.SP, 2)
     return 4
 }

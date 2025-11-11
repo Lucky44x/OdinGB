@@ -12,7 +12,7 @@ FLAGS :: enum(u8) {
 }
 
 REG8 :: enum(u8) {
-    A = 4, F = 5, B = 6, C = 7, D = 8, E = 9, H = 10, L = 11, NONE = 15
+    A = 4, F = 5, B = 6, C = 7, D = 8, E = 9, H = 10, L = 11, IME = 12, _IME_NEXT = 13, NONE = 15
 }
 
 REG16 :: enum(u8) {

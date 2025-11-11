@@ -115,7 +115,10 @@ decode_instruction :: proc(
 ) -> (ins: Instruction, dat: InsData) {
     dataByte := mmu.get(ctx_mem, u8, addr)
     ins = OPCODE_HANDLERS[dataByte]
-    if dataByte == 0xCB do ins = PREFIXED_OPCODES[dataByte]
+    if dataByte == 0xCB {
+        dataByte := mmu.get(ctx_mem, u8, addr + 1)
+        ins = PREFIXED_OPCODES[dataByte]
+    } 
     if ins.length == 0 { when ODIN_DEBUG do fmt.eprintfln("[INSTRUCTION-PARSER] Instruction byte %#02X could not be mapped correctly", dataByte) }
 
     dat.x = ((dataByte & 0b00110000) >> 4) & 0xFF
@@ -194,4 +197,52 @@ register_var_instruction :: proc(
     }
 
     when ODIN_DEBUG do fmt.printfln("[INSTRUCTION_REGISTER] Instruction: %s\nRegistered pattern %s\n", ins.name, pattern)
+}
+
+bool_to_u8 :: proc(
+    b: bool
+) -> u8 {
+    return b ? 0x01 : 0x00
+}
+
+// ---------- ADD (u8/u16/i8) ----------
+add_nums_flags :: proc(numA: $T, numB: T) -> (value: T, z, hc, c: u8) {
+    when T == u8 {
+        sum   := u16(numA) + u16(numB);
+        value  = T(sum & 0xFF);
+        c   = bool_to_u8(sum > 0xFF);
+        hc  = bool_to_u8(((numA & 0x0F) + (numB & 0x0F)) > 0x0F);
+        z   = bool_to_u8(value == 0);
+    }
+
+    when T == u16 {
+        sum   := u32(numA) + u32(numB);
+        value  = T(sum & 0xFFFF);
+        c   = bool_to_u8(sum > 0xFFFF);
+        hc  = bool_to_u8(((numA & 0x0FFF) + (numB & 0x0FFF)) > 0x0FFF);
+        z   = bool_to_u8(value == 0);
+    }
+
+    return;
+}
+
+// ---------- SUB (u8/u16/i8): A - B ----------
+sub_nums_flags :: proc(numA: $T, numB: T) -> (value: T, c, hc, z: u8) {
+    when T == u8 {
+        diff  := i16(u16(numA)) - i16(u16(numB));
+        value  = T(u8(diff & 0xFF));
+        c   = bool_to_u8(numA < numB);                       // borrow
+        hc  = bool_to_u8((numA & 0x0F) < (numB & 0x0F));     // half-borrow
+        z   = bool_to_u8(value == 0);
+    }
+
+    when T == u16 {
+        diff  := i32(u32(numA)) - i32(u32(numB));
+        value  = T(u16(diff & 0xFFFF));
+        c   = bool_to_u8(numA < numB);                       // borrow from bit 16
+        hc  = bool_to_u8((numA & 0x0FFF) < (numB & 0x0FFF)); // half-borrow from bit 12
+        z   = bool_to_u8(value == 0);
+    }
+
+    return;
 }

@@ -3,4 +3,5 @@ build/
 *.exe
 *.pdb
 *.log
-*.txt
+log.*
+log.txt

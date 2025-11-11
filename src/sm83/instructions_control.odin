@@ -77,7 +77,7 @@ jp_CC_imm16 :: proc(
     cond := (ins.a >> 1) // right-shift a by one to get the marked area
     if !(eval_condition(ctx, cond)) do return 3
     
-    fmt.printfln("Jumping...")
+    //fmt.printfln("Jumping...")
     return jp_imm16(ctx, bus, ins)
 }
 

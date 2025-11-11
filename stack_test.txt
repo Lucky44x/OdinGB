@@ -1,0 +1,20 @@
+(indexed in order) 0=b, 1=c, 2=d, 3=e, 4=h, 5=l, 6=[hl], 7=a
+(indexed in order) 0=bc, 1=de, 2=hl, 3=sp
+(indexed in order) 0=bc, 1=de, 2-hl, 3=af
+(indexed in order) 0=bc, 1=de, 2=hl+, 3=hl-
+(indexed in order) 0=nz, 1=z, 2=nc, 3=c
+
+LD SP 0xFFFE    00110001    0x31    0xFE 0xFF
+LD C 0x10       00001110    0x0E    0x10
+LD A [----]                 0xFA    ----
+CALL ----                   0xCD    ----
+LD B B                      0x40
+STOP                        0x10
+
+// Loop
+INC A           00111100    0x3C
+CP A C          10111001    0xB9
+JP CC ----      11000010    0xC2    ----
+LD B B                      0x40
+RET                         0xC9
+0x05

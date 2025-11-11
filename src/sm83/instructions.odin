@@ -9,6 +9,12 @@ import "core:strings"
 import "../mmu"
 
 /*
+    NOTICE:
+        For many instructions, I could have implemented a more "generalized" approach, where r8 = 6 -> remaps to [hl],
+        via a target-pointer...
+
+        Alas, I did NOT do this, and instead I have a bunch of specific implementations....
+
     OPCODE SYNTAX:
     1st Byte -> Opcode
 
@@ -94,10 +100,10 @@ init_instructions :: proc() {
     register_load_instructions()
     register_arith8_instructions()
     register_arith16_instructions()
-
     register_control_instructions()
     register_bitwise_instructions()
-    // Register NOOP Instruction last for override
+    register_shifts_instructions()
+    register_misc_instructions()
 }
 
 /*
@@ -109,9 +115,7 @@ decode_instruction :: proc(
 ) -> (ins: Instruction, dat: InsData) {
     dataByte := mmu.get(ctx_mem, u8, addr)
     ins = OPCODE_HANDLERS[dataByte]
-    if dataByte == 0xCB {
-        //TODO Prefixed instructions
-    }
+    if dataByte == 0xCB do ins = PREFIXED_OPCODES[dataByte]
     if ins.length == 0 { when ODIN_DEBUG do fmt.eprintfln("[INSTRUCTION-PARSER] Instruction byte %#02X could not be mapped correctly", dataByte) }
 
     dat.x = ((dataByte & 0b00110000) >> 4) & 0xFF

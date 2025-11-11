@@ -12,11 +12,11 @@ import "../mmu"
     ONLY USE ONCE AT STARTUP
 */
 register_misc_instructions :: proc() {
-    register_instruction("10100xxx", Instruction{ handler=halt, length=1, name="HALT"})
-    register_instruction("10100xxx", Instruction{ handler=stop, length=1, name="STOP"})
-    register_instruction("10100xxx", Instruction{ handler=di, length=1, name="DI"})
-    register_instruction("10100xxx", Instruction{ handler=ei, length=1, name="EI"})
-    register_instruction("10100xxx", Instruction{ handler=nop, length=1, name="NOP"})
+    register_instruction(0x76, Instruction{ handler=halt, length=1, name="HALT"})
+    register_instruction(0x10, Instruction{ handler=stop, length=1, name="STOP"})
+    register_instruction(0xF3, Instruction{ handler=di, length=1, name="DI"})
+    register_instruction(0xFB, Instruction{ handler=ei, length=1, name="EI"})
+    register_instruction(0x00, Instruction{ handler=nop, length=1, name="NOP"})
 }
 
 /*
@@ -45,9 +45,11 @@ halt :: proc(
 /*
     STOP Instruction
 
-    opc: 0b10100xxx / var
-    dur: 1 cycle
-    len: 1 byte
+    WTF IS THIS INSTRUCTON ?????
+
+    opc: 0b00010000 / 0x10
+    dur: -
+    len: 2 byte
     flg: -
 */
 stop :: proc(

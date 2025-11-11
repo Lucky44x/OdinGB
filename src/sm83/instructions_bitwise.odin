@@ -13,14 +13,15 @@ import "../mmu"
 */
 register_bitwise_instructions :: proc() {
     register_instruction("10100xxx", Instruction{ handler=and_A_r8, length=1, name="AND A r8"})
+    register_instruction("10101xxx", Instruction{ handler=xor_A_r8, length=1, name="XOR A r8"})
+    register_instruction("10110xxx", Instruction{ handler=or_A_r8, length=1, name="OR A r8"})
+
     register_instruction(0xA6, Instruction{ handler=and_A_HLmem, length=1, name="AND A [HL]"})
     register_instruction(0xE6, Instruction{ handler=and_A_imm8, length=2, name="AND A imm8"})
 
-    register_instruction("10110xxx", Instruction{ handler=or_A_r8, length=1, name="OR A r8"})
     register_instruction(0xB6, Instruction{ handler=or_A_HLmem, length=1, name="OR A [HL]"})
     register_instruction(0xF6, Instruction{ handler=or_A_imm8, length=2, name="OR A imm8"})
 
-    register_instruction("10101xxx", Instruction{ handler=xor_A_r8, length=1, name="XOR A r8"})
     register_instruction(0xAE, Instruction{ handler=xor_A_HLmem, length=1, name="XOR A [HL]"})
     register_instruction(0xEE, Instruction{ handler=xor_A_imm8, length=2, name="XOR A imm8"})
 }

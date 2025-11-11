@@ -12,17 +12,18 @@ import "../mmu"
     ONLY USE ONCE AT STARTUP
 */
 register_control_instructions :: proc() {
+    register_instruction("110xx010", Instruction{ handler=jp_CC_imm16, length=3, name="JP CC imm16"})
+    register_instruction("001xx000", Instruction{ handler=jp_CC_e, length=2, name="JP CC e"})
+    register_instruction("110xx100", Instruction{ handler=call_CC_imm16, length=3, name="CALL CC imm16"})
+    register_instruction("110xx000", Instruction{ handler=ret_CC, length=1, name="RET CC"})
+    register_instruction("11xxx111", Instruction{ handler=rst_n, length=2, name="RST n"})
+
     register_instruction(0xC3, Instruction{ handler=jp_imm16, length=3, name="JP imm16"})
     register_instruction(0xE9, Instruction{ handler=jp_HL, length=1, name="JP HL"})
-    register_instruction("110xx010", Instruction{ handler=jp_CC_imm16, length=3, name="JP CC imm16"})
     register_instruction(0x18, Instruction{ handler=jp_e, length=2, name="JP e"})
-    register_instruction("001xx000", Instruction{ handler=jp_CC_e, length=2, name="JP CC e"})
     register_instruction(0xCD, Instruction{ handler=call_imm16, length=3, name="CALL imm16"})
-    register_instruction("110xx100", Instruction{ handler=call_CC_imm16, length=3, name="CALL CC imm16"})
     register_instruction(0xC9, Instruction{ handler=ret, length=1, name="RET"})
-    register_instruction("110xx000", Instruction{ handler=ret_CC, length=1, name="RET CC"})
     register_instruction(0xD9, Instruction{ handler=retI, length=1, name="RETI"})
-    register_instruction("11xxx111", Instruction{ handler=rst_n, length=2, name="RST n"})
 }
 
 /*

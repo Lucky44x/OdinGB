@@ -14,29 +14,30 @@ import "../mmu"
 */
 register_arith8_instructions :: proc() {
     register_instruction("10000xxx", Instruction{ handler=add_A_r8, length=1, name="ADD A r8"})
+    register_instruction("10001xxx", Instruction{ handler=adc_A_r8, length=1, name="ADC A r8"})
+    register_instruction("10010xxx", Instruction{ handler=sub_A_r8, length=1, name="SUB A r8"})
+    register_instruction("10011xxx", Instruction{ handler=sbc_A_r8, length=1, name="SBC A r8"})
+    register_instruction("10111xxx", Instruction{ handler=cp_A_r8, length=1, name="CP A r8"})
+    register_instruction("00xxx100", Instruction{handler=inc_r8, length=1, name="INC r8"})
+    register_instruction("00xxx101", Instruction{handler=inc_r8, length=1, name="DEC r8"})
+
     register_instruction(0x86, Instruction{ handler=add_A_HLmem, length=1, name="ADD A [HL]"})
     register_instruction(0xC6, Instruction{ handler=add_A_imm8, length=2, name="ADD A imm8"})
 
-    register_instruction("10001xxx", Instruction{ handler=adc_A_r8, length=1, name="ADC A r8"})
     register_instruction(0x8E, Instruction{ handler=adc_A_HLmem, length=1, name="ADC A [HL]"})
     register_instruction(0xCE, Instruction{ handler=adc_A_imm8, length=2, name="ADC A imm8"})
 
-    register_instruction("10010xxx", Instruction{ handler=sub_A_r8, length=1, name="SUB A r8"})
     register_instruction(0x96, Instruction{ handler=sub_A_HLmem, length=1, name="SUB A [HL]"})
     register_instruction(0xD6, Instruction{ handler=sub_A_imm8, length=2, name="SUB A imm8"})
 
-    register_instruction("10011xxx", Instruction{ handler=sbc_A_r8, length=1, name="SBC A r8"})
     register_instruction(0x9E, Instruction{ handler=sbc_A_HLmem, length=1, name="SBC A [HL]"})
     register_instruction(0xDE, Instruction{ handler=sbc_A_imm8, length=2, name="SBC A imm8"})
 
-    register_instruction("10111xxx", Instruction{ handler=cp_A_r8, length=1, name="CP A r8"})
     register_instruction(0xBE, Instruction{ handler=cp_A_HLmem, length=1, name="CP A [HL]"})
     register_instruction(0xFE, Instruction{ handler=cp_A_imm8, length=2, name="CP A imm8"})
 
-    register_instruction("00xxx100", Instruction{handler=inc_r8, length=1, name="INC r8"})
     register_instruction(0x34, Instruction{handler=inc_HLmem, length=1, name="INC [HL]"})
 
-    register_instruction("00xxx101", Instruction{handler=inc_r8, length=1, name="DEC r8"})
     register_instruction(0x35, Instruction{handler=inc_HLmem, length=1, name="DEc [HL]"})
 
     register_instruction(0x3F, Instruction{handler=ccf, length=1, name="CCF"})

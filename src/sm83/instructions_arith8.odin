@@ -2,6 +2,7 @@
 #+feature dynamic-literals
 package sm83
 
+import "core:flags"
 import "base:builtin"
 import "core:fmt"
 import "../mmu"
@@ -354,15 +355,18 @@ dec_HLmem :: proc(
     opc: 0b00111111 / 0x3F
     dur: 1 cycle
     len: 1 byte
-    flg: N = 0, H = 0, C = ?
+    flg: N = 0, H = 0, C = !C
 */
 ccf :: proc(
     ctx: ^CPU,
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    set_flag(ctx, FLAGS.CARRY, false)
-    return 0
+    state := get_flag(ctx, FLAGS.CARRY)
+    set_flag(ctx, FLAGS.CARRY, 0x01 - state)    // when flag active: 0x01 - 0x01 = 0x00, when not: 0x01 - 0x00 -> 0x01
+    set_flag(ctx, FLAGS.SUB, 0x00)
+    set_flag(ctx, FLAGS.HCARRY, 0x00)
+    return 1
 }
 
 /*
@@ -378,7 +382,10 @@ scf :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
+    set_flag(ctx, FLAGS.CARRY, 0x01)
+    set_flag(ctx, FLAGS.HCARRY, 0x00)
+    set_flag(ctx, FLAGS.SUB, 0x01)
+    return 1
 }
 
 /*
@@ -410,5 +417,10 @@ cpl :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    return 0
+    val := get_register(ctx, REG8.A)
+    val = ~val
+    set_register(ctx, REG8.A, val)
+    set_flag(ctx, FLAGS.SUB, 0x01)
+    set_flag(ctx, FLAGS.HCARRY, 0x01)
+    return 1
 }

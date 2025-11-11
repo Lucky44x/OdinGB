@@ -128,10 +128,10 @@ get_register_u16 :: proc(
 set_flag :: proc(
     ctx: ^CPU,
     flag: FLAGS,
-    state: bool
+    state: u8
 ) {
     bit := u8(1) << (u8(flag) % 8)
-    if state do ctx.registers[REG8.F] |= bit     // Set bit
+    if state != 0x00 do ctx.registers[REG8.F] |= bit     // Set bit
     else do ctx.registers[REG8.F] &= ~bit        // Clear bit
     ctx.registers[REG8.F] &= 0xF0
 }
@@ -139,7 +139,7 @@ set_flag :: proc(
 get_flag :: proc(
     ctx: ^CPU,
     flag: FLAGS
-) -> (f: bool) {
+) -> (f: u8) {
     bit := u8(1) << (u8(flag) % 8)
-    return ctx.registers[REG8.F] & bit != 0
+    return ctx.registers[REG8.F] & bit != 0x00 ? 0x01 : 0x00
 }

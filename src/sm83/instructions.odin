@@ -36,6 +36,19 @@ R16_IDX_S : []REG16 = { .BC, .DE, .HL, .AF }
 // The index table for r16mem
 R16_IDX_M : []REG16 = { .BC, .DE, .HL, .HL }
 
+eval_condition :: proc(
+    ctx: ^CPU,
+    cond: u8
+) -> bool {
+    switch cond {
+        case 0: return get_flag(ctx, FLAGS.ZERO) == 0x00
+        case 1: return get_flag(ctx, FLAGS.ZERO) != 0x00
+        case 2: return get_flag(ctx, FLAGS.CARRY) == 0x00
+        case 3: return get_flag(ctx, FLAGS.CARRY) != 0x01
+    }
+    return false
+}
+
 r16m_do_hl_increment_if_needed :: proc(
     ctx: ^CPU,
     idx: u8,
@@ -82,6 +95,7 @@ init_instructions :: proc() {
     register_arith8_instructions()
     register_arith16_instructions()
 
+    register_control_instructions()
     register_bitwise_instructions()
     // Register NOOP Instruction last for override
 }

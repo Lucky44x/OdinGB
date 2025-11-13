@@ -7,7 +7,7 @@
             "preLaunchTask": "Build",
             "name": "Debug",
             "program": "${workspaceRoot}/build/debug.exe",
-            "args": [".\\roms\\bios\\dmg_boot.bin", ".\\roms\\testing\\blargg\\cpu_instrs\\cpu_instrs.gb"],
+            "args": [".\\roms\\bios\\dmg_boot.bin", ".\\roms\\tests\\blargg\\cpu_instrs\\cpu_instrs.gb"],
             "cwd": "${workspaceRoot}"
         }
     ]

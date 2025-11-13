@@ -38,7 +38,7 @@ get_tile_data_8000 :: proc(
     tile: u8,
 ) -> [8]u16 {
     dat: [8]u16
-    addr: u16 = 0x8000 + (u16(tile) * 16)
+    addr: u16 = (u16(tile) * 16)
     ptr := mem.ptr_offset(ctx.vram, addr)
     dat = mem.reinterpret_copy([8]u16, ptr)
     return dat
@@ -49,7 +49,8 @@ get_tile_data_8800 :: proc(
     tile: i8,
 ) -> [8]u16 {
     dat: [8]u16
-    addr: u16 = u16(i32(0x8000) + i32(tile) * 16) & 0xFFFF
+    addr: u16 = u16(i32(0x9000) + i32(tile) * 16) & 0xFFFF
+    addr -= 0x9000
     ptr := mem.ptr_offset(ctx.vram, addr)
     dat = mem.reinterpret_copy([8]u16, ptr)
     return dat

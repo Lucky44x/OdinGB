@@ -107,7 +107,7 @@ get :: proc(
         // 0x0000 - 0x3FFF
         // ROM-Bank 00, unless boot flag not set, then boot-rom
         if ctx.banked do return cartridge.get_rom(ctx.cart, T, address)
-        if address < 0x0100 do return cartridge.get_rom(ctx.cart, T, address)
+        if address > 0x0100 do return cartridge.get_rom(ctx.cart, T, address)
 
         return boot_rom_get(ctx, T, address)
     }

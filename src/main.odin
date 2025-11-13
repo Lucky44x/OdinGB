@@ -79,12 +79,12 @@ main :: proc() {
 
         // Try drawing one or two tiles
         tile1 := rend.get_tile_data(&ctx.ppu, u8(0))
-        tile2 := rend.get_tile_data(&ctx.ppu, u8(1))
+        tile2 := rend.get_tile_data(&ctx.ppu, u8(100))
 
         rend.clear_ppu(&ctx.ppu)
         rend.render_tile(&ctx.ppu, tile1, 5, 5)
-        rend.render_tile(&ctx.ppu, tile2, 5, 5)
-        
+        rend.render_tile(&ctx.ppu, tile2, 20, 20)
+
         rl.UpdateTexture(ctx.ppu.renderTarget, ctx.ppu.frameBuffer)
 
         rl.BeginDrawing()

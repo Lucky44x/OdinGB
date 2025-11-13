@@ -58,18 +58,16 @@ render_tile :: proc(
     tile: [8]u16,
     x, y: u8,
 ) {
-    for fY in y..<y+8 {
-        current_line : u16 = tile[fY-y]
-        for fX in x..<x+8 {
-            // Combine grayscale values
-            bit_idx: u8 = 7 - u8(fX-x) // Left to right, bit7, 6, 5, 4, 3, 2, 1
-            bit_lsb: u8 = u8(current_line & 0xFF) >> bit_idx
-            bit_msb: u8 = u8((current_line << 8) & 0xFF) >> bit_idx
-            color_id: u8 = bit_msb
-
-            //Calculate frame-buffer index
-            fbI : u32 = u32(x) + u32(y) * 160
-            ctx.frameBuffer[fbI] = COLOR_TABLE[color_id]
+    for fY in u8(0)..<8 {
+        current_line : u16 = tile[fY]
+        for fX in u8(0)..<8 {
+            fbI := (x + fX) + ( (y + fY) * 160)
+            byte1 : u8 = u8(current_line & 0xFF)
+            byte2 : u8 = u8((current_line << 8) & 0xFF)
+            lsb := (byte1 >> (7 - fX)) & 0x01
+            msb := (byte2 >> (7 - fX)) & 0x01
+            total := (lsb << 1) | msb
+            ctx.frameBuffer[fbI] = COLOR_TABLE[total]
         }
     }
 }

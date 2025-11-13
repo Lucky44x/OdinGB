@@ -70,7 +70,7 @@ add_HL_r16 :: proc(
     reg := R16_IDX[ins.x]
     hl := get_register(ctx, REG16.HL)
     val := get_register(ctx, reg)
-    result, c, hc, z := add_nums_flags(hl, val)
+    result, z, hc, c := add_nums_flags(hl, val)
 
     set_flag(ctx, FLAGS.SUB, 0x00)
     set_flag(ctx, FLAGS.HCARRY, hc)

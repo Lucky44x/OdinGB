@@ -65,12 +65,12 @@ main :: proc() {
     //mmu.put(&ctx.bus, 0x01, 0xFF50)
     //fmt.printfln("[DEBUG] Set BANK_REGISTER to %#02X", mmu.get(&ctx.bus, u8, u16(mmu.IO_REGS.BANK)))
     
-    rl.SetTargetFPS(120)
+    rl.SetTargetFPS(60)
 
     rot : f32 = 0.0
     for !rl.WindowShouldClose() {
         elapsed_cycles : u32 = 0
-        for elapsed_cycles < 1024 {    // Execute instructions for roughly one frame (60Hz refresh), each cycle = 1T = 1/4 M
+        for elapsed_cycles < 512 {    // Execute instructions for roughly one frame (60Hz refresh), each cycle = 1T = 1/4 M
             cycles := sm83.step(&ctx.cpu, &ctx.bus)
             // Update PPU and other modules with cycles
             elapsed_cycles += cycles

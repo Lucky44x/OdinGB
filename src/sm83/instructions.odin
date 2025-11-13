@@ -247,7 +247,7 @@ add_nums_flags :: proc(numA: $T, numB: T) -> (value: T, z, hc, c: u8) {
 }
 
 // ---------- SUB (u8/u16/i8): A - B ----------
-sub_nums_flags :: proc(numA: $T, numB: T) -> (value: T, c, hc, z: u8) {
+sub_nums_flags :: proc(numA: $T, numB: T) -> (value: T, z, hc, c: u8) {
     when T == u8 {
         diff  := i16(u16(numA)) - i16(u16(numB));
         value  = T(u8(diff & 0xFF));

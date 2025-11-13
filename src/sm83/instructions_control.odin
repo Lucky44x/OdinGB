@@ -114,7 +114,9 @@ jp_CC_e :: proc(
     ins: InsData
 ) -> u32 {
     cond := (ins.a & 0x03)
-    if !eval_condition(ctx, cond) do return 3
+    cond_ev := eval_condition(ctx, cond)
+
+    if !cond_ev do return 3
     return jp_e(ctx, bus, ins)
 }
 

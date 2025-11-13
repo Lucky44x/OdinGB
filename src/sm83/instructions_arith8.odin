@@ -377,14 +377,11 @@ cp_A_r8 :: proc(
     a := get_register(ctx, REG8.A)
     v := get_register(ctx, reg)
 
-    //fmt.printfln("Comparing %#02X and %#02X", a, v)
-
     result, z, hc, c := sub_nums_flags(a, v)
-    //fmt.printfln("Result of operation: %#02X", result)
 
     set_flag(ctx, FLAGS.ZERO, z)
     set_flag(ctx, FLAGS.HCARRY, hc)
-    set_flag(ctx, FLAGS.CARRY, c)
+    set_flag(ctx, FLAGS.CARRY, v > a ? 0x01 : 0x00)
     set_flag(ctx, FLAGS.SUB, 0x01)
     return 2
 }
@@ -407,9 +404,10 @@ cp_A_HLmem :: proc(
     v := mmu.get(bus, u8, addr)
 
     result, z, hc, c := sub_nums_flags(a, v)
+
     set_flag(ctx, FLAGS.ZERO, z)
     set_flag(ctx, FLAGS.HCARRY, hc)
-    set_flag(ctx, FLAGS.CARRY, c)
+    set_flag(ctx, FLAGS.CARRY, v > a ? 0x01 : 0x00)
     set_flag(ctx, FLAGS.SUB, 0x01)
     return 2
 }
@@ -431,10 +429,15 @@ cp_A_imm8 :: proc(
     v := ins.opbytes[1]
 
     result, z, hc, c := sub_nums_flags(a, v)
+
+    if (z != 0x00) {
+        fmt.printfln("Zero reached")
+    }
+
     set_flag(ctx, FLAGS.ZERO, z)
     set_flag(ctx, FLAGS.HCARRY, hc)
-    set_flag(ctx, FLAGS.CARRY, c)
-    set_flag(ctx, FLAGS.SUB, 0x00)
+    set_flag(ctx, FLAGS.CARRY, v > a ? 0x01 : 0x00)
+    set_flag(ctx, FLAGS.SUB, 0x01)
     return 2
 }
 
@@ -503,6 +506,7 @@ dec_r8 :: proc(
     v := get_register(ctx, reg)
 
     result, z, hc, _ := sub_nums_flags(v, 1)
+
     set_flag(ctx, FLAGS.ZERO, z)
     set_flag(ctx, FLAGS.HCARRY, hc)
     set_flag(ctx, FLAGS.SUB, 0x01)

@@ -180,13 +180,17 @@ put :: proc(
         put(ctx, val, address - 0x2000)     // IDK if echo page is read-only but whatever
     } else if address < 0xFEA0 {
         // 0xFE00 - 0xFE9F
-        rend.vram_put(ctx.ppu, val, address - 0xFE00)
+        rend.oam_put(ctx.ppu, val, address - 0xFE00)
     } else if address < 0xFF00 {
         //NOOP - Not usable
         // see https://gbdev.io/pandocs/Memory_Map.html#fea0feff-range for more details
     } else if address < 0xFF80 {
         // 0xFF00 - 0xFF7F
         // I/O - Registers
+        if address == 0xFF42 {
+            fmt.printfln("Scrolling...")
+        }
+
         io_put(ctx, val, address - 0xFF00)
     } else if address < 0xFFFF {
         // 0xFF80 - 0xFFFE

@@ -586,8 +586,14 @@ daa :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    //TODO IMPLEMENT
-    return 0
+    res, carr := get_register(ctx)
+    set_register(ctx, REG8.A, res)
+
+    set_flag(ctx, .ZERO, res == 0 ? 0x01 : 0x00)
+    set_flag(ctx, .CARRY, carr ? 0x01 : 0x00)
+    set_flag(ctx, .HCARRY, 0x00)
+
+    return 1
 }
 
 /*

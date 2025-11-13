@@ -88,7 +88,9 @@ io_put :: proc(
 
     // Do specific calls:
     if acOff == 0x02 do do_transfer(ctx, io_get(ctx, u8, 0x02), io_get(ctx, u8, 0x01))
-    else if acOff == 0x50 do ctx.banked = true
+    else if acOff == 0x50 {
+        ctx.banked = true
+    }
 
     dst := mem.ptr_offset(ctx.io_registers, acOff)
     value: T = val

@@ -295,7 +295,7 @@ ldh_A_imm8mem :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> (cycles: u32) {
-    addr : u16 = 0xFF00 + u16(ins.opbytes[1])
+    addr : u16 = 0xFF00 + u16(ins.opbytes[1]) & 0xFF
     val := mmu.get(bus, u8, addr)
     set_register(ctx, REG8.A, val)
     return 3
@@ -314,7 +314,7 @@ ldh_imm8mem_A :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> (cycles: u32) {
-    addr : u16 = 0xFF00 + u16(ins.opbytes[1])
+    addr : u16 = 0xFF00 + u16(ins.opbytes[1]) & 0xFF
     val := get_register(ctx, REG8.A)
     mmu.put(bus, val, addr)
     return 3

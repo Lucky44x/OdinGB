@@ -5,8 +5,8 @@ import rl "vendor:raylib"
 
 COLOR_TABLE := [4]u8 {
     0x00,
-    0xFF,
-    0xFF,
+    0x44,
+    0x77,
     0xFF
 }
 
@@ -61,13 +61,19 @@ render_tile :: proc(
     for fY in u8(0)..<8 {
         current_line : u16 = tile[fY]
         for fX in u8(0)..<8 {
-            fbI := (x + fX) + ( (y + fY) * 160)
-            byte1 : u8 = u8(current_line & 0xFF)
-            byte2 : u8 = u8((current_line << 8) & 0xFF)
-            lsb := (byte1 >> (7 - fX)) & 0x01
-            msb := (byte2 >> (7 - fX)) & 0x01
-            total := (lsb << 1) | msb
-            ctx.frameBuffer[fbI] = COLOR_TABLE[total]
+            fbI := u32(x + fX) + (u32(y + fY) * 160)
+            bitIndex := 7 - fX
+
+            lsb_byte := u8(current_line & 0xFF)
+            msb_byte := u8((current_line >> 8) & 0xFF)
+            bit_idx := 7 - u8(fX)
+
+            lo := (lsb_byte >> bit_idx) & 0x01
+            hi := (msb_byte >> bit_idx) & 0x01
+
+            color_id: u8 = (hi << 1 ) | lo
+
+            ctx.frameBuffer[fbI] = COLOR_TABLE[color_id]
         }
     }
 }

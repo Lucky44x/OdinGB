@@ -93,6 +93,16 @@ add_SP_e :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    //TODO Implement
+    val := transmute(i8)ins.opbytes[1]
+    sp := i32(get_register(ctx, REG16.SP))
+    sum := sp + i32(val)
+    set_register(ctx, REG16.SP, u16(sum))
+    c := bool_to_u8(sum > 0xFFFF);
+    hc := bool_to_u8(((i32(val) & 0x0FFF) + (sp & 0x0FFF)) > 0x0FFF);
+
+    set_flag(ctx, FLAGS.ZERO, 0)
+    set_flag(ctx, FLAGS.SUB, 0x00)
+    set_flag(ctx, FLAGS.HCARRY, hc)
+    set_flag(ctx, FLAGS.CARRY, c)
     return 0
 }

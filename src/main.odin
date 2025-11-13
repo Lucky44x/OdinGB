@@ -65,12 +65,12 @@ main :: proc() {
     //mmu.put(&ctx.bus, 0x01, 0xFF50)
     //fmt.printfln("[DEBUG] Set BANK_REGISTER to %#02X", mmu.get(&ctx.bus, u8, u16(mmu.IO_REGS.BANK)))
     
-    rl.SetTargetFPS(60)
+    rl.SetTargetFPS(120)
 
     rot : f32 = 0.0
     for !rl.WindowShouldClose() {
         elapsed_cycles : u32 = 0
-        for elapsed_cycles < 512 {    // Execute instructions for roughly one frame (60Hz refresh), each cycle = 1T = 1/4 M
+        for elapsed_cycles < 1024 {    // Execute instructions for roughly one frame (60Hz refresh), each cycle = 1T = 1/4 M
             cycles := sm83.step(&ctx.cpu, &ctx.bus)
             // Update PPU and other modules with cycles
             elapsed_cycles += cycles
@@ -78,12 +78,16 @@ main :: proc() {
         }
 
         // Try drawing one or two tiles
-        tile1 := rend.get_tile_data(&ctx.ppu, u8(0))
-        tile2 := rend.get_tile_data(&ctx.ppu, u8(100))
+        //tile2 := rend.get_tile_data(&ctx.ppu, u8(100))
 
         rend.clear_ppu(&ctx.ppu)
-        rend.render_tile(&ctx.ppu, tile1, 5, 5)
-        rend.render_tile(&ctx.ppu, tile2, 20, 20)
+
+        for i in 0..<256 {
+            tile := rend.get_tile_data(&ctx.ppu, u8(i))
+            rend.render_tile(&ctx.ppu, tile, u8(i % 20) * 8, u8(i / 20) * 8)
+        }
+
+        //rend.render_tile(&ctx.ppu, tile2, 20, 20)
 
         rl.UpdateTexture(ctx.ppu.renderTarget, ctx.ppu.frameBuffer)
 

@@ -74,7 +74,7 @@ jp_CC_imm16 :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    cond := (ins.a >> 1) // right-shift a by one to get the marked area
+    cond := (ins.a & 0x03)
     if !(eval_condition(ctx, cond)) do return 3
     
     //fmt.printfln("Jumping...")
@@ -95,8 +95,8 @@ jp_e :: proc(
     ins: InsData
 ) -> u32 {
     e := transmute(i8) ins.opbytes[1]
-    ival: i16 = i16(get_register(ctx, REG16.SP)) + i16(e)
-    set_register(ctx, REG16.SP, u16(ival))
+    ival: i16 = i16(get_register(ctx, REG16.PC)) + i16(e)
+    set_register(ctx, REG16.PC, u16(ival))
     return 3
 }
 
@@ -113,7 +113,7 @@ jp_CC_e :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    cond := (ins.a >> 1) // right-shift a by one to get the marked area
+    cond := (ins.a & 0x03)
     if !eval_condition(ctx, cond) do return 3
     return jp_e(ctx, bus, ins)
 }
@@ -150,7 +150,7 @@ call_CC_imm16 :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    cond := (ins.a >> 1) // right-shift a by one to get the marked area
+    cond := (ins.a & 0x03)
     if !eval_condition(ctx, cond) do return 3
     return call_imm16(ctx, bus, ins)
 }
@@ -186,7 +186,7 @@ ret_CC :: proc(
     bus: ^mmu.MMU,
     ins: InsData
 ) -> u32 {
-    cond := (ins.a >> 1) // right-shift a by one to get the marked area
+    cond := (ins.a & 0x03)
     if !eval_condition(ctx, cond) do return 2
     return ret(ctx, bus, ins) + 1
 }
@@ -224,7 +224,7 @@ rst_n :: proc(
     ins: InsData
 ) -> u32 {
     vec := u16(ins.a << 3) * 8
-    push_stack(ctx, bus, get_register(ctx, REG16.SP))
+    push_stack(ctx, bus, get_register(ctx, REG16.PC))
     set_register(ctx, REG16.PC, vec)
     return 4
 }

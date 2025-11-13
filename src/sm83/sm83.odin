@@ -7,7 +7,9 @@ import "../mmu"
 
 CPU :: struct {
     running: bool,
-    registers: [^]u8
+    registers: [^]u8,
+    reg8_debug: [16]u8,
+    reg16_debug: [16]u16
 }
 
 init :: proc(
@@ -80,6 +82,11 @@ step :: proc(
         defer  delete(op_data.opbytes)
     } else {
         when !ODIN_DEBUG do return 0
+    }
+
+    if op_handler.handler == nil {
+        fmt.eprintfln("[SM83-STEP] HEINOUS ERROR: %#02X : %s could not execute, because Handler is nil?", ins_byte, op_handler.name)
+        panic("[SM83 STEP] CRITICAL")
     }
 
     add_register(ctx, REG16.PC, int(op_handler.length))

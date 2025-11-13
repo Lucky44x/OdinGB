@@ -355,11 +355,11 @@ bit_r8 :: proc(
     if reg == .NONE do val = mmu.get(bus, u8, get_register(ctx, REG16.HL))
     else do val = get_register(ctx, reg)
 
-    result: u8 = (0x01 << ins.a) & val
+    bit: u8 = (val >> ins.a) & 0x01
     
-    set_flag(ctx, FLAGS.ZERO, result)
+    set_flag(ctx, FLAGS.ZERO, bit == 0 ? 0x01 : 0x00)
     set_flag(ctx, FLAGS.SUB, 0)
-    set_flag(ctx, FLAGS.HCARRY, 0)
+    set_flag(ctx, FLAGS.HCARRY, 1)
 
     return reg == .NONE ? 3 : 2
 }

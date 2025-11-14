@@ -13,11 +13,19 @@ FLAGS :: enum(u8) {
 }
 
 REG8 :: enum(u8) {
-    A, F, B, C, D, E, H, L, IME, _IME_NEXT, NONE
+    A = 0, F = 1, B = 2, C = 3, D = 4, E = 5, H = 6, L = 7, IME, _IME_NEXT, NONE
 }
 
 REG16 :: enum(u8) {
-    PC, SP, AF, BC, DE, HL, NONE
+    SP, PC, AF = 0, BC = 2, DE = 4, HL = 6, NONE = 8
+}
+
+Registers :: struct {
+    regs: [REG8]u8,
+    SP, PC: u16,
+
+    IME: bool,
+    IME_NEXT: bool
 }
 
 /*
@@ -33,8 +41,8 @@ add_register_u8 :: proc(
     reg: REG8,
     val: int,
 ) {
-    if val < 0 do ctx.registers[u8(reg)] -= u8(abs(val))
-    else do ctx.registers[u8(reg)] += u8(abs(val))
+    if val < 0 do ctx.registers.regs[reg] -= u8(abs(val))
+    else do ctx.registers.regs[reg] += u8(abs(val))
 }
 
 add_register_u16 :: proc(
@@ -69,6 +77,16 @@ set_register_u8 :: proc(
         return 
     }
 
+    if reg == ._IME_NEXT {
+        ctx.registers.IME_NEXT = val != 0x00
+        return
+    }
+    if reg == .IME {
+        ctx.registers.IME = val != 0x00
+        return
+    }
+
+    ctx.registers.regs[reg] = val
 }
 
 set_register_u16 :: proc(
@@ -82,6 +100,22 @@ set_register_u16 :: proc(
         return 
     }
 
+    if reg == .SP {
+        ctx.registers.SP = val
+        return 
+    }
+    if reg == .PC {
+        ctx.registers.PC = val
+        return 
+    }
+
+    lo := u8(val & 0xFF)
+    hi := u8(val >> 8) & 0xFF
+
+    if reg == .AF do lo &= 0xF0
+
+    ctx.registers.regs[REG8(reg)] = lo
+    ctx.registers.regs[REG8(u8(reg) + 1)] = hi
 }
 
 /*
@@ -129,8 +163,11 @@ get_register_u8 :: proc(
         when ODIN_DEBUG do fmt.eprintfln("[REGISTER-GETTER] Cannot get 16-Bit Register NONE...")
         return 0x00
     }
+    
+    if reg == .IME do return ctx.registers.IME ? 0x01 : 0x00
+    if reg == ._IME_NEXT do return ctx.registers.IME_NEXT ? 0x01 : 0x00
 
-
+    return ctx.registers.regs[reg]
 }
 
 get_register_u16 :: proc(
@@ -143,8 +180,13 @@ get_register_u16 :: proc(
         when ODIN_DEBUG do fmt.eprintfln("[REGISTER-GETTER] Cannot get 16-Bit Register NONE...")
         return 0x00
     }
+    if reg == .SP do return ctx.registers.SP
+    if reg == .PC do return ctx.registers.PC
 
+    lo := u16(ctx.registers.regs[REG8(reg)] & 0xFF)
+    hi := u16((ctx.registers.regs[REG8(u8(reg) + 1)]) & 0xFF)
 
+    return (hi << 8) | lo
 }
 
 set_flag :: proc(
@@ -153,9 +195,9 @@ set_flag :: proc(
     state: u8
 ) {
     bit := u8(1) << (u8(flag) % 8)
-    if state != 0x00 do ctx.registers[REG8.F] |= bit     // Set bit
-    else do ctx.registers[REG8.F] &= ~bit        // Clear bit
-    ctx.registers[REG8.F] &= 0xF0
+    if state != 0x00 do ctx.registers.regs[REG8.F] |= bit     // Set bit
+    else do ctx.registers.regs[REG8.F] &= ~bit        // Clear bit
+    ctx.registers.regs[REG8.F] &= 0xF0
 }
 
 get_flag :: proc(
@@ -163,5 +205,5 @@ get_flag :: proc(
     flag: FLAGS
 ) -> (f: u8) {
     bit := u8(1) << (u8(flag) % 8)
-    return ctx.registers[REG8.F] & bit != 0x00 ? 0x01 : 0x00
+    return ctx.registers.regs[REG8.F] & bit != 0x00 ? 0x01 : 0x00
 }

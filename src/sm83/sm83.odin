@@ -1,25 +1,11 @@
 package sm83
 
-import "core:sys/valgrind"
 import "core:fmt"
-import "base:builtin"
 import "../mmu"
 
 CPU :: struct {
     running: bool,
-    regs: Registers
-}
-
-Registers :: struct {
-    A, F: u8,
-    B, C: u8,
-    D, E: u8,
-    H, L: u8,
-
-    SP, PC: u16,
-
-    IME: bool,
-    IME_NEXT: bool
+    registers: Registers
 }
 
 init :: proc(

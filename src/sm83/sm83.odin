@@ -7,9 +7,19 @@ import "../mmu"
 
 CPU :: struct {
     running: bool,
-    registers: [^]u8,
-    reg8_debug: [16]u8,
-    reg16_debug: [16]u16
+    regs: Registers
+}
+
+Registers :: struct {
+    A, F: u8,
+    B, C: u8,
+    D, E: u8,
+    H, L: u8,
+
+    SP, PC: u16,
+
+    IME: bool,
+    IME_NEXT: bool
 }
 
 init :: proc(
@@ -18,15 +28,13 @@ init :: proc(
     // Initialize Instruction Tables
     init_instructions()
 
-    // Make Registers
-    ctx.registers = make([^]u8, 16)
     ctx.running = true
 }
 
 deinit :: proc(
     ctx: ^CPU
 ) {
-    free(ctx.registers)
+    //free(ctx.registers)
 }
 
 push_stack :: proc(

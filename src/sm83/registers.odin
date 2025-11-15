@@ -51,7 +51,7 @@ add_register_u16 :: proc(
     val: int,
 ) {
     prev: u16 = get_register_u16(ctx, reg)
-    //fmt.printfln("Reg %i before add: %#04X", reg, prev)
+    ///fmt.printfln("Reg %i before add: %#04X", reg, prev)
     if val < 0 do prev -= u16(abs(val))
     else do prev += u16(abs(val))
     //fmt.printfln("Reg %i after adding %i: %#04X", reg, val, prev)
@@ -114,8 +114,13 @@ set_register_u16 :: proc(
 
     if reg == .AF do lo &= 0xF0
 
-    ctx.registers.regs[REG8(reg)] = lo
-    ctx.registers.regs[REG8(u8(reg) + 1)] = hi
+    hiReg := REG8(reg)
+    loReg := REG8(u8(reg) + 1)
+
+    set_register(ctx, hiReg, hi)
+    set_register(ctx, loReg, lo)
+
+    return
 }
 
 /*
@@ -183,10 +188,14 @@ get_register_u16 :: proc(
     if reg == .SP do return ctx.registers.SP
     if reg == .PC do return ctx.registers.PC
 
-    lo := u16(ctx.registers.regs[REG8(reg)] & 0xFF)
-    hi := u16((ctx.registers.regs[REG8(u8(reg) + 1)]) & 0xFF)
+    hiReg := REG8(reg)
+    loReg := REG8(u8(reg) + 1)
 
-    return (hi << 8) | lo
+    lo := get_register(ctx, hiReg)
+    hi := get_register(ctx, loReg)
+    val = (u16(lo) << 8) | u16(hi)
+
+    return
 }
 
 set_flag :: proc(

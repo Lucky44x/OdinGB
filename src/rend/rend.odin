@@ -11,6 +11,9 @@ COLOR_TABLE := [4]u8 {
 }
 
 PPU :: struct {
+    mode: u8, 
+    elapse_dots: u32,
+
     renderTarget: rl.Texture2D,
     frameBuffer: [^]u8,
 
@@ -51,6 +54,13 @@ clear_ppu :: proc(
     ctx: ^PPU
 ) {
     mem.set(ctx.frameBuffer, 0xFF, 160*144)
+}
+
+update_ppu :: proc(
+    ctx: ^PPU,
+    elapsed_m_cycles: u32
+) {
+    ctx.elapse_dots += elapsed_m_cycles
 }
 
 render_tile :: proc(

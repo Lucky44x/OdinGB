@@ -104,5 +104,5 @@ add_SP_e :: proc(
     set_flag(ctx, FLAGS.SUB, 0x00)
     set_flag(ctx, FLAGS.HCARRY, hc)
     set_flag(ctx, FLAGS.CARRY, c)
-    return 0
+    return 4
 }

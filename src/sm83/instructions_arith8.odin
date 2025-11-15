@@ -120,7 +120,7 @@ add_A_imm8 :: proc(
     set_flag(ctx, FLAGS.CARRY, c)
     set_flag(ctx, FLAGS.SUB, 0x00)
     set_register(ctx, REG8.A, result)
-    return 1
+    return 2
 }
 
 /*

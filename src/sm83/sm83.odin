@@ -29,7 +29,13 @@ push_stack :: proc(
     val: u16
 ) {
     sp := get_register(ctx, REG16.SP)
-    mmu.put(bus, val, sp - 1)
+    //mmu.put(bus, val, sp - 1)
+
+    hi := u8(val & 0xFF)
+    lo := u8(val >> 8) & 0xFF
+    mmu.put(bus, lo, sp - 1)
+    mmu.put(bus, hi, sp)
+
     sp -= 0x02
     set_register(ctx, REG16.SP, sp)
 }
@@ -39,7 +45,11 @@ pop_stack :: proc(
     bus: ^mmu.MMU
 ) -> u16 {
     sp := get_register(ctx, REG16.SP)
-    val := mmu.get(bus, u16, sp + 1)
+
+    lo := cast(u16)mmu.get(bus, u8, sp + 1)
+    hi := cast(u16)mmu.get(bus, u8, sp + 2)
+    val := (lo << 8) | hi
+
     sp += 0x02
     set_register(ctx, REG16.SP, sp)
     return val
@@ -86,5 +96,5 @@ step :: proc(
     add_register(ctx, REG16.PC, int(op_handler.length))
     cycles := op_handler.handler(ctx, bus, op_data)
     if cycles == 0 do fmt.eprintfln("[SM83-STEP] Error %#02X - %s -> Unimplemented...", op_data.opbytes[0], op_handler.name)
-    return cycles * 4
+    return cycles
 }

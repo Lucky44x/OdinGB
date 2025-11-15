@@ -116,7 +116,7 @@ jp_CC_e :: proc(
     cond := (ins.a & 0x03)
     cond_ev := eval_condition(ctx, cond)
 
-    if !cond_ev do return 3
+    if !cond_ev do return 2
     return jp_e(ctx, bus, ins)
 }
 

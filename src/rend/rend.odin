@@ -1,7 +1,25 @@
 package rend
 
+import "../mmu"
 import "core:mem"
 import rl "vendor:raylib"
+
+/*
+    DRAWING BEHAVIOUR:
+        - Screen is split into 154 Scanlines, first 144 are drawn top-to bottom
+    MODES:
+        - Mode 0: Horizontal Blank      (376 - mode3 duration)      MEM: VRAM, CGB pal, OAM
+            Wait for end of scanline
+        - Mode 1: Vertical Blank        (4560 dots)                 MEM: VRAM, CGB pal, OAM
+            Wait for end of frame
+        - Mode 2: OAM Scan              (80 dots)                   MEM: VRAM, CGB palettes
+            Search for objects that overlap the line
+        - Mode 3: Horizontal Blank      (between 172 and 289 dots)  MEM: none
+            Draw pixels to the screen
+    ORDER:
+        2 -> 3 -> 0 for SL 0..143
+        1           for SL 144..153
+*/
 
 COLOR_TABLE := [4]u8 {
     0x00,
@@ -11,24 +29,24 @@ COLOR_TABLE := [4]u8 {
 }
 
 PPU :: struct {
-    mode: u8, 
+    mode: u8,
     elapse_dots: u32,
 
-    renderTarget: rl.Texture2D,
-    frameBuffer: [^]u8,
+    bus: ^mmu.MMU,
 
-    vram: [^]u8,
-    oam: [^]u8
+    renderTarget: rl.Texture2D,
+    frameBuffer: [^]u8
 }
 
 make_ppu :: proc(
-    ctx: ^PPU
+    ctx: ^PPU,
+    bus: ^mmu.MMU
 ) {
     if ctx == nil do return 
 
+    ctx.bus = bus
+
     ctx.frameBuffer = make([^]u8, 160*144)  // 1byte per pixel
-    ctx.oam = make([^]u8, 256)  // Overallocate a bit, as usual
-    ctx.vram = make([^]u8, 4096*2)
 
     img: rl.Image
     img.data = ctx.frameBuffer
@@ -45,8 +63,6 @@ delete_ppu :: proc(
     ctx: ^PPU
 ) {
     free(ctx.frameBuffer)
-    free(ctx.vram)
-    free(ctx.oam)
     rl.UnloadTexture(ctx.renderTarget)
 }
 
@@ -58,9 +74,9 @@ clear_ppu :: proc(
 
 update_ppu :: proc(
     ctx: ^PPU,
-    elapsed_m_cycles: u32
 ) {
-    ctx.elapse_dots += elapsed_m_cycles
+    ctx.elapse_dots += 1
+    // Draw one pixel
 }
 
 render_tile :: proc(

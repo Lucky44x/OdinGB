@@ -75,16 +75,13 @@ main :: proc() {
 
     rot : f32 = 0.0
     for !rl.WindowShouldClose() {
-        elapsed_cycles : u32 = 0
-        for elapsed_cycles < CYCLES_PER_FRAME {    // Execute instructions for roughly one frame (60Hz refresh), each cycle = 1T = 1/4 M
-            cycles := sm83.step(&ctx.cpu, &ctx.bus) * 4
-            // Update PPU and other modules with cycles
-            elapsed_cycles += cycles
-            rend.update_ppu(&ctx.ppu, cycles)
-        }
+        wait_cpu_cycles : u32 = 0
+        for cycles in 0 ..< CYCLES_PER_FRAME {    // Execute instructions for roughly one frame (60Hz refresh), each cycle = 1T = 1/4 M
+            if wait_cpu_cycles == 0 do wait_cpu_cycles = sm83.step(&ctx.cpu, &ctx.bus)
+            else do wait_cpu_cycles -= 1
 
-        // Try drawing one or two tiles
-        //tile2 := rend.get_tile_data(&ctx.ppu, u8(100))
+            rend.update_ppu(&ctx.ppu)
+        }
 
         rend.clear_ppu(&ctx.ppu)
 
@@ -124,14 +121,14 @@ make_emu_context :: proc(ctx: ^EmuContext) -> bool {
     }
     when ODIN_DEBUG do fmt.eprintfln("[OdinGB-Init] Initialized Cartridge (2/4)")
 
-    rend.make_ppu(&ctx.ppu)
-    when ODIN_DEBUG do fmt.eprintfln("[OdinGB-Init] Initialized renderer (3/4)")
-
-    if !mmu.init(&ctx.bus, ctx.args.bios, &ctx.cart, &ctx.ppu) {
+    if !mmu.init(&ctx.bus, ctx.args.bios, &ctx.cart) {
         when ODIN_DEBUG do fmt.eprintfln("[OdinGB-Init] Failed to initialize MMU")
         return false
     }
-    when ODIN_DEBUG do fmt.eprintfln("[OdinGB-Init] Initialized MMU (4/4)")
+    when ODIN_DEBUG do fmt.eprintfln("[OdinGB-Init] Initialized MMU (3/4)")
+
+    rend.make_ppu(&ctx.ppu, &ctx.bus)
+    when ODIN_DEBUG do fmt.eprintfln("[OdinGB-Init] Initialized renderer (4/4)")
 
     return true
 }

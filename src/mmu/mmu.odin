@@ -5,7 +5,6 @@ import "core:os"
 import "core:mem"
 
 import "../cartridge"
-import "../rend"
 
 @(private="file")
 WRAM_PAGE_SIZE :: 4096
@@ -18,10 +17,11 @@ WRAM_PAGE_SIZE :: 4096
 */
 MMU :: struct {
     cart: ^cartridge.Cartridge,
-    ppu: ^rend.PPU,
     banked: bool,
     boot_rom: [^]u8,
     wram: [^]u8,
+    vram: [^]u8,
+    oam: [^]u8,
     io_registers: [^]u8,
     hram: [^]u8
 }
@@ -29,8 +29,7 @@ MMU :: struct {
 init :: proc(
     ctx: ^MMU,
     bios: os.Handle,
-    cart: ^cartridge.Cartridge,
-    ppu: ^rend.PPU
+    cart: ^cartridge.Cartridge
 ) -> bool {
     /*
         Make Boot-Rom Size, and load into memory
@@ -60,12 +59,16 @@ init :: proc(
         Set a reference to the loaded CART
     */
     ctx.cart = cart
-    ctx.ppu = ppu
     /*
         Base-Pages are 2 in the GB DMG and 8 in the GBC
         WRAM_PAGE_SIZE * (BASE_PAGES + BANK_NUM) + 512
     */
     ctx.wram = make([^]u8, WRAM_PAGE_SIZE * 2)
+    
+    // Roughly 256(overallocated) for OAM
+    ctx.oam = make([^]u8, 256)  // Overallocate a bit, as usual
+    // 8K for vram
+    ctx.vram = make([^]u8, 4096*2)
     /*
         128 bytes for I/O Registers FF00 -  FF7F + 1 byte for IE
     */
@@ -85,6 +88,8 @@ deinit :: proc(
     free(ctx.io_registers)
     free(ctx.hram)
     free(ctx.boot_rom)
+    free(ctx.vram)
+    free(ctx.oam)
 }
 
 boot_rom_get :: proc(
@@ -119,7 +124,7 @@ get :: proc(
     else if address < 0xA000 {
         // 0x8000 x 0x9FFF
         // V-Ram
-        return rend.vram_get(ctx.ppu, T, address-0x8000)
+        return vram_get(ctx, T, address-0x8000)
     }
     else if address <  0xC000 {
         // 0xA000 - 0xBFFF
@@ -135,7 +140,7 @@ get :: proc(
         return get(ctx, T, address - 0x2000)
     } else if address < 0xFEA0 {
         // 0xFE00 - 0xFE9F
-        return rend.oam_get(ctx.ppu, T, address-0xFE00)
+        return oam_get(ctx, T, address-0xFE00)
     } else if address < 0xFF00 {
         //NOOP - Not usable
         // see https://gbdev.io/pandocs/Memory_Map.html#fea0feff-range for more details
@@ -164,7 +169,7 @@ put :: proc(
     else if address < 0xA000 {
         // 0x8000 x 0x9FFF
         // V-Ram
-        rend.vram_put(ctx.ppu, val, address - 0x8000)
+        vram_put(ctx, val, address - 0x8000)
     }
     else if address <  0xC000 {
         // 0xA000 - 0xBFFF
@@ -180,7 +185,7 @@ put :: proc(
         put(ctx, val, address - 0x2000)     // IDK if echo page is read-only but whatever
     } else if address < 0xFEA0 {
         // 0xFE00 - 0xFE9F
-        rend.oam_put(ctx.ppu, val, address - 0xFE00)
+        oam_put(ctx, val, address - 0xFE00)
     } else if address < 0xFF00 {
         //NOOP - Not usable
         // see https://gbdev.io/pandocs/Memory_Map.html#fea0feff-range for more details

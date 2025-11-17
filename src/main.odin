@@ -17,7 +17,7 @@ import "sound"
 SCALE :: 5
 
 when ODIN_DEBUG {
-    CYCLES_PER_FRAME :: 512
+    CYCLES_PER_FRAME :: 1170
 } else {
     CYCLES_PER_FRAME :: 70224
 }
@@ -73,7 +73,7 @@ main :: proc() {
     //mmu.put(&ctx.bus, 0x01, 0xFF50)
     //fmt.printfln("[DEBUG] Set BANK_REGISTER to %#02X", mmu.get(&ctx.bus, u8, u16(mmu.IO_REGS.BANK)))
     
-    //rl.SetTargetFPS(60)
+    rl.SetTargetFPS(59)
 
     rot : f32 = 0.0
     for !rl.WindowShouldClose() {
@@ -81,16 +81,16 @@ main :: proc() {
         for cycles in 0 ..< CYCLES_PER_FRAME {    // Execute instructions for roughly one frame (60Hz refresh), each cycle = 1T = 1/4 M
             if wait_cpu_cycles == 0 do wait_cpu_cycles = sm83.step(&ctx.cpu, &ctx.bus)
             else do wait_cpu_cycles -= 1
-            rend.update_ppu(&ctx.ppu)
+            rend.step(&ctx.ppu)
+            sound.step(&ctx.apu)
         }
 
 
         rl.UpdateTexture(ctx.ppu.renderTarget, ctx.ppu.frameBuffer)
+        sound.flush_to_audio_device(&ctx.apu)
 
         rl.BeginDrawing()
-
         rl.DrawTextureEx(ctx.ppu.renderTarget, {0,0}, 0, SCALE, rl.WHITE)
-
         rl.EndDrawing()
     }
 

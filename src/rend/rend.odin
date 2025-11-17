@@ -59,7 +59,7 @@ clear_ppu :: proc(
     mem.set(ctx.frameBuffer, 0xFF, 160*144)
 }
 
-update_ppu :: proc(
+step :: proc(
     ctx: ^PPU,
 ) {
     update_render_mode(ctx, &ctx.mode)

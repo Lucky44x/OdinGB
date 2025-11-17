@@ -1,3 +1,4 @@
+#+feature dynamic-literals
 package mmu
 
 import "core:fmt"
@@ -21,6 +22,14 @@ IO_REGS :: enum(u16) {
     RP = 0xFF56, BCPS = 0xFF68, BCPD = 0xFF69, OCPS = 0xFF6A, OCPD = 0xFF6B,
     OPRI = 0xFF6C, SVBK = 0xFF70, PCM12 = 0xFF76, PCM34 = 0xFF77
 }
+
+@(private = "file")
+REG_WRITE_MASKS := map[u16]u8 {
+    0xFF41 = 0b01111000,
+    0xFF44 = 0b00000000,
+    0xFF00 = 0b00110000,
+}
+
 
 @(private = "file")
 NO_READ_REGS : []u16 : {
@@ -64,7 +73,8 @@ io_get_register :: proc(
 io_get :: proc(
     ctx: ^MMU,
     $T: typeid,
-    offset: u16 = 0
+    offset: u16 = 0,
+    internal: bool
 ) -> T {
     acOff := offset
     if offset == 0xFFFF do acOff = 0xFF80
@@ -79,7 +89,8 @@ io_get :: proc(
 io_put :: proc(
     ctx: ^MMU,
     val: $T,
-    offset: u16 = 0
+    offset: u16 = 0,
+    internal: bool
 ) {
     acOff := offset
     if offset == 0xFFFF do acOff = 0xFF80
@@ -87,14 +98,25 @@ io_put :: proc(
     if find_in_numeric_array(NO_WRITE_REGS, acOff) do return
 
     // Do specific calls:
-    if acOff == 0x02 do do_transfer(ctx, io_get(ctx, u8, 0x02), io_get(ctx, u8, 0x01))
-    else if acOff == 0x50 {
+    if acOff == 0x50 {
         ctx.banked = true
     }
 
     dst := mem.ptr_offset(ctx.io_registers, acOff)
-    value: T = val
-    _ = mem.copy(dst, &value, size_of(T))
+    local_val := val
+    if !internal {
+        //Do write protection
+        when T == u8 {
+            mask, ok := REG_WRITE_MASKS[acOff + 0xFF00]
+            if !ok do mask = 0xFF
+            prev_val := mem.reinterpret_copy(T, dst)
+            preserved := u8(prev_val) & ~mask
+            updated := u8(local_val & mask)
+            local_val = preserved | updated
+        }
+    }
+
+    _ = mem.copy(dst, &local_val, size_of(T))
 }
 
 @(private = "package")
@@ -110,6 +132,30 @@ do_transfer :: proc(
     
     val := flag_byte
     val &= ~flagMask
-    io_put(ctx, val, 0x02)
+    io_put(ctx, val, 0x02, true)
     fmt.printfln("Transfer: %r", rune(data_byte))
+}
+
+get_bit_flag :: proc(
+    ctx: ^MMU,
+    addr: u16,
+    bit: u8
+) -> bool {
+    dat: u8 = get(ctx, u8, addr)
+    bitmask: u8 = 0x01 << bit
+    state := dat & bitmask
+    return state == 0x00 ? false : true
+}
+
+set_bit_flag :: proc(
+    ctx: ^MMU,
+    addr: u16,
+    bit: u8,
+    state: bool
+) {
+    dat: u8 = get(ctx, u8, addr, true)
+    bitmask: u8 = 0x01 << bit
+    if state do dat |= bitmask
+    else do dat &= ~bitmask
+    put(ctx, dat, addr, true)
 }

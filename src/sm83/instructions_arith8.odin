@@ -430,10 +430,6 @@ cp_A_imm8 :: proc(
 
     result, z, hc, c := sub_nums_flags(a, v)
 
-    if (z != 0x00) {
-        fmt.printfln("Zero reached")
-    }
-
     set_flag(ctx, FLAGS.ZERO, z)
     set_flag(ctx, FLAGS.HCARRY, hc)
     set_flag(ctx, FLAGS.CARRY, v > a ? 0x01 : 0x00)

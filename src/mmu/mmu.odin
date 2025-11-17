@@ -105,7 +105,8 @@ boot_rom_get :: proc(
 get :: proc(
     ctx: ^MMU,
     $T: typeid,
-    address: u16
+    address: u16,
+    internal: bool = false
 ) -> T {
     //Redirect call to section
     if address < 0x4000 {
@@ -147,13 +148,13 @@ get :: proc(
     } else if address < 0xFF80 {
         // 0xFF00 - 0xFF7F
         // I/O - Registers
-        return io_get(ctx, T, address - 0xFF00)
+        return io_get(ctx, T, address - 0xFF00, internal)
     } else if address < 0xFFFF {
         // 0xFF80 - 0xFFFE
         // High-RAM (HRAM)
         return hram_get(ctx, T, address - 0xFF80)
     } else {
-        return io_get(ctx, T, 0xFFFF)   // 0xFFFF gets converted internaly, to 0xFF80 to map to the last byte of the virtual registry
+        return io_get(ctx, T, 0xFFFF, internal)   // 0xFFFF gets converted internaly, to 0xFF80 to map to the last byte of the virtual registry
     }
     return cast(T)0
 }
@@ -161,7 +162,8 @@ get :: proc(
 put :: proc(
     ctx: ^MMU,
     val: $T,
-    address: u16
+    address: u16,
+    internal: bool = false
 ) {
     //Redirect call to section
     if address < 0x4000 { /*ROM BANK 00 / BOOT_ROM if flag not set --==--> NOOP*/ }
@@ -196,12 +198,12 @@ put :: proc(
             fmt.printfln("Scrolling...")
         }
 
-        io_put(ctx, val, address - 0xFF00)
+        io_put(ctx, val, address - 0xFF00, internal)
     } else if address < 0xFFFF {
         // 0xFF80 - 0xFFFE
         // High-RAM (HRAM)
         hram_put(ctx, val, address - 0xFF80)
     } else {
-        io_put(ctx, val, 0xFFFF)        // 0xFFFF gets converted internaly, to 0xFF80 to map to the last byte of the virtual registry
+        io_put(ctx, val, 0xFFFF, internal)        // 0xFFFF gets converted internaly, to 0xFF80 to map to the last byte of the virtual registry
     }
 }

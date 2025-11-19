@@ -2,9 +2,6 @@
 #+feature dynamic-literals
 package sm83
 
-import "core:flags"
-import "base:builtin"
-import "core:fmt"
 import "../mmu"
 
 /*

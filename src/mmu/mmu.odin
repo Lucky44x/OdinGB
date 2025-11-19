@@ -194,10 +194,6 @@ put :: proc(
     } else if address < 0xFF80 {
         // 0xFF00 - 0xFF7F
         // I/O - Registers
-        if address == 0xFF42 {
-            fmt.printfln("Scrolling...")
-        }
-
         io_put(ctx, val, address - 0xFF00, internal)
     } else if address < 0xFFFF {
         // 0xFF80 - 0xFFFE

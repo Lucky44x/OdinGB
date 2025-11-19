@@ -3,6 +3,8 @@ package sm83
 import "core:fmt"
 import "../mmu"
 
+DEBUG_PRINT :: #config(VERBOSE, false)
+
 CPU :: struct {
     running: bool,
     registers: Registers
@@ -76,7 +78,7 @@ step :: proc(
     op_handler, op_data := decode_instruction(addr, bus)
     
     if op_handler.length != 0 {
-        when ODIN_DEBUG {
+        when ODIN_DEBUG && DEBUG_PRINT {
             if ins_byte != 0x00 {
                 fmt.printfln("[SM83-STEP] Executing: %#02X - %s - len: %i - PC_of_command: %#04X ... DATA:", op_data.opbytes[0], op_handler.name, op_handler.length, get_register(ctx, REG16.PC))
                 for i in 0 ..< op_handler.length do fmt.printf(" %#02X ",op_data.opbytes[i])

@@ -1,6 +1,8 @@
 #+private
 package sound
 
+import "../mmu"
+
 Channels :: struct {
     ch1: Channel1,
     ch2: Channel2,
@@ -33,19 +35,42 @@ Channel4 :: struct {
     using Channel
 }
 
+@(private)
 channels_step :: proc(
     self: ^APU
 ) {
 
 }
 
+@(private)
+channels_length_step :: proc(
+    self: ^APU
+) {
+    
+}
+
+@(private)
+channels_envelope_step :: proc(
+    self: ^APU
+) {
+
+}
+
+@(private)
 channel_get :: proc(
-    self: Channels,
+    self: ^APU,
     idx: int
 ) -> f32 {
-    if idx == 1 do return self.ch1.out
-    else if idx == 2 do return self.ch2.out
-    else if idx == 3 do return self.ch3.out
-    else if idx == 4 do return self.ch4.out
+    if idx == 1 do return mmu.get(self.bus, u8, u16(mmu.IO_REGS.NR12)) == 0 ? 0 : self.ch.ch1.out
+    else if idx == 2 do return mmu.get(self.bus, u8, u16(mmu.IO_REGS.NR22)) == 0 ? 0 : self.ch.ch2.out
+    else if idx == 3 do return mmu.get(self.bus, u8, u16(mmu.IO_REGS.NR30)) == 0 ? 0 : self.ch.ch3.out
+    else if idx == 4 do return mmu.get(self.bus, u8, u16(mmu.IO_REGS.NR42)) == 0 ? 0 : self.ch.ch4.out
     return 0.0
+}
+
+@(private)
+channels_sweep :: proc(
+    self: ^APU
+) {
+
 }

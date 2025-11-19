@@ -14,10 +14,11 @@ import "cartridge"
 import "rend"
 import "sound"
 
+DEBUG_PRINT :: #config(VERBOSE, false)
 SCALE :: 5
 
-when ODIN_DEBUG {
-    CYCLES_PER_FRAME :: 1170
+when ODIN_DEBUG && DEBUG_PRINT {
+    CYCLES_PER_FRAME :: 150
 } else {
     CYCLES_PER_FRAME :: 70224
 }
@@ -90,7 +91,8 @@ main :: proc() {
         sound.flush_to_audio_device(&ctx.apu)
 
         rl.BeginDrawing()
-        rl.DrawTextureEx(ctx.ppu.renderTarget, {0,0}, 0, SCALE, rl.WHITE)
+        rl.ClearBackground(rl.BLACK)
+        if mmu.get_bit_flag(&ctx.bus, u16(mmu.IO_REGS.LCDC), 7) do rl.DrawTextureEx(ctx.ppu.renderTarget, {0,0}, 0, SCALE, rl.WHITE)
         rl.EndDrawing()
     }
 
@@ -98,31 +100,31 @@ main :: proc() {
 }
 
 make_emu_context :: proc(ctx: ^EmuContext) -> bool {
-    when ODIN_DEBUG { fmt.printfln("Initializing Emulator") }
+    when ODIN_DEBUG && DEBUG_PRINT { fmt.printfln("Initializing Emulator") }
 
     style : flags.Parsing_Style = .Odin
     flags.parse_or_exit(&ctx.args, os.args, style);
 
     sm83.init(&ctx.cpu)
-    when ODIN_DEBUG do fmt.eprintfln("[OdinGB-Init] Initialized CPU (1/5)")
+    when ODIN_DEBUG && DEBUG_PRINT do fmt.eprintfln("[OdinGB-Init] Initialized CPU (1/5)")
 
     if !cartridge.init(&ctx.cart, ctx.args.rom) {
-        when ODIN_DEBUG do fmt.eprintfln("[OdinGB-Init] Failed to initialize Cartridge")
+        when ODIN_DEBUG && DEBUG_PRINT do fmt.eprintfln("[OdinGB-Init] Failed to initialize Cartridge")
         return false
     }
-    when ODIN_DEBUG do fmt.eprintfln("[OdinGB-Init] Initialized Cartridge (2/5)")
+    when ODIN_DEBUG && DEBUG_PRINT do fmt.eprintfln("[OdinGB-Init] Initialized Cartridge (2/5)")
 
     if !mmu.init(&ctx.bus, ctx.args.bios, &ctx.cart) {
-        when ODIN_DEBUG do fmt.eprintfln("[OdinGB-Init] Failed to initialize MMU")
+        when ODIN_DEBUG && DEBUG_PRINT do fmt.eprintfln("[OdinGB-Init] Failed to initialize MMU")
         return false
     }
-    when ODIN_DEBUG do fmt.eprintfln("[OdinGB-Init] Initialized MMU (3/5)")
+    when ODIN_DEBUG && DEBUG_PRINT do fmt.eprintfln("[OdinGB-Init] Initialized MMU (3/5)")
 
     rend.make_ppu(&ctx.ppu, &ctx.bus)
-    when ODIN_DEBUG do fmt.eprintfln("[OdinGB-Init] Initialized renderer (4/5)")
+    when ODIN_DEBUG && DEBUG_PRINT do fmt.eprintfln("[OdinGB-Init] Initialized renderer (4/5)")
 
     sound.make_apu(&ctx.apu, &ctx.bus)
-    when ODIN_DEBUG do fmt.eprintfln("[OdinGB-Init] Initialized renderer (4/5)")
+    when ODIN_DEBUG && DEBUG_PRINT do fmt.eprintfln("[OdinGB-Init] Initialized renderer (4/5)")
 
     return true
 }

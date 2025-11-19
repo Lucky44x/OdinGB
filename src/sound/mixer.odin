@@ -8,10 +8,10 @@ mixer_step :: proc(
 ) -> f32 {
     if mmu.get(self.bus, u8, u16(mmu.IO_REGS.NR52), true) & 0x80 == 0 do return 0.0
 
-    c1 := channel_get(self.ch, 1)
-    c2 := channel_get(self.ch, 2)
-    c3 := channel_get(self.ch, 3)
-    c4 := channel_get(self.ch, 4)
+    c1 := channel_get(self, 1)
+    c2 := channel_get(self, 2)
+    c3 := channel_get(self, 3)
+    c4 := channel_get(self, 4)
 
     sum := c1 + c2 + c3 + c4
     num_used := 0

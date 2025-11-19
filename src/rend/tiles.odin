@@ -16,7 +16,8 @@ get_tile_data :: proc{
 }
 
 get_tile_row :: proc {
-    get_tile_row_8000
+    get_tile_row_8000,
+    get_tile_row_8800
 }
 
 get_tile_row_8000 :: proc(
@@ -24,6 +25,15 @@ get_tile_row_8000 :: proc(
     tile, row: u8, 
 ) -> u16 {
     dat := get_tile_data_8000(ctx, tile)
+    return dat[row]
+}
+
+get_tile_row_8800 :: proc(
+    ctx: ^PPU,
+    tile: i8,
+    row: u8 
+) -> u16 {
+    dat := get_tile_data_8800(ctx, tile)
     return dat[row]
 }
 

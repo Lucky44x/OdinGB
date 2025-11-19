@@ -48,7 +48,10 @@ Mode2 :: struct {
 Mode3 :: struct {
     scanline: u8,
     elapsed_dots: u32,
-    scy,scx,curx: u8,
+    scy,scx,curx,wx,wy: u8,
+    tile8000: bool,
+    windowMap: u16,     // Denotes MAP used for window (0x9800 or 0x9C00)... contains 0x00 if window off
+    bgMap: u16
 }
 
 switch_mode :: proc(
@@ -82,6 +85,9 @@ update_render_mode :: proc(
     }
 }
 
+/*
+    Wait for end of scanline
+*/
 update_render_mode_0 :: proc(
     ctx: ^PPU,
     state: ^Mode0
@@ -93,6 +99,9 @@ update_render_mode_0 :: proc(
     state.elapsed_dots += 1
 }
 
+/*
+    Wait until next frame
+*/
 update_render_mode_1 :: proc(
     ctx: ^PPU,
     state: ^Mode1
@@ -104,6 +113,9 @@ update_render_mode_1 :: proc(
     state.elapsed_dots += 1
 }
 
+/*
+    Search for OBJ that overlap line
+*/
 update_render_mode_2 :: proc(
     ctx: ^PPU,
     state: ^Mode2
@@ -115,13 +127,19 @@ update_render_mode_2 :: proc(
             scanline = state.scanline, 
             elapsed_dots = 0, 
             scy = mmu.get(ctx.bus, u8, 0xFF42),
-            scx = mmu.get(ctx.bus, u8, 0xFF43)
+            scx = mmu.get(ctx.bus, u8, 0xFF43),
+            tile8000 = mmu.get_bit_flag(ctx.bus, 0xFF40, 4),
+            windowMap = mmu.get_bit_flag(ctx.bus, 0xFF40, 5) ? (mmu.get_bit_flag(ctx.bus, 0xFF40, 6) ? 0x9C00 : 0x9800) : 0x00, // Set Window-Tilemap, 0x00 if disabled
+            bgMap = mmu.get_bit_flag(ctx.bus, 0xFF40, 3) ? 0x9C00 : 0x9800
         })
         return 
     }
     state.elapsed_dots += 1
 }
 
+/*
+    Draw pixels to buffer
+*/
 update_render_mode_3 :: proc(
     ctx: ^PPU,
     state: ^Mode3
@@ -144,18 +162,48 @@ update_render_mode_3 :: proc(
     }
 
     if state.curx % 8 == 0 {
-        //Do 8 pixels at once, because why not
-        mapX := (u16(state.scx) + u16(state.curx)) % 256
-        mapY := (u16(state.scy) + u16(state.scanline)) % 256
-        //fmt.printfln("mapY: %i + %i = %i", state.scy, state.scanline, mapY)
-        tileX := math.floor_div(u8(mapX), 8)
-        tileY := math.floor_div(u8(mapY), 8)
-        tileR := mapY % 8
+        // Draw Background
+        {
+            //Do 8 pixels at once, because why not
+            mapX := (u16(state.scx) + u16(state.curx)) % 256
+            mapY := (u16(state.scy) + u16(state.scanline)) % 256
+            //fmt.printfln("mapY: %i + %i = %i", state.scy, state.scanline, mapY)
+            tileX := math.floor_div(u8(mapX), 8)
+            tileY := math.floor_div(u8(mapY), 8)
+            tileR := mapY % 8
 
-        tileIdx := get_map_tile(ctx, u8(tileX), u8(tileY))
-        tileRow := get_tile_row(ctx, tileIdx, u8(tileR))
+            tileRow: u16
+            if state.tile8000 {
+                tileIdx := get_map_tile(ctx, u8(tileX), u8(tileY), state.bgMap)
+                tileRow = get_tile_row(ctx, tileIdx, u8(tileR))
+            } else {
+                tileIdx := get_map_tile_8800(ctx, u8(tileX), u8(tileY), state.bgMap)
+                tileRow = get_tile_row(ctx, tileIdx, u8(tileR))          
+            }
 
-        render_row(ctx, tileRow, state.curx, state.scanline)
+            render_row(ctx, tileRow, state.curx, state.scanline)
+        }
+
+        // Draw Window as overlay
+        if state.windowMap != 0x00 {
+            mapX := u8(u16(state.curx) % 256)
+            mapY := u8(u16(state.scanline) % 256)
+            tileX := math.floor_div(mapX, 8)
+            tileY := math.floor_div(mapY, 8)
+            tileR := mapY % 8
+
+            tileRow: u16
+            if state.tile8000 {
+                tileIdx := get_map_tile(ctx, u8(tileX), u8(tileY), state.windowMap)
+                tileRow = get_tile_row(ctx, tileIdx, u8(tileR))
+            } else {
+                tileIdx := get_map_tile_8800(ctx, u8(tileX), u8(tileY), state.windowMap)
+                tileRow = get_tile_row(ctx, tileIdx, u8(tileR))
+            }
+
+            fmt.printfln("Rendering Window...")
+            render_row(ctx, tileRow, state.curx, state.scanline)
+        }
     }
     state.curx += 1
     state.elapsed_dots += 1

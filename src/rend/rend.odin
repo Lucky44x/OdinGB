@@ -1,5 +1,6 @@
 package rend
 
+import "core:fmt"
 import "../mmu"
 import "core:mem"
 import rl "vendor:raylib"

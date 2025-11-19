@@ -46,22 +46,22 @@ step :: proc(
 
     for self.cycles_since_frame >= CYCLES_PER_FRAME {
         self.cycles_since_frame -= CYCLES_PER_FRAME
-        self.frame_step = (self.frame_step + 1) & 7
         sequencer_step(self)
     }
+
+    channels_step(self)
 
     for self.cycles_since_sample >= CYCLES_PER_SAMPLE {
         self.cycles_since_sample -= CYCLES_PER_SAMPLE
         samp := mixer_step(self)
         _ = ring_push(&self.buffer, samp) 
     }
-
-    channels_step(self)
 }
 
 flush_to_audio_device :: proc(
     self: ^APU
 ) {
+    /*
     if !rl.IsAudioStreamProcessed(self.stream) do return
 
     temp_buf: []f32 = make([]f32, 512)
@@ -70,4 +70,5 @@ flush_to_audio_device :: proc(
 
     rl.UpdateAudioStream(self.stream, &temp_buf, i32(len(temp_buf)))
     delete(temp_buf)
+    */
 }

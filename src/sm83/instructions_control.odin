@@ -40,6 +40,7 @@ jp_imm16 :: proc(
     ins: InsData
 ) -> u32 {
     addr := bu16(ins.opbytes)
+
     set_register(ctx, REG16.PC, addr)
     return 4
 }

@@ -7,7 +7,7 @@
             "preLaunchTask": "Build",
             "name": "Debug",
             "program": "${workspaceRoot}/build/debug.exe",
-            "args": [".\\roms\\bios\\dmg_boot.bin", ".\\roms\\Tetris.gb"],
+            "args": [".\\roms\\bios\\dmg_boot.bin", ".\\roms\\testing\\blargg\\cpu_instrs\\individual\\01-special.gb"],
             "cwd": "${workspaceRoot}"
         }
     ]

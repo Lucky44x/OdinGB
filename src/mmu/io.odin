@@ -40,7 +40,7 @@ NO_READ_REGS : []u16 : {
 
 @(private = "file")
 NO_WRITE_REGS : []u16 : {
-    u16(IO_REGS.LY), u16(IO_REGS.PCM12), u16(IO_REGS.PCM34)
+    u16(IO_REGS.TIMA), u16(IO_REGS.LY), u16(IO_REGS.PCM12), u16(IO_REGS.PCM34)
 }
 
 @(private = "file")
@@ -50,8 +50,8 @@ find_in_numeric_array :: proc(
 ) -> bool {
     // Since Blacklists are ordered/sorted, we can break once we exceed our target_num
     for e in arr {
-        if u16(e) > u16(element) do break 
-        else if u16(e) == u16(element) do return true
+        if (u16(e) - 0xFF00) > u16(element) do break 
+        else if (u16(e) - 0xFF00) == u16(element) do return true
     }
     return false
 }
@@ -97,14 +97,19 @@ io_put :: proc(
 
     if find_in_numeric_array(NO_WRITE_REGS, acOff) do return
 
-    // Do specific calls:
-    if acOff == 0x50 {
-        ctx.banked = true
-    }
-
     dst := mem.ptr_offset(ctx.io_registers, acOff)
     local_val := val
     if !internal {
+        // Do specific calls:
+        switch acOff {
+        case 0x50:                          // Set Banked flag
+            ctx.banked = true
+            return 
+        case 0x04:                          // Reset Div Register
+            io_put(ctx, 0x00, 0x04, true)
+            return 
+        }
+
         //Do write protection
         when T == u8 {
             mask, ok := REG_WRITE_MASKS[acOff + 0xFF00]

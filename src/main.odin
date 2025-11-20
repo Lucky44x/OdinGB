@@ -10,6 +10,7 @@ import rl "vendor:raylib"
 
 import "sm83"
 import "mmu"
+import "timer"
 import "cartridge"
 import "rend"
 import "sound"
@@ -31,6 +32,7 @@ EmuArgs :: struct {
 EmuContext :: struct {
     args: EmuArgs,
     cpu: sm83.CPU,
+    timer: timer.Timer,
     cart: cartridge.Cartridge,
     bus: mmu.MMU,
     ppu: rend.PPU,
@@ -82,10 +84,14 @@ main :: proc() {
         for cycles in 0 ..< CYCLES_PER_FRAME {    // Execute instructions for roughly one frame (60Hz refresh), each cycle = 1T = 1/4 M
             if wait_cpu_cycles == 0 do wait_cpu_cycles = sm83.step(&ctx.cpu, &ctx.bus)
             else do wait_cpu_cycles -= 1
+
+            //Step timing stuff
+            //timer.div_step(&ctx.timer, &ctx.bus)
+            //timer.timer_step(&ctx.timer, &ctx.bus, &ctx.cpu)
+
             rend.step(&ctx.ppu)
             sound.step(&ctx.apu)
         }
-
 
         rl.UpdateTexture(ctx.ppu.renderTarget, ctx.ppu.frameBuffer)
         sound.flush_to_audio_device(&ctx.apu)

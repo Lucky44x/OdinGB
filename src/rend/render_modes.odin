@@ -61,7 +61,7 @@ switch_mode :: proc(
 ) {
     ctx.mode = mode
     mmu.put(ctx.bus, scanline, u16(mmu.IO_REGS.LY), true)
-    lcy := mmu.get(ctx.bus, u8, u16(mmu.IO_REGS.LYC))
+    lcy := mmu.get(ctx.bus, u8, u16(mmu.IO_REGS.LYC), true)
     mmu.set_bit_flag(ctx.bus, u16(mmu.IO_REGS.STAT), 2, lcy == scanline)
 }
 
@@ -126,8 +126,8 @@ update_render_mode_2 :: proc(
         switch_mode(ctx, state.scanline, Mode3{ 
             scanline = state.scanline, 
             elapsed_dots = 0, 
-            scy = mmu.get(ctx.bus, u8, 0xFF42),
-            scx = mmu.get(ctx.bus, u8, 0xFF43),
+            scy = mmu.get(ctx.bus, u8, 0xFF42, true),
+            scx = mmu.get(ctx.bus, u8, 0xFF43, true),
             tile8000 = mmu.get_bit_flag(ctx.bus, 0xFF40, 4),
             windowMap = mmu.get_bit_flag(ctx.bus, 0xFF40, 5) ? (mmu.get_bit_flag(ctx.bus, 0xFF40, 6) ? 0x9C00 : 0x9800) : 0x00, // Set Window-Tilemap, 0x00 if disabled
             bgMap = mmu.get_bit_flag(ctx.bus, 0xFF40, 3) ? 0x9C00 : 0x9800

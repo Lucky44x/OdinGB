@@ -10,6 +10,14 @@ CPU :: struct {
     registers: Registers
 }
 
+Interrupts :: enum(u8) {
+    VBlank = 0,         // Bit 0
+    STAT,               // Bit 1
+    Timer,              // Bit 2
+    Serial,             // Bit 3
+    Joypad              // Bit 4
+}
+
 init :: proc(
     ctx: ^CPU
 ) {
@@ -57,6 +65,15 @@ pop_stack :: proc(
     return val
 }
 
+call_routine :: proc(
+    ctx: ^CPU,
+    bus: ^mmu.MMU,
+    addr: u16
+) {
+    push_stack(ctx, bus, get_register(ctx, REG16.PC))
+    set_register(ctx, REG16.PC, addr)
+}
+
 check_ime_enable :: proc(
     ctx: ^CPU
 ) {
@@ -72,6 +89,9 @@ step :: proc(
     elapsed_cycles: u32
 ) {
     check_ime_enable(ctx)
+    // Immediatly step interrupts
+    //interrupted, cycles := step_interrupts(ctx, bus)
+    //if interrupted do return cycles                     // Immediatly skip to next execution-step after returning 5 M-Cycles for interrupt handler
 
     addr : u16 = get_register(ctx, REG16.PC)
     ins_byte := mmu.get(bus, u8, addr)
@@ -85,7 +105,7 @@ step :: proc(
                 fmt.printf("\n")
             }
         }
-        defer  delete(op_data.opbytes)
+        defer delete(op_data.opbytes)
     } else {
         when !ODIN_DEBUG do return 0
     }

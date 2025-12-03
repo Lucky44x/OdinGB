@@ -2,8 +2,6 @@
 #+feature dynamic-literals
 package sm83
 
-import "base:builtin"
-import "core:fmt"
 import "../mmu"
 
 /*
@@ -50,8 +48,7 @@ and_A_r8 :: proc(
     set_flag(ctx, FLAGS.HCARRY, 0x01)
     set_flag(ctx, FLAGS.CARRY, 0x00)
 
-    if reg == .NONE do mmu.put(bus, val, get_register(ctx, REG16.HL))
-    else do set_register(ctx, reg, val)
+    set_register(ctx, REG8.A, aval)
 
     return reg == .NONE ? 2 : 1
 }
@@ -108,11 +105,10 @@ or_A_r8 :: proc(
 
     set_flag(ctx, FLAGS.ZERO, aval == 0 ? 0x01 : 0x00)
     set_flag(ctx, FLAGS.SUB, 0x00)
-    set_flag(ctx, FLAGS.HCARRY, 0x01)
+    set_flag(ctx, FLAGS.HCARRY, 0x00)
     set_flag(ctx, FLAGS.CARRY, 0x00)
 
-    if reg == .NONE do mmu.put(bus, val, get_register(ctx, REG16.HL))
-    else do set_register(ctx, reg, val)
+    set_register(ctx, REG8.A, aval)
 
     return reg == .NONE ? 2 : 1
 }
@@ -139,7 +135,7 @@ or_A_imm8 :: proc(
 
     set_flag(ctx, FLAGS.ZERO, aval == 0 ? 0x01 : 0x00)
     set_flag(ctx, FLAGS.SUB, 0x00)
-    set_flag(ctx, FLAGS.HCARRY, 0x01)
+    set_flag(ctx, FLAGS.HCARRY, 0x00)
     set_flag(ctx, FLAGS.CARRY, 0x00)
 
     return 2
@@ -169,11 +165,10 @@ xor_A_r8 :: proc(
 
     set_flag(ctx, FLAGS.ZERO, aval == 0 ? 0x01 : 0x00)
     set_flag(ctx, FLAGS.SUB, 0x00)
-    set_flag(ctx, FLAGS.HCARRY, 0x01)
+    set_flag(ctx, FLAGS.HCARRY, 0x00)
     set_flag(ctx, FLAGS.CARRY, 0x00)
 
-    if reg == .NONE do mmu.put(bus, val, get_register(ctx, REG16.HL))
-    else do set_register(ctx, reg, val)
+    set_register(ctx, REG8.A, aval)
 
     return reg == .NONE ? 2 : 1
 }
@@ -200,7 +195,7 @@ xor_A_imm8 :: proc(
 
     set_flag(ctx, FLAGS.ZERO, aval == 0 ? 0x01 : 0x00)
     set_flag(ctx, FLAGS.SUB, 0x00)
-    set_flag(ctx, FLAGS.HCARRY, 0x01)
+    set_flag(ctx, FLAGS.HCARRY, 0x00)
     set_flag(ctx, FLAGS.CARRY, 0x00)
 
     return 2

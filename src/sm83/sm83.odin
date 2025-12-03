@@ -90,8 +90,8 @@ step :: proc(
 ) {
     check_ime_enable(ctx)
     // Immediatly step interrupts
-    //interrupted, cycles := step_interrupts(ctx, bus)
-    //if interrupted do return cycles                     // Immediatly skip to next execution-step after returning 5 M-Cycles for interrupt handler
+    interrupted, cycles := step_interrupts(ctx, bus)
+    if interrupted do return cycles                     // Immediatly skip to next execution-step after returning 5 M-Cycles for interrupt handler
 
     addr : u16 = get_register(ctx, REG16.PC)
     ins_byte := mmu.get(bus, u8, addr)
@@ -116,7 +116,7 @@ step :: proc(
     }
 
     add_register(ctx, REG16.PC, int(op_handler.length))
-    cycles := op_handler.handler(ctx, bus, op_data)
+    cycles = op_handler.handler(ctx, bus, op_data)
     if cycles == 0 do fmt.eprintfln("[SM83-STEP] Error %#02X - %s -> Unimplemented...", op_data.opbytes[0], op_handler.name)
     return cycles
 }

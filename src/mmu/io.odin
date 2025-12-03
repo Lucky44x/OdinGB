@@ -95,7 +95,7 @@ io_put :: proc(
     acOff := offset
     if offset == 0xFFFF do acOff = 0xFF80
 
-    if find_in_numeric_array(NO_WRITE_REGS, acOff) do return
+    if !internal && find_in_numeric_array(NO_WRITE_REGS, acOff) do return
 
     dst := mem.ptr_offset(ctx.io_registers, acOff)
     local_val := val

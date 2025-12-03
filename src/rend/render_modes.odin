@@ -4,6 +4,7 @@ package rend
 import "core:fmt"
 import "core:math"
 import "../mmu"
+import "../sm83"
 
 /*
     DRAWING BEHAVIOUR:
@@ -62,7 +63,9 @@ switch_mode :: proc(
     ctx.mode = mode
     mmu.put(ctx.bus, scanline, u16(mmu.IO_REGS.LY), true)
     lcy := mmu.get(ctx.bus, u8, u16(mmu.IO_REGS.LYC), true)
-    mmu.set_bit_flag(ctx.bus, u16(mmu.IO_REGS.STAT), 2, lcy == scanline)
+    eq: bool = lcy == scanline
+    mmu.set_bit_flag(ctx.bus, u16(mmu.IO_REGS.STAT), 2, eq)
+    if eq && mmu.get_bit_flag(ctx.bus, u16(mmu.IO_REGS.STAT), 6) do sm83.request_interrupt(ctx.bus, .STAT)
 }
 
 update_render_mode :: proc(
@@ -93,8 +96,16 @@ update_render_mode_0 :: proc(
     state: ^Mode0
 ) {
     if state.elapsed_dots == state.desired_dots {
-        if state.scanline == 143 do switch_mode(ctx, state.scanline + 1, Mode1{ scanline = state.scanline + 1, elapsed_dots = 0 })
-        else do switch_mode(ctx, state.scanline + 1, Mode2{ scanline = state.scanline + 1, elapsed_dots = 0 })
+        if state.scanline == 143 {
+            //request VBlank
+            sm83.request_interrupt(ctx.bus, .VBlank)
+            if mmu.get_bit_flag(ctx.bus, 0xFF41, 4) do sm83.request_interrupt(ctx.bus, .STAT)
+            switch_mode(ctx, state.scanline + 1, Mode1{ scanline = state.scanline + 1, elapsed_dots = 0 })
+        }
+        else {
+            if mmu.get_bit_flag(ctx.bus, 0xFF41, 5) do sm83.request_interrupt(ctx.bus, .STAT)
+            switch_mode(ctx, state.scanline + 1, Mode2{ scanline = state.scanline + 1, elapsed_dots = 0 })
+        }
     }
     state.elapsed_dots += 1
 }
@@ -107,7 +118,10 @@ update_render_mode_1 :: proc(
     state: ^Mode1
 ) {
     if state.elapsed_dots == 456 {
-        if state.scanline == 153 do switch_mode(ctx, 0, Mode2{ scanline = 0, elapsed_dots = 0 })
+        if state.scanline == 153 {
+            if mmu.get_bit_flag(ctx.bus, 0xFF41, 5) do sm83.request_interrupt(ctx.bus, .STAT)
+            switch_mode(ctx, 0, Mode2{ scanline = 0, elapsed_dots = 0 })
+        }
         else do switch_mode(ctx, state.scanline + 1, Mode1{ scanline = state.scanline + 1, elapsed_dots = 0 })
     }
     state.elapsed_dots += 1
@@ -148,6 +162,8 @@ update_render_mode_3 :: proc(
     //when ODIN_DEBUG do fmt.printfln("Updating Mode3: %i", state.curx)
 
     if state.elapsed_dots == 172 {
+        if mmu.get_bit_flag(ctx.bus, 0xFF41, 3) do sm83.request_interrupt(ctx.bus, .STAT)
+
         switch_mode(ctx, state.scanline, Mode0{ 
             scanline = state.scanline,
             elapsed_dots = 0, 

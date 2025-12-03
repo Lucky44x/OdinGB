@@ -336,7 +336,8 @@ ldd_A_HLmem :: proc(
     addr := get_register(ctx, REG16.HL)
     val := mmu.get(bus, u8, addr)
     set_register(ctx, REG8.A, val)
-    add_register(ctx, REG16.HL, -1)
+    addr -= 1
+    set_register(ctx, REG16.HL, addr)
     return 2
 }
 

@@ -2,6 +2,7 @@ package sm83
 
 import "core:fmt"
 import "../mmu"
+import "core:log"
 
 DEBUG_PRINT :: #config(VERBOSE, false)
 
@@ -98,11 +99,12 @@ step :: proc(
     op_handler, op_data := decode_instruction(addr, bus)
     
     if op_handler.length != 0 {
-        when ODIN_DEBUG && DEBUG_PRINT {
-            if ins_byte != 0x00 {
-                fmt.printfln("[SM83-STEP] Executing: %#02X - %s - len: %i - PC_of_command: %#04X ... DATA:", op_data.opbytes[0], op_handler.name, op_handler.length, get_register(ctx, REG16.PC))
-                for i in 0 ..< op_handler.length do fmt.printf(" %#02X ",op_data.opbytes[i])
-                fmt.printf("\n")
+        when DEBUG_PRINT {
+            if ins_byte != 0x00 && bus.banked {
+                log.infof("[SM83-STEP] Executing: %#02X - %s - len: %i - PC_of_command: %#04X ... DATA:", op_data.opbytes[0], op_handler.name, op_handler.length, get_register(ctx, REG16.PC))
+                log.infof("[SM83-STEP] Register State: PC=%#04X  HL=%#04X  A=%#02X  F=%#02X", ctx.registers.PC, get_register_u16(ctx, .HL), ctx.registers.regs[.A], ctx.registers.regs[.F])
+                for i in 0 ..< op_handler.length do log.infof(" %#02X ",op_data.opbytes[i])
+                log.info("-=-\n")
             }
         }
         defer delete(op_data.opbytes)
@@ -111,12 +113,12 @@ step :: proc(
     }
 
     if op_handler.handler == nil {
-        fmt.eprintfln("[SM83-STEP] HEINOUS ERROR: %#02X : %s could not execute, because Handler is nil?", ins_byte, op_handler.name)
+        log.fatalf("[SM83-STEP] HEINOUS ERROR: %#02X : %s could not execute, because Handler is nil?", ins_byte, op_handler.name)
         panic("[SM83 STEP] CRITICAL")
     }
 
     add_register(ctx, REG16.PC, int(op_handler.length))
     cycles = op_handler.handler(ctx, bus, op_data)
-    if cycles == 0 do fmt.eprintfln("[SM83-STEP] Error %#02X - %s -> Unimplemented...", op_data.opbytes[0], op_handler.name)
+    if cycles == 0 do log.warnf("[SM83-STEP] Error %#02X - %s -> Unimplemented...", op_data.opbytes[0], op_handler.name)
     return cycles
 }

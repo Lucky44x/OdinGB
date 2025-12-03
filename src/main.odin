@@ -15,12 +15,14 @@ import "cartridge"
 import "rend"
 import "sound"
 
+import "core:log"
+
 DEBUG_PRINT :: #config(VERBOSE, false)
 SCALE :: 5
 DBG_SCALE :: (SCALE * 160) / 256
 
-when ODIN_DEBUG && DEBUG_PRINT {
-    CYCLES_PER_FRAME :: 150
+when DEBUG_PRINT {
+    CYCLES_PER_FRAME :: 15000
 } else {
     CYCLES_PER_FRAME :: 70224
 }
@@ -33,10 +35,11 @@ EmuDBGMode :: enum {
 
 EmuArgs :: struct {
     bios: os.Handle `args:"pos=0,required,file=r" usage:"bios-rom."`,
-    rom: os.Handle `args:"pos=1,required,file=r" usage:"Rom file."`,
+    rom: os.Handle `args:"pos=1,required,file=r" usage:"Rom file."`
 }
 
 EmuContext :: struct {
+    logger: log.Logger,
     args: EmuArgs,
     cpu: sm83.CPU,
     timer: timer.Timer,
@@ -51,6 +54,17 @@ EmuContext :: struct {
 }
 
 main :: proc() {
+    when DEBUG_PRINT {
+        f_hand, f_err := os.open("./logs/verbose.log", (os.O_CREATE | os.O_TRUNC | os.O_RDWR))
+        if f_err != nil {
+            fmt.eprintfln("Error during log file opening: %e", f_err)
+            return 
+        }
+
+        logger := log.create_file_logger(f_hand)
+    } else do logger := log.create_console_logger()
+    context.logger = logger
+
     when ODIN_DEBUG {
 		track: mem.Tracking_Allocator
 		mem.tracking_allocator_init(&track, context.allocator)
@@ -78,14 +92,14 @@ main :: proc() {
 
     ctx: EmuContext
     if !make_emu_context(&ctx) {
-        fmt.eprintfln("[OdinGB] Failed to initialize, shutting down")
-        return 
+        log.errorf("[OdinGB] Failed to initialize, shutting down")
+        return
     }
     defer delete_emu_context(&ctx)
 
     // Setup Debug context (skip boot rom)
     //mmu.put(&ctx.bus, 0x01, 0xFF50)
-    //fmt.printfln("[DEBUG] Set BANK_REGISTER to %#02X", mmu.get(&ctx.bus, u8, u16(mmu.IO_REGS.BANK)))
+    //log.info("[DEBUG] Set BANK_REGISTER to %#02X", mmu.get(&ctx.bus, u8, u16(mmu.IO_REGS.BANK)))
     
     rl.SetTargetFPS(59)
 
@@ -109,6 +123,9 @@ main :: proc() {
 
         rl.EndDrawing()
     }
+
+    when DEBUG_PRINT do log.destroy_file_logger(logger)
+    else do log.destroy_console_logger(logger)
 }
 
 emu_render_tilemap :: proc(
@@ -175,31 +192,31 @@ emu_step_frame :: proc(
 }
 
 make_emu_context :: proc(ctx: ^EmuContext) -> bool {
-    when ODIN_DEBUG && DEBUG_PRINT { fmt.printfln("Initializing Emulator") }
+    when ODIN_DEBUG && DEBUG_PRINT { log.info("Initializing Emulator") }
 
     style : flags.Parsing_Style = .Odin
     flags.parse_or_exit(&ctx.args, os.args, style);
 
     sm83.init(&ctx.cpu)
-    when ODIN_DEBUG && DEBUG_PRINT do fmt.eprintfln("[OdinGB-Init] Initialized CPU (1/5)")
+    when ODIN_DEBUG && DEBUG_PRINT do log.errorf("[OdinGB-Init] Initialized CPU (1/5)")
 
     if !cartridge.init(&ctx.cart, ctx.args.rom) {
-        when ODIN_DEBUG && DEBUG_PRINT do fmt.eprintfln("[OdinGB-Init] Failed to initialize Cartridge")
+        when ODIN_DEBUG && DEBUG_PRINT do log.errorf("[OdinGB-Init] Failed to initialize Cartridge")
         return false
     }
-    when ODIN_DEBUG && DEBUG_PRINT do fmt.eprintfln("[OdinGB-Init] Initialized Cartridge (2/5)")
+    when ODIN_DEBUG && DEBUG_PRINT do log.errorf("[OdinGB-Init] Initialized Cartridge (2/5)")
 
     if !mmu.init(&ctx.bus, ctx.args.bios, &ctx.cart) {
-        when ODIN_DEBUG && DEBUG_PRINT do fmt.eprintfln("[OdinGB-Init] Failed to initialize MMU")
+        when ODIN_DEBUG && DEBUG_PRINT do log.errorf("[OdinGB-Init] Failed to initialize MMU")
         return false
     }
-    when ODIN_DEBUG && DEBUG_PRINT do fmt.eprintfln("[OdinGB-Init] Initialized MMU (3/5)")
+    when ODIN_DEBUG && DEBUG_PRINT do log.errorf("[OdinGB-Init] Initialized MMU (3/5)")
 
     rend.make_ppu(&ctx.ppu, &ctx.bus, &ctx.cpu)
-    when ODIN_DEBUG && DEBUG_PRINT do fmt.eprintfln("[OdinGB-Init] Initialized renderer (4/5)")
+    when ODIN_DEBUG && DEBUG_PRINT do log.errorf("[OdinGB-Init] Initialized renderer (4/5)")
 
     sound.make_apu(&ctx.apu, &ctx.bus)
-    when ODIN_DEBUG && DEBUG_PRINT do fmt.eprintfln("[OdinGB-Init] Initialized renderer (4/5)")
+    when ODIN_DEBUG && DEBUG_PRINT do log.errorf("[OdinGB-Init] Initialized renderer (4/5)")
 
     return true
 }

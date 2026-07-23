@@ -1,5 +1,6 @@
 package cpu
 
+@(private)
 Registers :: struct {
     // Generic registers
     bytes: [8]u8,
@@ -9,7 +10,7 @@ Registers :: struct {
 }
 
 REG_8 :: enum(u8) {
-    B = 0, C = 1, D = 2, E = 3, H = 4, L = 5, A = 6, F = 7
+    B = 0, C = 1, D = 2, E = 3, H = 4, L = 5, F = 6, A = 7
 }
 
 REG_16 :: enum(u8) {
@@ -34,6 +35,14 @@ write_r16 :: proc(
 
     hi := u8(value >> 8)
     lo := u8(value)
+
+    /*
+        TODO: Maybe this fixes AF ?
+    */
+    if register == .AF {
+        hi = u8(value)
+        lo = u8(value >> 8)
+    }
 
     // General behaviour
     write_r8(c, REG_8(register), hi)
@@ -72,6 +81,14 @@ read_r16 :: proc(
     // General behaviour
     hi := read_r8(c, REG_8(register))
     lo := read_r8(c, REG_8(u8(register) + 1))
+
+    /*
+        TODO: Maybe this fixes AF ?
+    */
+    if register == .AF {
+        hi = read_r8(c, .A)
+        lo = read_r8(c, .F)
+    }
 
     return u16(hi << 8) | u16(lo);
 }

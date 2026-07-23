@@ -1,5 +1,7 @@
 package tests
 
+import "core:log"
+import "core:fmt"
 import "core:mem"
 import "core:testing"
 import "../cpu"
@@ -159,6 +161,8 @@ run_sm83_opcode_file :: proc(
 
     cases, loaded := load_opcode_cases(opcode_name, allocator)
     if !testing.expectf(t, loaded, "Failed loading %s.json", opcode_name) do return
+
+    log.infof("Testing opcode %s", opcode_name)
 
     for &test_case in cases {
         case_ok := run_sm83_case(t, &test_case)

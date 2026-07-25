@@ -1,5 +1,6 @@
 package cpu
 
+import "core:log"
 @(private)
 Registers :: struct {
     // Generic registers
@@ -27,40 +28,44 @@ write_r16 :: proc(
     register: REG_16, \
     value: u16
 ) {
-    // Special behaviour
-    #partial switch(register) {
-        case .SP: c.regs.sp = value; return
-        case .PC: c.regs.pc = value; return
-    }
-
     hi := u8(value >> 8)
     lo := u8(value)
 
-    /*
-        TODO: Maybe this fixes AF ?
-    */
-    if register == .AF {
-        hi = u8(value)
-        lo = u8(value >> 8)
-    }
+    switch register {
+    case .BC:
+        write_r8(c, .B, hi)
+        write_r8(c, .C, lo)
 
-    // General behaviour
-    write_r8(c, REG_8(register), hi)
-    write_r8(c, REG_8(u8(register) + 1), lo)
+    case .DE:
+        write_r8(c, .D, hi)
+        write_r8(c, .E, lo)
+
+    case .HL:
+        write_r8(c, .H, hi)
+        write_r8(c, .L, lo)
+
+    case .AF:
+        write_r8(c, .A, hi)
+        write_r8(c, .F, lo)
+
+    case .SP:
+        c.regs.sp = value
+
+    case .PC:
+        c.regs.pc = value
+    }
 }
 
 write_r8 :: proc(
     c: ^CPU,
-    register: REG_8, 
-    value: u8
+    register: REG_8,
+    value: u8,
 ) {
-    // Special behaviour
-    #partial switch register {
-        case .F: c.regs.bytes[register] = value & 0xF0; return
+    if register == .F {
+        c.regs.bytes[register] = value & 0xF0
+    } else {
+        c.regs.bytes[register] = value
     }
-
-    // General behaviour
-    c.regs.bytes[register] = value;
 }
 
 read :: proc {
@@ -72,25 +77,33 @@ read_r16 :: proc(
     c: ^CPU, 
     register: REG_16
 ) -> u16 {
-    // Special behaviour
-    #partial switch(register) {
-        case .SP: return c.regs.sp;
-        case .PC: return c.regs.pc;
-    }
+    hi, lo: u8
 
-    // General behaviour
-    hi := read_r8(c, REG_8(register))
-    lo := read_r8(c, REG_8(u8(register) + 1))
+    switch register {
+    case .BC:
+        hi = read_r8(c, .B)
+        lo = read_r8(c, .C)
 
-    /*
-        TODO: Maybe this fixes AF ?
-    */
-    if register == .AF {
+    case .DE:
+        hi = read_r8(c, .D)
+        lo = read_r8(c, .E)
+
+    case .HL:
+        hi = read_r8(c, .H)
+        lo = read_r8(c, .L)
+
+    case .AF:
         hi = read_r8(c, .A)
         lo = read_r8(c, .F)
+
+    case .SP:
+        return c.regs.sp
+
+    case .PC:
+        return c.regs.pc
     }
 
-    return u16(hi << 8) | u16(lo);
+    return (u16(hi) << 8) | u16(lo)
 }
 
 read_r8 :: proc(
@@ -98,4 +111,58 @@ read_r8 :: proc(
     register: REG_8
 ) -> u8 {
     return c.regs.bytes[register];
+}
+
+increment :: proc {
+    inc_r16,
+    inc_r8
+}
+
+inc_r16 :: proc(
+    c: ^CPU,
+    register: REG_16,
+    inc: u16 = 1
+) -> u16 {
+    value := read_r16(c, register)
+    value += inc
+    write_r16(c, register, value)
+    return value
+}
+
+inc_r8 :: proc(
+    c: ^CPU,
+    register: REG_8,
+    inc: u8 = 1
+) -> u8 {
+    value := read_r8(c, register)
+    value += inc
+    write_r8(c, register, value)
+    return value
+}
+
+decrement :: proc {
+    dec_r16,
+    dec_r8
+}
+
+dec_r16 :: proc(
+    c: ^CPU,
+    register: REG_16,
+    dec: u16 = 1
+) -> u16 {
+    value := read_r16(c, register)
+    value -= dec
+    write_r16(c, register, value)
+    return value
+}
+
+dec_r8 :: proc(
+    c: ^CPU,
+    register: REG_8,
+    dec: u8 = 1
+) -> u8 {
+    value := read_r8(c, register)
+    value -= dec
+    write_r8(c, register, value)
+    return value
 }

@@ -2,7 +2,6 @@
 package cpu
 
 import "core:log"
-import "core:fmt"
 import "base:runtime"
 
 op_8 :: enum(u8) { b, c, d, e, h, l, mem, a }
@@ -35,15 +34,103 @@ Instruction :: struct {
 
 @(init)
 setup_instruction_table :: proc "contextless"() {
-    register_load_instructions(&InstructionTable)
+    register_load_instructions_8(&InstructionTable)
+    register_load_instructions_16(&InstructionTable)
+    register_arithmetic_8bit_instructions(&InstructionTable)
+    register_arithmetic_16bit_instructions(&InstructionTable)
 }
 
+decode_bits :: #force_inline proc(opcode: u8, shift: u8, width: u8) -> u8 {
+    mask := u8((1 << width) - 1)
+    return u8((opcode >> shift) & mask)
+}
+
+// Also used to decode opernand-front
 decode_r8_dst :: #force_inline proc(opcode: u8) -> op_8 {
-    return op_8((opcode >> 3) & 0b111)
+    return op_8(decode_bits(opcode, 3, 3))
 }
 
+// Also used to decode opernand-back
 decode_r8_src :: #force_inline proc(opcode: u8) -> op_8 {
-    return op_8(opcode & 0b111)
+    return op_8(decode_bits(opcode, 0, 3))
+}
+
+decode_r16 :: #force_inline proc(opcode: u8) -> op_16 {
+    return op_16(decode_bits(opcode, 4, 2))
+}
+
+decode_r16stk :: #force_inline proc(opcode: u8) -> op_16_stk {
+    return op_16_stk(decode_bits(opcode, 4, 2))
+}
+
+decode_r16_mem :: #force_inline proc(opcode: u8) -> op_16_mem {
+    return op_16_mem(decode_bits(opcode, 4, 2))
+}
+
+convert_op16stk_to_reg16 :: #force_inline proc(op: op_16_stk) -> REG_16 {
+    switch op {
+        case .bc: return .BC
+        case .de: return .DE
+        case .hl: return .HL
+        case .af: return .AF
+    }
+
+    return .BC
+}
+
+convert_op16_to_reg16 :: #force_inline proc(op: op_16) -> REG_16 {
+    switch op {
+    case .bc:
+        return .BC
+    case .de:
+        return .DE
+    case .hl:
+        return .HL
+    case .sp:
+        return .SP
+    }
+
+    return .BC
+}
+
+write_r16mem :: proc(cpu: ^CPU, r16mem: op_16_mem, value: u8) {
+    switch r16mem {
+    case .bc:
+        addr := read_r16(cpu, .BC)
+        cpu.bus.write(cpu.bus.ctx, addr, value)
+    case .de:
+        addr := read_r16(cpu, .DE)
+        cpu.bus.write(cpu.bus.ctx, addr, value)
+    case .hlp:
+        addr := read_r16(cpu, .HL)
+        cpu.bus.write(cpu.bus.ctx, addr, value)
+        inc_r16(cpu, .HL)
+    case .hlm:
+        addr := read_r16(cpu, .HL)
+        cpu.bus.write(cpu.bus.ctx, addr, value)
+        dec_r16(cpu, .HL)
+    }
+}
+
+read_r16mem :: proc(cpu: ^CPU, r16mem: op_16_mem) -> u8 {
+    switch r16mem {
+    case .bc:
+        return cpu.bus.read(cpu.bus.ctx, read_r16(cpu, .BC))
+    case .de:
+        return cpu.bus.read(cpu.bus.ctx, read_r16(cpu, .DE))
+    case .hlp:
+        addr := read_r16(cpu, .HL)
+        value := cpu.bus.read(cpu.bus.ctx, addr)
+        inc_r16(cpu, .HL)
+        return value
+    case .hlm:
+        addr := read_r16(cpu, .HL)
+        value := cpu.bus.read(cpu.bus.ctx, addr)
+        dec_r16(cpu, .HL)
+        return value
+    }
+
+    return 0x00
 }
 
 register_instruction :: proc "contextless"(
@@ -82,5 +169,8 @@ handle_instruction :: proc(
     opcode: u8
 ) -> (cycles: u8) {
     if InstructionTable[opcode].length == 0 do return 0
-    return InstructionTable[opcode].handle(cpu, opcode)
+
+    val := InstructionTable[opcode].handle(cpu, opcode)
+    if val <= 0 do log.info("Instruction %02X (%s) returned %d cycles", opcode, InstructionTable[opcode].name, val)
+    return val
 }

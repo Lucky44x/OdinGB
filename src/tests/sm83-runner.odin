@@ -23,7 +23,7 @@ make_initial_cpu_state :: proc(
     cpu.write_r8(&result, .L, state.l)
 
     cpu.write_r16(&result, .SP, state.sp)
-    cpu.write_r16(&result, .SP, state.pc)
+    cpu.write_r16(&result, .PC, state.pc)
 
     //TODO: Add IME and IE flags
 
@@ -41,7 +41,8 @@ make_initial_ram :: proc(
         value := entry[1]
 
         if !testing.expectf(t, value <= 0xFF, "%s: RAM[%04X] cotnains invalid byte value %d", case_name, address, value) do return false
-        bus.memory[int(address)] = u8(value)
+        //log.infof("Setting RAM[%04X] = %02X", address, value)
+        test_write_adapter(bus, address, u8(value))
     }
 
     return true
@@ -162,7 +163,7 @@ run_sm83_opcode_file :: proc(
     cases, loaded := load_opcode_cases(opcode_name, allocator)
     if !testing.expectf(t, loaded, "Failed loading %s.json", opcode_name) do return
 
-    log.infof("Testing opcode %s", opcode_name)
+    //log.infof("Testing opcode %s", opcode_name)
 
     for &test_case in cases {
         case_ok := run_sm83_case(t, &test_case)

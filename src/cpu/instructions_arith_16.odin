@@ -5,7 +5,7 @@ register_arithmetic_16bit_instructions :: proc "contextless" (table: ^[256]Instr
     register_instruction(table, ins_inc_r16, "INC r16", 0b11001111, 0b00000011)
     register_instruction(table, ins_dec_r16, "DEC r16", 0b11001111, 0b00001011)
     register_instruction(table, ins_add_hl_r16, "ADD HL, r16", 0b11001111, 0b00001001)
-    register_instruction(table, ins_add_sp_e, "ADD SP, e8", 0xFF, 0xE8, 2)
+    register_instruction(table, ins_add_sp_e, "ADD SP, e8", 0xFF, 0xE8, 2, allow_override=false)
 }
 
 //==================================================

@@ -1,6 +1,7 @@
 #+private
 package cpu
 
+import "core:c"
 register_arithmetic_8bit_instructions :: proc "contextless" (table: ^[256]Instruction) {
     register_instruction(table, ins_inc_r8, "INC r8", 0b11000111, 0b00000100, 1)
     register_instruction(table, ins_dec_r8, "DEC r8", 0b11000111, 0b00000101, 1)
@@ -9,13 +10,18 @@ register_arithmetic_8bit_instructions :: proc "contextless" (table: ^[256]Instru
     register_instruction(table, ins_sub_a_r8, "SUB/C A r8", 0b11110000, 0b10010000, 1)
     register_instruction(table, ins_sub_a_imm8, "SUB/C A imm8", 0b11110111, 0b11010110, 2)
     register_instruction(table, ins_and_a_r8, "AND A r8", 0b11111000, 0b10100000, 1)
-    register_instruction(table, ins_and_a_imm8, "AND A imm8", 0xFF, 0xE6, 2)
+    register_instruction(table, ins_and_a_imm8, "AND A imm8", 0xFF, 0xE6, 2, allow_override=false)
     register_instruction(table, ins_xor_a_r8, "XOR A r8", 0b11111000, 0b10101000, 1)
-    register_instruction(table, ins_xor_a_imm8, "XOR A imm8", 0xFF, 0xEE, 2)
+    register_instruction(table, ins_xor_a_imm8, "XOR A imm8", 0xFF, 0xEE, 2, allow_override=false)
     register_instruction(table, ins_or_a_r8, "OR A r8", 0b11111000, 0b10110000, 1)
-    register_instruction(table, ins_or_a_imm8, "OR A imm8", 0xFF, 0xF6, 2)
+    register_instruction(table, ins_or_a_imm8, "OR A imm8", 0xFF, 0xF6, 2, allow_override=false)
     register_instruction(table, ins_comp_a_r8, "COMP A r8", 0b11111000, 0b10111000, 1)
-    register_instruction(table, ins_comp_a_imm8, "COMP A imm8", 0xFF, 0xFE, 1)
+    register_instruction(table, ins_comp_a_imm8, "COMP A imm8", 0xFF, 0xFE, 1, allow_override=false)
+
+    register_instruction(table, ins_ccf, "CCF", 0xFF, 0x3F, allow_override=false)
+    register_instruction(table, ins_scf, "SCF", 0xFF, 0x37, allow_override=false)
+    register_instruction(table, ins_cpl, "CPL", 0xFF, 0x2F, allow_override=false)
+    register_instruction(table, ins_daa, "DAA", 0xFF, 0x27, allow_override=false)
 }
 
 //==================================================
@@ -488,5 +494,106 @@ ins_comp_a_imm8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     set_flag(cpu, .N, true)
     set_flag(cpu, .H, borrow_from_bit(left, right, 3))
     set_flag(cpu, .C, borrow_from_bit(left, right, 7))
+    return 1;
+}
+
+/*
+    Flips the carry flag, and clears the N and H flags
+    Mask: 0xFF
+    Vars: 0x3F
+
+    Flags:
+        N: Reset
+        H: Reset
+        C: Flip
+    
+    Example: 0x3F
+*/
+ins_ccf :: proc(cpu: ^CPU, opcode: u8) -> u8 {
+    set_flag(cpu, .N, false)
+    set_flag(cpu, .H, false)
+    set_flag(cpu, .C, !get_flag(cpu, .C))
+    return 1;
+}
+
+/*
+    Sets the carry flag, clears H and N
+    Mask: 0xFF
+    Vars: 0x37
+
+    Flags:
+        N: Reset
+        H: Reset
+        C: Flip
+    
+    Example: 0x37
+*/
+ins_scf :: proc(cpu: ^CPU, opcode: u8) -> u8 {
+    set_flag(cpu, .N, false)
+    set_flag(cpu, .H, false)
+    set_flag(cpu, .C, true)
+    return 1;
+}
+
+/*
+    Flips bits of A and sets N and H
+    Mask: 0xFF
+    Vars: 0x2F
+
+    Flags:
+        N: Set
+        H: Set
+    
+    Example: 0x2F
+*/
+ins_cpl :: proc(cpu: ^CPU, opcode: u8) -> u8 {
+    value := read_r8(cpu, .A)
+    write_r8(cpu, .A, ~value)
+
+    // Set Flags
+    set_flag(cpu, .N, true)
+    set_flag(cpu, .H, true)
+    return 1;
+}
+
+/*
+    Decimal Adjust Accumulator for BCD arithmetic
+    Mask: 0xFF
+    Vars: 0x27
+
+    Flags:
+        Z: Set if the adjusted result is zero
+        N: Unchanged
+        H: Reset
+        C: Set if the adjustment produced a carry/borrow, otherwise reset
+    
+    Example: 0x27
+*/
+ins_daa :: proc(cpu: ^CPU, opcode: u8) -> u8 {
+    offset: u8
+
+    value_a := read_r8(cpu, .A)
+    hc := get_flag(cpu, .H)
+    carry := get_flag(cpu, .C)
+    sub := get_flag(cpu, .N)
+
+    if (!sub && (value_a & 0xF) > 0x09) || hc do offset |= 0x06
+
+    should_carry := false
+    if (!sub && value_a > 0x99) || carry {
+        offset |= 0x60
+        should_carry = true
+    }
+    
+    adjusted: u8
+    if sub do adjusted = value_a - offset
+    else do adjusted = value_a + offset
+
+    write_r8(cpu, .A, adjusted)
+
+    set_flag(cpu, .Z, adjusted == 0)
+    set_flag(cpu, .H, false)
+    set_flag(cpu, .C, should_carry)
+
     return 1;
 }

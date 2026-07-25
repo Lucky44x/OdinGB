@@ -1,6 +1,7 @@
 #+private
 package cpu
 
+import "core:fmt"
 import "core:log"
 import "base:runtime"
 
@@ -30,6 +31,7 @@ Instruction :: struct {
     
     name: string,
     length: u8,
+    override: bool
 }
 
 @(init)
@@ -140,7 +142,7 @@ register_instruction :: proc "contextless"(
     mask: u8,
     value: u8,
     length: u8 = 1,
-    allow_override := false,
+    allow_override := true,
 ) {
     context = runtime.default_context()
 
@@ -151,15 +153,16 @@ register_instruction :: proc "contextless"(
             continue
         }
 
-        if table[opcode].length > 0 {
-            log.errorf("Opcode %02X was already registered -> %s -- %d", opcode, table[opcode].name, table[opcode].length)
-            assert(false)
+        if table[opcode].length > 0 && !table[opcode].override {
+            str := fmt.tprintf("Opcode %02X was already previously registered, and previous Handler: %s does not allow overrides", opcode, table[opcode].name)
+            assert(false, str)
         }
 
         table[opcode] = {
             handle = handler,
             name    = name,
             length  = length,
+            override = allow_override
         }
     }
 }

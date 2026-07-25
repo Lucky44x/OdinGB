@@ -5,10 +5,10 @@ register_load_instructions_8 :: proc "contextless" (table: ^[256]Instruction) {
     register_instruction(table, ins_ld_r8_r8, "LD r8 r8", 0b11000000, 0b01000000, 1)
     register_instruction(table, ins_ld_r8_imm8, "LD r8 imm8", 0b11000110, 0b00000110, 2)
 
-    register_instruction(table, ins_ldh_a_mem, "LDH A [C]", 0xFF, 0xF2, 1)
-    register_instruction(table, ins_ldh_a_mem, "LDH A [N]", 0xFF, 0xF0, 2)
-    register_instruction(table, ins_ldh_mem_a, "LDH [C] A", 0xFF, 0xE2, 1)
-    register_instruction(table, ins_ldh_mem_a, "LDH [N] A", 0xFF, 0xE0, 1)
+    register_instruction(table, ins_ldh_a_mem, "LDH A [C]", 0xFF, 0xF2, 1, allow_override=false)
+    register_instruction(table, ins_ldh_a_mem, "LDH A [N]", 0xFF, 0xF0, 2, allow_override=false)
+    register_instruction(table, ins_ldh_mem_a, "LDH [C] A", 0xFF, 0xE2, 1, allow_override=false)
+    register_instruction(table, ins_ldh_mem_a, "LDH [N] A", 0xFF, 0xE0, 1, allow_override=false)
 }
 
 //==================================================

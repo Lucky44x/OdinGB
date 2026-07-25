@@ -6,12 +6,12 @@ register_load_instructions_16 :: proc "contextless" (table: ^[256]Instruction) {
     register_instruction(table, ins_ld_r16_m, "LD r16 m", 0b11001111, 0b00000001, 3)
     register_instruction(table, ins_ld_r16mem_a, "LD [r16mem] A", 0b11001111, 0b00000010, 1)
     register_instruction(table, ins_ld_a_r16mem, "LD A [r16mem]", 0b11001111, 0b00001010, 1)
-    register_instruction(table, ins_ld_mmem_sp, "LD [imm16] SP", 0xFF, 0x08, 3)
-    register_instruction(table, ins_ld_a_mmem, "LD A [imm16]", 0xFF, 0xFA)
-    register_instruction(table, ins_ld_mmem_a, "LD [imm16] A", 0xFF, 0xEA)
+    register_instruction(table, ins_ld_mmem_sp, "LD [imm16] SP", 0xFF, 0x08, 3, allow_override=false)
+    register_instruction(table, ins_ld_a_mmem, "LD A [imm16]", 0xFF, 0xFA, allow_override=false)
+    register_instruction(table, ins_ld_mmem_a, "LD [imm16] A", 0xFF, 0xEA, allow_override=false)
 
-    register_instruction(table, ins_ld_sp_hl, "LD SP, HL", 0xFF, 0xF9)
-    register_instruction(table, ins_ld_hl_sp_e, "LD HL, SP+e", 0xFF, 0xF8)
+    register_instruction(table, ins_ld_sp_hl, "LD SP, HL", 0xFF, 0xF9, allow_override=false)
+    register_instruction(table, ins_ld_hl_sp_e, "LD HL, SP+e", 0xFF, 0xF8, allow_override=false)
     register_instruction(table, ins_push_r16, "PUSH r16", 0b11001111, 0b11000101, 1)
     register_instruction(table, ins_pop_r16, "POP r16", 0b11001111, 0b11000001, 1)
 }
@@ -156,9 +156,6 @@ ins_ld_hl_sp_e :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     sp := read_r16(cpu, .SP)
 
     value := i32(sp) + i32(i8(imm8))
-
-    log.infof("%04x + %04x = %04x", i32(sp), i32(imm8), value)
-    log.infof("%d + %d = %d", i32(sp), i32(imm8), value)
 
     write_r16(cpu, .HL, u16(value))
 

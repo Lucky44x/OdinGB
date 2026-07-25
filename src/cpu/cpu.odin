@@ -1,5 +1,6 @@
 package cpu
 
+import "core:log"
 CPU :: struct {
     regs: Registers,
     bus: ^Bus_Access,
@@ -17,8 +18,26 @@ step :: proc(
     bus: ^Bus_Access,
 ) {
     cpu.bus = bus
+
+    // TODO: Wake on specific interrupt etc...
+    if cpu.stopped do return
+
+    //TODO: Fetch interrupts
+    pending_interrupt := false
+
+    if cpu.halted {
+        if !pending_interrupt do return
+        // Any Interrupt will break halt
+        cpu.halted = false
+        // Autoamtically falls through to the interrupt dispatcher
+    }
+
+    if pending_interrupt && cpu.ime {
+        //TODO: Dispatch interrupt
+    }
+
     opcode: u8 = fetch_next_u8(cpu)
-    if handle_instruction(cpu, opcode) == 0 do return
+    if handle_instruction(cpu, opcode) == 0 do log.warnf("Opcode: %02x returned a cycle time of 0", opcode)
 
     if cpu.ime_enable_pending == 1 {
         cpu.ime = true

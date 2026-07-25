@@ -30,6 +30,8 @@ ins_nop :: proc(cpu: ^CPU, opcode: u8) -> u8 { return 1 }
     Example: 0x10
 */
 ins_stop :: proc(cpu: ^CPU, opcode: u8) -> u8 {
+    _ = fetch_next_u8(cpu)
+    cpu.stopped = true
     return 1
 }
 
@@ -43,6 +45,7 @@ ins_stop :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     Example: 0x76
 */
 ins_halt :: proc(cpu: ^CPU, opcode: u8) -> u8 {
+    cpu.halted = true
     return 1
 }
 

@@ -9,6 +9,10 @@ register_misc_instructions :: proc "contextless" (table: ^[256]Instruction) {
     register_instruction(table, ins_di, "DI", 0xFF, 0xF3, allow_override = false)
 }
 
+//==================================================
+//              MISC operations
+//==================================================
+
 /*
     Noop - No Operation
     Mask: 0xFF
@@ -30,8 +34,8 @@ ins_nop :: proc(cpu: ^CPU, opcode: u8) -> u8 { return 1 }
     Example: 0x10
 */
 ins_stop :: proc(cpu: ^CPU, opcode: u8) -> u8 {
-    _ = fetch_next_u8(cpu)
-    cpu.stopped = true
+    //_ = fetch_next_u8(cpu)
+    cpu.state = .Stopped
     return 1
 }
 
@@ -45,7 +49,7 @@ ins_stop :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     Example: 0x76
 */
 ins_halt :: proc(cpu: ^CPU, opcode: u8) -> u8 {
-    cpu.halted = true
+    cpu.state = .Halted
     return 1
 }
 

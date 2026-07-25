@@ -11,6 +11,10 @@ register_control_instructions :: proc "contextless" (table: ^[256]Instruction) {
     register_instruction(table, ins_reti, "RETI", 0xFF, 0xD9, allow_override=false)
 }
 
+//==================================================
+//              Control-Flow operations
+//==================================================
+
 /*
     Jumps to the position stored in HL unconditionally
     Mask: 0xFF

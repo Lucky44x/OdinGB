@@ -44,9 +44,11 @@ setup_instruction_table :: proc "contextless"() {
     register_load_instructions_16(&InstructionTable)
     register_arithmetic_8bit_instructions(&InstructionTable)
     register_arithmetic_16bit_instructions(&InstructionTable)
+    register_rotation_instructions(&InstructionTable)
     register_misc_instructions(&InstructionTable)
 
     // Register prefixed instructions
+    register_bitwise_instructions_CB(&PrefixedTable)
 }
 
 decode_bits :: #force_inline proc(opcode: u8, shift: u8, width: u8) -> u8 {

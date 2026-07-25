@@ -1,6 +1,13 @@
 package cpu
 
 import "core:log"
+
+CPU_RunState :: enum(u8) {
+    Running,
+    Halted,
+    Stopped
+}
+
 CPU :: struct {
     regs: Registers,
     bus: ^Bus_Access,
@@ -9,8 +16,7 @@ CPU :: struct {
     ime: bool,
     ime_enable_pending: u8,
 
-    halted: bool,
-    stopped: bool
+    state: CPU_RunState
 }
 
 step :: proc(
@@ -20,15 +26,15 @@ step :: proc(
     cpu.bus = bus
 
     // TODO: Wake on specific interrupt etc...
-    if cpu.stopped do return
+    if cpu.state == .Stopped do return
 
     //TODO: Fetch interrupts
     pending_interrupt := false
 
-    if cpu.halted {
+    if cpu.state == .Halted {
         if !pending_interrupt do return
         // Any Interrupt will break halt
-        cpu.halted = false
+        cpu.state = .Running
         // Autoamtically falls through to the interrupt dispatcher
     }
 

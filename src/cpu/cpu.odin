@@ -1,10 +1,15 @@
 package cpu
 
-import "core:log"
-
 CPU :: struct {
     regs: Registers,
-    bus: ^Bus_Access
+    bus: ^Bus_Access,
+
+    // Interrupt
+    ime: bool,
+    ime_enable_pending: u8,
+
+    halted: bool,
+    stopped: bool
 }
 
 step :: proc(
@@ -13,9 +18,12 @@ step :: proc(
 ) {
     cpu.bus = bus
     opcode: u8 = fetch_next_u8(cpu)
-    if handle_instruction(cpu, opcode) == 0 {
-        log.errorf("Could not find instruction handler matching %02X in table...", opcode)
-    }
+    if handle_instruction(cpu, opcode) == 0 do return
+
+    if cpu.ime_enable_pending == 1 {
+        cpu.ime = true
+        cpu.ime_enable_pending = 0
+    } else if cpu.ime_enable_pending > 1 do cpu.ime_enable_pending -= 1
 }
 
 @(private)

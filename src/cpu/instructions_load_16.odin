@@ -167,6 +167,20 @@ ins_ld_hl_sp_e :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     return 3
 }
 
+stack_push_SP :: proc(cpu: ^CPU, val: u16) {
+    dec_r16(cpu, .SP, 2)
+    address := read_r16(cpu, .SP)
+    bus_write_u16(cpu.bus, address, val)
+}
+
+stack_pop_SP :: proc(cpu: ^CPU) -> u16 {
+    address := read_r16(cpu, .SP)
+    value := bus_read_u16(cpu.bus, address)
+    inc_r16(cpu, .SP, 2)
+
+    return value
+}
+
 /*
     Decrement SP and write to [SP] the value at r16
     Mask: 0b11001111
@@ -181,12 +195,8 @@ ins_ld_hl_sp_e :: proc(cpu: ^CPU, opcode: u8) -> u8 {
 ins_push_r16 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     operand := decode_r16stk(opcode)
     reg := convert_op16stk_to_reg16(operand)
-
     value := read_r16(cpu, reg)
-
-    dec_r16(cpu, .SP, 2)
-    address := read_r16(cpu, .SP)
-    bus_write_u16(cpu.bus, address, value)
+    stack_push_SP(cpu, value)
     return 4
 }
 
@@ -204,11 +214,6 @@ ins_push_r16 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
 ins_pop_r16 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     operand := decode_r16stk(opcode)
     reg := convert_op16stk_to_reg16(operand)
-
-    address := read_r16(cpu, .SP)
-    value := bus_read_u16(cpu.bus, address)
-    write_r16(cpu, reg, value)
-    inc_r16(cpu, .SP, 2)
-
+    write_r16(cpu, reg, stack_pop_SP(cpu))
     return 3
 }

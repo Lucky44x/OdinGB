@@ -21,6 +21,9 @@ op_cond :: enum(u8) { nz, z, nc, c }
 @(private="file")
 InstructionTable: [256]Instruction
 
+@(private="file")
+PrefixedTable: [256]Instruction
+
 InstructionHandler :: proc(
     cpu: ^CPU,
     opcode: u8
@@ -36,10 +39,14 @@ Instruction :: struct {
 
 @(init)
 setup_instruction_table :: proc "contextless"() {
+    register_control_instructions(&InstructionTable)
     register_load_instructions_8(&InstructionTable)
     register_load_instructions_16(&InstructionTable)
     register_arithmetic_8bit_instructions(&InstructionTable)
     register_arithmetic_16bit_instructions(&InstructionTable)
+    register_misc_instructions(&InstructionTable)
+
+    // Register prefixed instructions
 }
 
 decode_bits :: #force_inline proc(opcode: u8, shift: u8, width: u8) -> u8 {
@@ -67,6 +74,20 @@ decode_r16stk :: #force_inline proc(opcode: u8) -> op_16_stk {
 
 decode_r16_mem :: #force_inline proc(opcode: u8) -> op_16_mem {
     return op_16_mem(decode_bits(opcode, 4, 2))
+}
+
+decode_condition :: #force_inline proc(opcode: u8) -> op_cond {
+    return op_cond(decode_bits(opcode, 3, 2))
+}
+
+resolve_condition :: #force_inline proc(cpu: ^CPU, condition: op_cond) -> bool {
+    switch condition {
+        case .nz: return !get_flag(cpu, .Z)
+        case .z: return get_flag(cpu, .Z)
+        case .nc: return !get_flag(cpu, .C)
+        case .c: return get_flag(cpu, .C)
+    }
+    return false
 }
 
 convert_op16stk_to_reg16 :: #force_inline proc(op: op_16_stk) -> REG_16 {
@@ -171,9 +192,21 @@ handle_instruction :: proc(
     cpu: ^CPU,
     opcode: u8
 ) -> (cycles: u8) {
-    if InstructionTable[opcode].length == 0 do return 0
+    fetchedOpcode := opcode
+    len := InstructionTable[opcode].length
+    if opcode == 0xCB {
+        fetchedOpcode = fetch_next_u8(cpu)
+        len = PrefixedTable[fetchedOpcode].length
+    }
 
-    val := InstructionTable[opcode].handle(cpu, opcode)
-    if val <= 0 do log.info("Instruction %02X (%s) returned %d cycles", opcode, InstructionTable[opcode].name, val)
-    return val
+    if len == 0 {
+        log.errorf("Could not find instruction handler matching %02X in table...", fetchedOpcode)
+        return
+    }
+
+    m_cycles: u8
+    if opcode == 0xCB do m_cycles = PrefixedTable[fetchedOpcode].handle(cpu, fetchedOpcode)
+    else do m_cycles = InstructionTable[fetchedOpcode].handle(cpu, fetchedOpcode)
+
+    return m_cycles
 }

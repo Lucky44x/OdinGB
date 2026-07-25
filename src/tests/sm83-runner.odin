@@ -25,7 +25,8 @@ make_initial_cpu_state :: proc(
     cpu.write_r16(&result, .SP, state.sp)
     cpu.write_r16(&result, .PC, state.pc)
 
-    //TODO: Add IME and IE flags
+    //TODO Add IE flag setting
+    result.ime = state.ime != 0
 
     return result
 }
@@ -95,7 +96,11 @@ expect_registers :: proc(
         t, cpu.read_r16(machine, .PC) == expected.pc, "%s: PC expected %04X, got %04X", case_name, expected.pc, cpu.read_r16(machine, .PC)
     ) && ok
 
-    //TODO: Add IME and IE flags
+    ok = testing.expectf(
+        t, machine.ime == (expected.ime != 0), "%s: IME expected %s but was %s", case_name, expected.ime != 0 ? "true" : "false", machine.ime ? "true" : "false"
+    ) && ok
+
+    //TODO: Add IE flag
 
     return ok
 }

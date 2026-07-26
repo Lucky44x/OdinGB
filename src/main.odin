@@ -1,7 +1,3 @@
-package main
+package core
 
 import "cpu"
-
-main :: proc() {
-
-}

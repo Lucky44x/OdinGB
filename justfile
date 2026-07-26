@@ -1,5 +1,5 @@
 app_package  := "./src"
-test_package := "./src/tests"
+test_package := "./src/core/tests"
 binary_name  := "gameboy"
 
 release_dir := "./build/release"

@@ -11,15 +11,25 @@ test_binary    := test_dir / (binary_name + "-tests.exe")
 default:
     @just --list
 
-build:
+build debug="false":
     mkdir -p "{{release_dir}}"
-    odin build "{{app_package}}" \
-        -out:"{{release_binary}}" \
-        -o:speed
 
-run:
-    @just build
-    ./{{release_binary}}
+    if [ {{debug}} = "true" ]; then \
+    odin build "{{app_package}}" \
+            -out:"{{release_binary}}" \
+            -o:speed \
+            -extra-linker-flags:"/FORCE:MULTIPLE" \
+            -debug; \
+    else \
+        odin build "{{app_package}}" \
+            -out:"{{release_binary}}" \
+            -o:speed \
+            -extra-linker-flags:"/FORCE:MULTIPLE"; \
+    fi
+
+run debug="false":
+    @just build {{debug}}
+    ./{{release_binary}} -bios-file:"./roms/dmg_boot.bin"
 
 test name="" debug="false":
     mkdir -p "{{test_dir}}"

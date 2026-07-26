@@ -1,6 +1,8 @@
 package common
 
-Boot_ROM :: struct {
-    data: []u8,
-    enabled: bool
+CART_Read :: proc(ctx: rawptr, )
+
+CART_Access :: struct {
+    ctx: rawptr,
+    
 }

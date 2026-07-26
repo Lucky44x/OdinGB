@@ -4,10 +4,10 @@ import c "../common"
 
 // [CART] 0x0000 - 0x7FFF -> 32KiB Cartridge, reads provided by frontend handle
 // [PPU] 0x8000 - 0x9FFF -> 8 KiB Window, owned by PPU
-// [CART] 0xA000 - 0xBFFF -> 8 KiB Window, owned by Cartridge
+// [CART] 0xA000 - 0xBFFF -> 8 KiB Window, owned by Cartridge (switchable External RAM)
 // * 0xC000 - 0xDFFF -> 8 KiB Window - Work RAM, self-owned W-RAM
 // [-] 0xE000 - 0xFDFF -> Mirror of C000 - DFFF
-// [PPU] 0xFE00 - 0xFE9F -> 160 bytes PPU data
+// [PPU] 0xFE00 - 0xFE9F -> 160 bytes PPU data (OAM)
 // [-] 0xFEA0 - 0xFEFF -> 96 bytes of nothing
 // [API] 0xFF00 - 0xFF7F -> 128 bytes Device Fields
 // * 0xFF80 - 0xFFFE -> 127 bytes Internal Memory H-RAM
@@ -15,7 +15,7 @@ import c "../common"
 
 Bus :: struct {
     // Accessors
-    boot_rom: c.Boot_ROM,
+    boot_rom: Boot_Rom,
 
     // In-Bus Memory
     ram: Bus_RAM,

@@ -8,7 +8,7 @@ register_load_instructions_8 :: proc "contextless" (table: ^[256]Instruction) {
     register_instruction(table, ins_ldh_a_mem, "LDH A [C]", 0xFF, 0xF2, 1, allow_override=false)
     register_instruction(table, ins_ldh_a_mem, "LDH A [N]", 0xFF, 0xF0, 2, allow_override=false)
     register_instruction(table, ins_ldh_mem_a, "LDH [C] A", 0xFF, 0xE2, 1, allow_override=false)
-    register_instruction(table, ins_ldh_mem_a, "LDH [N] A", 0xFF, 0xE0, 1, allow_override=false)
+    register_instruction(table, ins_ldh_mem_a, "LDH [N] A", 0xFF, 0xE0, 2, allow_override=false)
 }
 
 //==================================================
@@ -37,7 +37,7 @@ ins_ld_r8_r8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     if dst == .mem do cpu.bus.write(cpu.bus.ctx, read_r16(cpu, .HL), srcValue)
     else do write_r8(cpu, REG_8(dst), srcValue)
 
-    return 1;
+    return (src == .mem || dst == .mem) ? 2 : 1
 }
 
 /*
@@ -57,7 +57,7 @@ ins_ld_r8_imm8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     if operand == .mem do cpu.bus.write(cpu.bus.ctx, read_r16(cpu, .HL), value)
     else do write_r8(cpu, REG_8(operand), value)
     
-    return 2
+    return operand == .mem ? 3 : 2
 }
 
 /*
@@ -67,6 +67,10 @@ ins_ld_r8_imm8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
         x: 1 -> [c], 0 -> [n]
     
     Flags: -
+
+    Length:
+        [c]: 1
+        [n]: 2
 
     Example:
         [c]: F2
@@ -94,6 +98,10 @@ ins_ldh_a_mem :: proc(cpu: ^CPU, opcode: u8) -> u8 {
         x: 1 -> [c], 0 -> [n]
     
     Flags: -
+
+    Length:
+        [c]: 1
+        [n]: 2
 
     Example:
         [c]: E2

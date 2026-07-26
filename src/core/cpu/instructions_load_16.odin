@@ -1,7 +1,9 @@
 #+private
 package cpu
 
-import "core:log"
+import "core:c"
+import com "../common"
+
 register_load_instructions_16 :: proc "contextless" (table: ^[256]Instruction) {
     register_instruction(table, ins_ld_r16_m, "LD r16 m", 0b11001111, 0b00000001, 3)
     register_instruction(table, ins_ld_r16mem_a, "LD [r16mem] A", 0b11001111, 0b00000010, 1)

@@ -136,7 +136,7 @@ ins_rl_r8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     set_flag(cpu, .N, false)
     set_flag(cpu, .H, false)
     set_flag(cpu, .C, b7 != 0)
-    return 2
+    return operand == .mem ? 4 : 2
 }
 
 /*
@@ -178,7 +178,7 @@ ins_rr_r8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     set_flag(cpu, .N, false)
     set_flag(cpu, .H, false)
     set_flag(cpu, .C, b0 != 0)
-    return 1
+    return operand == .mem ? 4 : 2
 }
 
 /*
@@ -220,7 +220,7 @@ ins_shift_arithmetic :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     set_flag(cpu, .N, false)
     set_flag(cpu, .H, false)
     set_flag(cpu, .C, overflow != 0)
-    return 2
+    return operand == .mem ? 4 : 2
 }
 
 /*
@@ -256,7 +256,7 @@ ins_swap :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     set_flag(cpu, .H, false)
     set_flag(cpu, .C, false)
 
-    return 2
+    return operand == .mem ? 4 : 2
 }
 
 /*
@@ -292,7 +292,7 @@ ins_shift_right_logical :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     set_flag(cpu, .H, false)
     set_flag(cpu, .C, b0 != 0)
     
-    return 2
+    return operand == .mem ? 4 : 2
 }
 
 /*
@@ -323,7 +323,7 @@ ins_bit :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     set_flag(cpu, .N, false)
     set_flag(cpu, .H, true)
 
-    return operand == .mem ? 4 : 2
+    return operand == .mem ? 3 : 2
 }
 
 /*

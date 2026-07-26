@@ -3,7 +3,7 @@ package cpu
 
 register_misc_instructions :: proc "contextless" (table: ^[256]Instruction) {
     register_instruction(table, ins_nop, "NOP", 0xFF, 0x00, allow_override = false)
-    register_instruction(table, ins_stop, "STP", 0xFF, 0x10, allow_override = false)
+    register_instruction(table, ins_stop, "STP", 0xFF, 0x10, 2, allow_override = false)
     register_instruction(table, ins_halt, "HALT", 0xFF, 0x76, allow_override = false)
     register_instruction(table, ins_ei, "EI", 0xFF, 0xFB, allow_override = false)
     register_instruction(table, ins_di, "DI", 0xFF, 0xF3, allow_override = false)
@@ -31,10 +31,12 @@ ins_nop :: proc(cpu: ^CPU, opcode: u8) -> u8 { return 1 }
 
     Flags: -
 
-    Example: 0x10
+    Length: 2
+
+    Example: 0x10 0x00
 */
 ins_stop :: proc(cpu: ^CPU, opcode: u8) -> u8 {
-    //_ = fetch_next_u8(cpu)
+    _ = fetch_next_u8(cpu)
     cpu.state = .Stopped
     return 1
 }

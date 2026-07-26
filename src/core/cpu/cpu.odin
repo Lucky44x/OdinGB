@@ -1,6 +1,7 @@
 package cpu
 
 import "core:log"
+import c "../common"
 
 CPU_RunState :: enum(u8) {
     Running,
@@ -10,7 +11,7 @@ CPU_RunState :: enum(u8) {
 
 CPU :: struct {
     regs: Registers,
-    bus: ^Bus_Access,
+    bus: ^c.Bus_Access,
 
     // Interrupt
     ime: bool,
@@ -19,11 +20,18 @@ CPU :: struct {
     state: CPU_RunState
 }
 
-step :: proc(
+init :: proc(
     cpu: ^CPU,
-    bus: ^Bus_Access,
+    bus: ^c.Bus_Access
 ) {
     cpu.bus = bus
+}
+
+step :: proc(
+    cpu: ^CPU,
+    bus: ^c.Bus_Access,
+) {
+    if cpu.bus == nil do cpu.bus = bus
 
     // TODO: Wake on specific interrupt etc...
     if cpu.state == .Stopped do return
@@ -68,4 +76,17 @@ fetch_next_u16 :: proc(cpu: ^CPU) -> u16 {
     inc_r16(cpu, .PC)
 
     return u16(val) | (u16(val2) << 8)
+}
+
+@(private)
+bus_read_u16 :: proc(bus: ^c.Bus_Access, address: u16) -> u16 {
+    lo := bus.read(bus.ctx, address)
+    hi := bus.read(bus.ctx, address + 1)
+    return (u16(hi) << 8) | u16(lo)
+}
+
+@(private)
+bus_write_u16 :: proc(bus: ^c.Bus_Access, address: u16, value: u16) {
+    bus.write(bus.ctx, address, u8(value & 0xFF))
+    bus.write(bus.ctx, address + 1, u8(value >> 8))
 }

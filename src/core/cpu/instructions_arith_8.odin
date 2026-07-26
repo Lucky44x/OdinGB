@@ -16,7 +16,7 @@ register_arithmetic_8bit_instructions :: proc "contextless" (table: ^[256]Instru
     register_instruction(table, ins_or_a_r8, "OR A r8", 0b11111000, 0b10110000, 1)
     register_instruction(table, ins_or_a_imm8, "OR A imm8", 0xFF, 0xF6, 2, allow_override=false)
     register_instruction(table, ins_comp_a_r8, "COMP A r8", 0b11111000, 0b10111000, 1)
-    register_instruction(table, ins_comp_a_imm8, "COMP A imm8", 0xFF, 0xFE, 1, allow_override=false)
+    register_instruction(table, ins_comp_a_imm8, "COMP A imm8", 0xFF, 0xFE, 2, allow_override=false)
 
     register_instruction(table, ins_ccf, "CCF", 0xFF, 0x3F, allow_override=false)
     register_instruction(table, ins_scf, "SCF", 0xFF, 0x37, allow_override=false)
@@ -57,7 +57,7 @@ ins_inc_r8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     set_flag(cpu, .N, false)
     set_flag(cpu, .H, carry_per_bit(original, 1, 3))
 
-    return 1;
+    return operand == .mem ? 3 : 1
 }
 
 /*
@@ -89,7 +89,7 @@ ins_dec_r8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     set_flag(cpu, .N, true)
     set_flag(cpu, .H, borrow_from_bit(original, 1, 3))
 
-    return 1;
+    return operand == .mem ? 3 : 1
 }
 
 /*
@@ -131,7 +131,7 @@ ins_add_a_r8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     set_flag(cpu, .H, carry_per_bit(left, right, 3, carry_in))
     set_flag(cpu, .C, carry_per_bit(left, right, 7, carry_in))
 
-    return 1
+    return operand == .mem ? 2 : 1
 }
 
 /*
@@ -169,7 +169,7 @@ ins_add_a_imm8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     set_flag(cpu, .H, carry_per_bit(left, right, 3, carry_in))
     set_flag(cpu, .C, carry_per_bit(left, right, 7, carry_in))
 
-    return 1;
+    return 2
 }
 
 /*
@@ -211,7 +211,7 @@ ins_sub_a_r8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     set_flag(cpu, .N, true)
     set_flag(cpu, .H, borrow_from_bit(left, right, 3, carry_in))
     set_flag(cpu, .C, borrow_from_bit(left, right, 7, carry_in))
-    return 1;
+    return operand == .mem ? 2 : 1
 }
 
 /*
@@ -249,7 +249,7 @@ ins_sub_a_imm8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     set_flag(cpu, .N, true)
     set_flag(cpu, .H, borrow_from_bit(left, right, 3, carry_in))
     set_flag(cpu, .C, borrow_from_bit(left, right, 7, carry_in))
-    return 1;
+    return 2
 }
 
 /*
@@ -283,7 +283,7 @@ ins_and_a_r8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     set_flag(cpu, .H, true)
     set_flag(cpu, .C, false)
 
-    return 1;
+    return operand == .mem ? 2 : 1
 }
 
 /*
@@ -312,7 +312,7 @@ ins_and_a_imm8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     set_flag(cpu, .H, true)
     set_flag(cpu, .C, false)
 
-    return 1;
+    return 2
 }
 
 /*
@@ -346,7 +346,7 @@ ins_xor_a_r8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     set_flag(cpu, .H, false)
     set_flag(cpu, .C, false)
 
-    return 1;
+    return operand == .mem ? 2 : 1
 }
 
 /*
@@ -375,7 +375,7 @@ ins_xor_a_imm8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     set_flag(cpu, .H, false)
     set_flag(cpu, .C, false)
 
-    return 1;
+    return 2
 }
 
 /*
@@ -409,7 +409,7 @@ ins_or_a_r8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     set_flag(cpu, .H, false)
     set_flag(cpu, .C, false)
 
-    return 1;
+    return operand == .mem ? 2 : 1
 }
 
 /*
@@ -438,7 +438,7 @@ ins_or_a_imm8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     set_flag(cpu, .H, false)
     set_flag(cpu, .C, false)
 
-    return 1;
+    return 2
 }
 
 /*
@@ -468,7 +468,7 @@ ins_comp_a_r8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     set_flag(cpu, .N, true)
     set_flag(cpu, .H, borrow_from_bit(left, right, 3))
     set_flag(cpu, .C, borrow_from_bit(left, right, 7))
-    return 1;
+    return operand == .mem ? 2 : 1
 }
 
 /*
@@ -481,6 +481,8 @@ ins_comp_a_r8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
         N: Set
         H: Set if carry from bit 3
         C: Set if carry from bit 7
+
+    Length: 2
     
     Example: 0xFE -> 11111110
 */
@@ -494,7 +496,7 @@ ins_comp_a_imm8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     set_flag(cpu, .N, true)
     set_flag(cpu, .H, borrow_from_bit(left, right, 3))
     set_flag(cpu, .C, borrow_from_bit(left, right, 7))
-    return 1;
+    return 2
 }
 
 /*

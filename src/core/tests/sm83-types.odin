@@ -1,6 +1,7 @@
 package tests
 
 import "../cpu"
+import "../common"
 import "core:log"
 
 SM83_RAM_Entry :: [2]u16
@@ -25,8 +26,8 @@ Test_Bus :: struct {
     memory: [65536]u8
 }
 
-test_read_adapter :: proc(ctx: rawptr, address: u16) -> u8 { return test_bus_read(cast(^Test_Bus)ctx, address) }
-test_bus_read :: proc(
+test_read_adapter :: proc (ctx: rawptr, address: u16) -> u8 { return test_bus_read(cast(^Test_Bus)ctx, address) }
+test_bus_read :: proc (
     bus: ^Test_Bus,
     address: u16
 ) -> u8 {
@@ -34,8 +35,8 @@ test_bus_read :: proc(
     return bus.memory[address]
 }
 
-test_write_adapter :: proc(ctx: rawptr, address: u16, val: u8) { test_bus_write(cast(^Test_Bus)ctx, address, val) }
-test_bus_write :: proc(
+test_write_adapter :: proc (ctx: rawptr, address: u16, val: u8) { test_bus_write(cast(^Test_Bus)ctx, address, val) }
+test_bus_write :: proc (
     bus: ^Test_Bus,
     address: u16,
     value: u8
@@ -46,7 +47,7 @@ test_bus_write :: proc(
 
 make_test_bus_access :: proc(
     bus: ^Test_Bus    
-) -> cpu.Bus_Access {
+) -> common.Bus_Access {
     return {
         ctx = bus,
         read = test_read_adapter,

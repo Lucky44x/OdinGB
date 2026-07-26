@@ -1,4 +1,5 @@
-roms/
+roms/*
+!roms/.gitkeep
 build/
 *.exe
 *.pdb

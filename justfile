@@ -17,6 +17,10 @@ build:
         -out:"{{release_binary}}" \
         -o:speed
 
+run:
+    @just build
+    ./{{release_binary}}
+
 test name="" debug="false":
     mkdir -p "{{test_dir}}"
     if [ -n "{{name}}" ]; then \

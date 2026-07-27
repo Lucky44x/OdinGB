@@ -15,13 +15,25 @@ import c "../common"
 
 Bus :: struct {
     // Accessors
-    boot_rom: Boot_Rom,
+    boot_rom: ^Boot_Rom,
+    cart_rom: ^c.CART_Access,
 
     // In-Bus Memory
     ram: Bus_RAM,
 
     // Interrupts
-    ic: Bus_InterruptController
+    ic: Bus_InterruptController,
+
+    is_banked: bool
+}
+
+init :: proc(
+    self: ^Bus,
+    boot_rom: ^Boot_Rom,
+    cart: ^c.CART_Access
+) {
+    self.boot_rom = boot_rom
+    self.cart_rom = cart
 }
 
 get_access :: proc(
@@ -36,23 +48,29 @@ get_access :: proc(
 
 adapter_bus_write :: proc (ctx: rawptr, addr: u16, val: u8) { bus_write(cast(^Bus)ctx, addr, val) }
 bus_write :: proc(ctx: ^Bus, addr: u16, value: u8) {
+    if addr == 0xFF50 {
+        ctx.is_banked = true
+        return
+    }
+
     switch(addr) {
-        case 0x0000 ..= 0x7FFF: //TODO: Ignore, write to cart
-            break
+        case 0x0000 ..= 0x7FFF: // Forwards write to the cartridge, cart then has to decide wether or not write is valid
+            ctx.cart_rom.write_ram(ctx, addr, value); return
         case 0x8000 ..= 0x9FFF: //TODO: Write to PPU
             break
-        case 0xA000 ..= 0xBFFF: //TODO: Ignore, write to cart
-            break
-        case 0xC000 ..= 0xDFFF: fallthrough // Falls through, since E000 - FDFF is a mirror region
-        case 0xE000 ..= 0xFDFF: //TODO: Write to own wram bank and guard against overflow beyond Mirror-Limit
-            break
+        case 0xA000 ..= 0xBFFF: // Forwards write to the cartridge, cart then has to decide wether or not write is valid
+            ctx.cart_rom.write_ram(ctx, addr, value); return
+        case 0xC000 ..= 0xDFFF:
+            write_ram(&ctx.ram, .WRAM, addr, value); return
+        case 0xE000 ..= 0xFDFF:
+            write_ram(&ctx.ram, .WRAM, addr - 0x2000, value); return
         case 0xFE00 ..= 0xFE9F: //TODO: Write to PPU
             break
         case 0xFEA0 ..= 0xFEFF: return; // Ignored -> Nothing in this range
         case 0xFF00 ..= 0xFF7F: //TODO: Write to device fields
             break
-        case 0xFF80 ..= 0xFFFE: //TODO: Write to hram
-            break
+        case 0xFF80 ..= 0xFFFE:
+            write_ram(&ctx.ram, .HRAM, addr, value); return
         case 0xFFFF: //TODO: Write to interrupt register
             break
     }
@@ -61,23 +79,22 @@ bus_write :: proc(ctx: ^Bus, addr: u16, value: u8) {
 
 adapter_bus_read :: proc (ctx: rawptr, addr: u16) -> u8 { return bus_read(cast(^Bus)ctx, addr) }
 bus_read :: proc(ctx: ^Bus, addr: u16) -> u8 {
+    if !ctx.is_banked && addr <= 0xFF do return ctx.boot_rom.data[addr]
+
     switch(addr) {
-        case 0x0000 ..= 0x7FFF: //TODO: Read from cart
-            break
+        case 0x0000 ..= 0x7FFF: return ctx.cart_rom.read_rom(ctx, addr)
         case 0x8000 ..= 0x9FFF: //TODO: Read from PPU
             break
-        case 0xA000 ..= 0xBFFF: //TODO: Read from cart
-            break
-        case 0xC000 ..= 0xDFFF: fallthrough // Falls through, since E000 - FDFF is a mirror region
-        case 0xE000 ..= 0xFDFF: //TODO: Read from own wram bank and guard against overflow beyond Mirror-Limit
-            break
+        case 0xA000 ..= 0xBFFF:
+            return ctx.cart_rom.read_rom(ctx, addr)
+        case 0xC000 ..= 0xDFFF: return read_ram(&ctx.ram, .WRAM, addr)
+        case 0xE000 ..= 0xFDFF: return read_ram(&ctx.ram, .WRAM, addr - 0x2000)
         case 0xFE00 ..= 0xFE9F: //TODO: Read from PPU
             break
         case 0xFEA0 ..= 0xFEFF: return 0xFF; // Nothing inside this region
         case 0xFF00 ..= 0xFF7F: //TODO: Read from device fields
             break
-        case 0xFF80 ..= 0xFFFE: //TODO: Read from hram
-            break
+        case 0xFF80 ..= 0xFFFE: return read_ram(&ctx.ram, .HRAM, addr)
         case 0xFFFF: //TODO: Read from interrupt register
             break
     }

@@ -46,6 +46,19 @@ cartridge_load_direct :: proc(
     cart.mapper = MAPPER_Basic
 }
 
+get_cart_accessor :: proc(
+    cart: ^Cartridge
+) -> c.CART_Access {
+    return {
+        ctx = cart,
+        read_rom = cart_read_adapter,
+        write_ram = cart_write_adapter
+    }
+}
+
+@(private)
+cart_read_adapter :: proc(ctx: rawptr, addr: u16) -> u8 { return cartridge_read(cast(^Cartridge)ctx, addr) }
+@(private)
 cartridge_read :: proc(
     ctx: ^Cartridge,
     addr: u16
@@ -60,4 +73,15 @@ cartridge_read :: proc(
             return read_rom_bulk(&type, phys_addr)
     }
     return 0xFF
+}
+
+@(private)
+cart_write_adapter :: proc(ctx: rawptr, addr: u16, val: u8) { cartridge_write(cast(^Cartridge)ctx, addr,val) }
+@(private)
+cartridge_write :: proc(
+    ctx: ^Cartridge,
+    addr: u16,
+    val: u8
+) {
+    //TODO: STUB implement later
 }

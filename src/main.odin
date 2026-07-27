@@ -59,12 +59,6 @@ main :: proc() {
     rl.SetTargetFPS(60)
 
     for !rl.WindowShouldClose() {
-        // Rendering
-        rl.BeginDrawing()
-        rl.ClearBackground(rl.GRAY)
-
-        rl.EndDrawing()
-
         // Logic
         if rl.IsFileDropped() {
             fileList := rl.LoadDroppedFiles()
@@ -93,6 +87,19 @@ main :: proc() {
 
             rl.UnloadDroppedFiles(fileList)
         }
+
+        // Rendering
+        rl.BeginDrawing()
+        rl.ClearBackground(rl.GRAY)
+
+        if emulator_core.is_loaded {
+            if rl.IsKeyDown(.SPACE) {
+                last_opcode := core.step_emulation(&emulator_core)
+                log.infof("Stepped, instruction: %02X", last_opcode)
+            }
+        }
+
+        rl.EndDrawing()
     }
 
     rl.CloseWindow()
@@ -124,5 +131,5 @@ load_rom :: proc(bios: ^core.GB_Bios, rom: ^os.File) {
     core.cartridge_load(&rom_cart, &rom_data)
 
     // Initialize emulator core
-    core.make_GB_Core(&emulator_core)
+    core.make_GB_Core(&emulator_core, &rom_cart, &boot_rom)
 }

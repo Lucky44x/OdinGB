@@ -17,7 +17,9 @@ CPU :: struct {
     ime: bool,
     ime_enable_pending: u8,
 
-    state: CPU_RunState
+    state: CPU_RunState,
+
+    last_instruction: u8,
 }
 
 init :: proc(
@@ -51,6 +53,7 @@ step :: proc(
     }
 
     opcode: u8 = fetch_next_u8(cpu)
+    cpu.last_instruction = opcode
     if handle_instruction(cpu, opcode) == 0 do log.warnf("Opcode: %02x returned a cycle time of 0", opcode)
 
     if cpu.ime_enable_pending == 1 {

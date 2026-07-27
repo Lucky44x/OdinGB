@@ -1,5 +1,6 @@
 package cpu
 
+import "core:sys/info"
 import "core:log"
 @(private)
 Registers :: struct {

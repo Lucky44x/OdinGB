@@ -56,6 +56,7 @@ step :: proc(
     }
 
     opcode: u8 = fetch_next_u8(cpu)
+
     cpu.last_instruction = opcode
     instruction_cycles := handle_instruction(cpu, opcode)
     if instruction_cycles <= 0 do log.warnf("Opcode: %02x returned a cycle time of 0", opcode)
@@ -103,6 +104,6 @@ bus_read_u16 :: proc(bus: ^c.Bus_Access, address: u16) -> u16 {
 
 @(private)
 bus_write_u16 :: proc(bus: ^c.Bus_Access, address: u16, value: u16) {
-    bus.write(bus, address, u8(value & 0xFF))
+    bus.write(bus, address, u8(value & 0x00FF))
     bus.write(bus, address + 1, u8(value >> 8))
 }

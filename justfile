@@ -23,7 +23,6 @@ build debug="false":
     if [ {{debug}} = "true" ]; then \
     odin build "{{app_package}}" \
             -out:"{{debug_binary}}" \
-            -o:speed \
             -extra-linker-flags:"/FORCE:MULTIPLE" \
             -debug; \
     else \

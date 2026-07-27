@@ -16,7 +16,7 @@ M_CYCLES_PER_FRAME :: 17_556
 
 emulator_core: core.GB_Core 
 boot_rom: core.GB_Bios
-
+cart_rom: core.GB_Cartridge
 
 main :: proc() {
     logger := log.create_console_logger(.Debug)
@@ -113,7 +113,7 @@ main :: proc() {
         rl.BeginDrawing()
         rl.ClearBackground(rl.GRAY)
 
-        vram_viewer_draw(&viewer, {16, 16}, 1)
+        vram_viewer_draw(&viewer, {16, 16}, 3)
 
         rl.EndDrawing()
     }
@@ -135,17 +135,14 @@ unload_bios :: proc(bios: ^core.GB_Bios, file: ^os.File) {
 }
 
 load_rom :: proc(bios: ^core.GB_Bios, rom: ^os.File) {
-    // Load Cartridge in direct mode
-    rom_cart: core.GB_Cartridge
-
     rom_data, err := os.read_entire_file_from_file(rom, context.allocator)
     defer delete(rom_data)
     if err != nil {
         log.errorf("Could not read rom: %e", err)
         return
     }
-    core.cartridge_load(&rom_cart, &rom_data)
+    core.cartridge_load(&cart_rom, rom_data)
 
     // Initialize emulator core
-    core.make_GB_Core(&emulator_core, &rom_cart, &boot_rom)
+    core.make_GB_Core(&emulator_core, &cart_rom, &boot_rom)
 }

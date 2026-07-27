@@ -1,6 +1,8 @@
 #+private
 package cpu
 
+import "core:log"
+import "core:sys/info"
 register_load_instructions_8 :: proc "contextless" (table: ^[256]Instruction) {
     register_instruction(table, ins_ld_r8_r8, "LD r8 r8", 0b11000000, 0b01000000, 1)
     register_instruction(table, ins_ld_r8_imm8, "LD r8 imm8", 0b11000110, 0b00000110, 2)

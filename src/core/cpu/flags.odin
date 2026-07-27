@@ -21,7 +21,7 @@ carry_per_bit_internal :: proc(
 
     shift_amount := u8(bit + 1)
     carry_mask := u32((u32(1) << shift_amount) - 1)
-    return left & carry_mask + (right & carry_mask) + carry > carry_mask
+    return (left & carry_mask) + (right & carry_mask) + carry > carry_mask
 }
 
 borrow_from_bit_internal :: proc(

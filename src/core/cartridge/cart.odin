@@ -39,7 +39,7 @@ cartridge_load_buffered :: proc(
 
 cartridge_load_direct :: proc(
     cart: ^Cartridge,
-    data: ^[]u8
+    data: []u8
 ) {
     read_cart_header(data[0x0100:0x014F])
     cart.rom = init_bulk_rom(data)

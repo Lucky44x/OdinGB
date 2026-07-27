@@ -2,11 +2,11 @@
 package cart
 
 ROM_Bulk :: struct {
-    data: ^[]u8
+    data: []u8
 }
 
 init_bulk_rom :: proc(
-    data: ^[]u8
+    data: []u8
 ) -> ROM_Bulk {
     return ROM_Bulk {
         data = data

@@ -70,8 +70,10 @@ cartridge_read :: proc(
         case ROM_Buffered:
             return read_rom_buffered(&type, phys_addr)
         case ROM_Bulk:
+            if addr == 0x0104 do log.info("ROM-Read: %02X", read_rom_bulk(&type, phys_addr))
             return read_rom_bulk(&type, phys_addr)
     }
+
     return 0xFF
 }
 

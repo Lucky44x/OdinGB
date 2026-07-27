@@ -55,6 +55,14 @@ step :: proc(
         return // Let instruction execute at next CPU step
     }
 
+    if read_r16(cpu, .PC) == 0x0028 {
+        log.infof("Logo input: PC=%04X DE=%04X, A=%02X HL=%04X", read_r16(cpu, .PC), read_r16(cpu, .DE), read_r8(cpu, .A), read_r16(cpu, .HL))
+        log.infof(
+            "cart[0104]=%02X bus[0104]=%02X",
+            cpu.bus.read(cpu.bus, 0x0104),
+        )
+    }
+
     opcode: u8 = fetch_next_u8(cpu)
 
     cpu.last_instruction = opcode

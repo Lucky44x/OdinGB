@@ -88,7 +88,7 @@ bus_read :: proc(ctx: ^Bus, addr: u16) -> u8 {
     switch(addr) {
         case 0x0000 ..= 0x7FFF: return ctx.cart_rom.read_rom(ctx.cart_rom, addr)
         case 0x8000 ..= 0x9FFF: return ctx.ppu.read(ctx.ppu, addr)
-        case 0xA000 ..= 0xBFFF: return ctx.cart_rom.read_rom(ctx.cart_rom, addr)
+        case 0xA000 ..= 0xBFFF: return ctx.cart_rom.read_rom(ctx.cart_rom, addr) //FIXME: Reading RAM not ROM
         case 0xC000 ..= 0xDFFF: return read_ram(&ctx.ram, .WRAM, addr)
         case 0xE000 ..= 0xFDFF: return read_ram(&ctx.ram, .WRAM, addr - 0x2000)
         case 0xFE00 ..= 0xFE9F: //TODO: Read from PPU

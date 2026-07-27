@@ -20,3 +20,4 @@ write_vram :: proc(
 ) {
     ctx.data[addr - 0x8000] = val
 }
+

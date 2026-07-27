@@ -38,8 +38,7 @@ set_interrupt :: proc(
     state := access.read(access, 0xFF0F)
     state |= (1 << src)
     access.write(access, 0xFF0F, state)
-
-    // log.infof("Set interrupt %e -> %02X", src, access.read(access, 0xFF0F))
+    //log.infof("Set interrupt %e -> %02X", src, access.read(access, 0xFF0F))
 }
 
 clear_interrupt :: proc(

@@ -37,6 +37,7 @@ make_GB_Core :: proc(
     bus.init(&core.bus_state, core.bios, &core.cartridge, &core.ppu)
     core.bus = bus.get_access(&core.bus_state)
 
+    ppu.init(&core.ppu_state, &core.bus)
     cpu.init(&core.cpu_state, &core.bus)
 
     core.is_loaded = true
@@ -52,5 +53,8 @@ cartridge_unload :: proc { cart.cartridge_unload }
 step_emulation :: proc(
     core: ^GB_Core
 ) -> u8 {
-    return cpu.step(&core.cpu_state, &core.bus)
+    elapsed_m := cpu.step(&core.cpu_state, &core.bus)
+    ppu.step(&core.ppu_state, u16(elapsed_m))
+    
+    return elapsed_m
 }

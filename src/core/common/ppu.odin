@@ -9,3 +9,10 @@ PPU_Access :: struct {
     write: PPU_Write,
     read: PPU_Read
 }
+
+pack_rgba555a1 :: proc(r, g, b: u16) -> u16 {
+    return ((r & 0x1F) << 11) |
+            ((g & 0x1F) << 6) |
+            ((b & 0x1F) << 1) |
+            1
+}

@@ -3,20 +3,26 @@ test_package := "./src/core/tests"
 binary_name  := "gameboy"
 
 release_dir := "./build/release"
+debug_dir := "./build/debug"
 test_dir    := "./build/test"
 
 release_binary := release_dir / (binary_name + ".exe")
 test_binary    := test_dir / (binary_name + "-tests.exe")
+debug_binary := debug_dir / (binary_name + "-dbg.exe")
 
 default:
     @just --list
 
 build debug="false":
-    mkdir -p "{{release_dir}}"
+    if [ {{debug}} = "true" ]; then \
+    mkdir -p "{{debug_dir}}"; \
+    else \
+    mkdir -p "{{release_dir}}"; \
+    fi
 
     if [ {{debug}} = "true" ]; then \
     odin build "{{app_package}}" \
-            -out:"{{release_binary}}" \
+            -out:"{{debug_binary}}" \
             -o:speed \
             -extra-linker-flags:"/FORCE:MULTIPLE" \
             -debug; \
@@ -29,7 +35,12 @@ build debug="false":
 
 run debug="false":
     @just build {{debug}}
-    ./{{release_binary}} -bios-file:"./roms/dmg_boot.bin"
+
+    if [ {{debug}} = "false" ]; then \
+        ./{{release_binary}} -bios-file:"./roms/dmg_boot.bin" \
+    else \
+        ./{{debug_binary}} -bios-file:"./roms/dmg_boot.bin" \
+    fi
 
 test name="" debug="false":
     mkdir -p "{{test_dir}}"

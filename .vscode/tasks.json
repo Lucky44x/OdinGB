@@ -4,39 +4,14 @@
     "args": [],
     "tasks": [
         {
-            "label": "mkdir",
-            "type": "shell",
-            "command": "cmd",
-            "args": [
-                "/C",
-                "if not exist .\\build mkdir .\\build"
-            ]
-        },
-        {
-            "label": "build",
-            "type": "shell",
-            "command": "odin build \"src\" -debug -out:build/debug.exe",
-            "group": "build"
-        },
-        {
             "label": "Build",
-            "dependsOn": [
-                "mkdir",
-                "build"
-            ]
-        },
-        {
-            "label": "Test",
             "type": "shell",
-            "command": "build/debug.exe",
-            "dependsOn": [
-                "mkdir",
-                "build"
-            ],
-            "args": [
-                ".\\roms\\bios\\dmg_boot.bin", 
-                ".\\roms\\tests\\dmg-acid2\\dmg-acid2.gb"
-            ],
+            "command": "just build true",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
         }
     ]
 }

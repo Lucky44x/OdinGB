@@ -6,8 +6,8 @@
             "request": "launch",
             "preLaunchTask": "Build",
             "name": "Debug",
-            "program": "${workspaceRoot}/build/debug.exe",
-            "args": [".\\roms\\bios\\dmg_boot.bin", ".\\roms\\Tetris.gb"],
+            "program": "${workspaceRoot}/build/debug/gameboy-dbg.exe",
+            "args": [".\\roms\\dmg_boot.bin", ".\\roms\\Dr. Mario.gb"],
             "cwd": "${workspaceRoot}"
         }
     ]

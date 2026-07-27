@@ -12,8 +12,11 @@ import "core:os"
 
 import "core/common"
 
+M_CYCLES_PER_FRAME :: 17_556
+
 emulator_core: core.GB_Core 
 boot_rom: core.GB_Bios
+
 
 main :: proc() {
     logger := log.create_console_logger(.Debug)
@@ -47,7 +50,8 @@ main :: proc() {
     }
 
     CONF :: struct {
-        bios: ^os.File `args:"name=bios-file,pos=0,required,file=r" usage:"The dmg_boot.bin"`
+        bios: ^os.File `args:"name=bios-file,pos=0,required,file=r" usage:"The dmg_boot.bin"`,
+        rom: ^os.File `args:"name=rom-file,pos=1,file=r" usage:"The game-rom"`
     }
 
     conf: CONF
@@ -56,9 +60,14 @@ main :: proc() {
     load_bios(&boot_rom, conf.bios)
     defer unload_bios(&boot_rom, conf.bios)
 
+    if conf.rom != nil do load_rom(&boot_rom, conf.rom)
+
     //rl.SetTraceLogLevel(.WARNING)
     rl.InitWindow(640, 576, "AcornGB")
     rl.SetTargetFPS(60)
+
+    viewer := vram_viewer_init()
+    defer vram_viewer_destroy(&viewer)
 
     for !rl.WindowShouldClose() {
         // Logic
@@ -90,16 +99,21 @@ main :: proc() {
             rl.UnloadDroppedFiles(fileList)
         }
 
+        if emulator_core.is_loaded {
+            cycles := M_CYCLES_PER_FRAME
+            
+            for cycles > 0 {
+                //log.info("Next Instruction")
+                cycles -= int(core.step_emulation(&emulator_core))
+            }
+            vram_viewer_update(&viewer, &emulator_core.ppu_state.vram.data)
+        }
+
         // Rendering
         rl.BeginDrawing()
         rl.ClearBackground(rl.GRAY)
 
-        if emulator_core.is_loaded {
-            if rl.IsKeyDown(.SPACE) {
-                last_opcode := core.step_emulation(&emulator_core)
-                log.infof("Stepped, instruction: %02X", last_opcode)
-            }
-        }
+        vram_viewer_draw(&viewer, {16, 16}, 1)
 
         rl.EndDrawing()
     }

@@ -75,6 +75,9 @@ fetch_next_u8 :: proc(cpu: ^CPU) -> u8 {
     pc := read_r16(cpu, .PC)
     val := cpu.bus.read(cpu.bus, pc)
     inc_r16(cpu, .PC)
+
+    //log.infof("  PC: %04X -> Fetched u8: %02X -> %04X", pc, val, read_r16(cpu, .PC))
+
     return val
 }
 
@@ -85,6 +88,8 @@ fetch_next_u16 :: proc(cpu: ^CPU) -> u16 {
     inc_r16(cpu, .PC)
     val2 := cpu.bus.read(cpu.bus, read_r16(cpu, .PC))
     inc_r16(cpu, .PC)
+
+    //log.infof("  PC: %04X -> Fetched u16: %04X -> %04X", pc, u16(val) | (u16(val2) << 8), read_r16(cpu, .PC))
 
     return u16(val) | (u16(val2) << 8)
 }

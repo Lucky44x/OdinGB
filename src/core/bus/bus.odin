@@ -17,6 +17,7 @@ Bus :: struct {
     // Accessors
     boot_rom: ^Boot_Rom,
     cart_rom: ^c.CART_Access,
+    ppu: ^c.PPU_Access,
 
     // In-Bus Memory
     ram: Bus_RAM,
@@ -31,10 +32,12 @@ Bus :: struct {
 init :: proc(
     self: ^Bus,
     boot_rom: ^Boot_Rom,
-    cart: ^c.CART_Access
+    cart: ^c.CART_Access,
+    ppu: ^c.PPU_Access
 ) {
     self.boot_rom = boot_rom
     self.cart_rom = cart
+    self.ppu = ppu
 }
 
 get_access :: proc(
@@ -57,8 +60,8 @@ bus_write :: proc(ctx: ^Bus, addr: u16, value: u8) {
     switch(addr) {
         case 0x0000 ..= 0x7FFF: // Forwards write to the cartridge, cart then has to decide wether or not write is valid
             ctx.cart_rom.write_ram(ctx.cart_rom, addr, value); return
-        case 0x8000 ..= 0x9FFF: //TODO: Write to PPU
-            break
+        case 0x8000 ..= 0x9FFF: 
+            ctx.ppu.write(ctx.ppu, addr, value); return
         case 0xA000 ..= 0xBFFF: // Forwards write to the cartridge, cart then has to decide wether or not write is valid
             ctx.cart_rom.write_ram(ctx.cart_rom, addr, value); return
         case 0xC000 ..= 0xDFFF:
@@ -84,10 +87,8 @@ bus_read :: proc(ctx: ^Bus, addr: u16) -> u8 {
 
     switch(addr) {
         case 0x0000 ..= 0x7FFF: return ctx.cart_rom.read_rom(ctx.cart_rom, addr)
-        case 0x8000 ..= 0x9FFF: //TODO: Read from PPU
-            break
-        case 0xA000 ..= 0xBFFF:
-            return ctx.cart_rom.read_rom(ctx.cart_rom, addr)
+        case 0x8000 ..= 0x9FFF: return ctx.ppu.read(ctx.ppu, addr)
+        case 0xA000 ..= 0xBFFF: return ctx.cart_rom.read_rom(ctx.cart_rom, addr)
         case 0xC000 ..= 0xDFFF: return read_ram(&ctx.ram, .WRAM, addr)
         case 0xE000 ..= 0xFDFF: return read_ram(&ctx.ram, .WRAM, addr - 0x2000)
         case 0xFE00 ..= 0xFE9F: //TODO: Read from PPU

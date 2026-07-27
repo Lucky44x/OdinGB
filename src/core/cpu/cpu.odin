@@ -32,40 +32,48 @@ init :: proc(
 step :: proc(
     cpu: ^CPU,
     bus: ^c.Bus_Access,
-) {
+) -> (m_cycles: u8) {
     if cpu.bus == nil do cpu.bus = bus
 
     // TODO: Wake on specific interrupt etc...
-    if cpu.state == .Stopped do return
+    if cpu.state == .Stopped do return 0 // Do not advance hardware state during STOP 
 
-    //TODO: Fetch interrupts
-    pending_interrupt := false
+    // Check if interrupt is pending
+    pending_interrupt := is_interrupt_pending(cpu)
 
     if cpu.state == .Halted {
-        if !pending_interrupt do return
+        if !pending_interrupt do return 1 // NOOP
         // Any Interrupt will break halt
         cpu.state = .Running
-        // Autoamtically falls through to the interrupt dispatcher
+        // Automatically falls through to the interrupt dispatcher
     }
 
     if pending_interrupt && cpu.ime {
-        //TODO: Dispatch interrupt
+        // log.info("Scanning for interrupts")
+        found, interrupt := fetch_interrupt(cpu)
+        if found do m_cycles += dispatch_interrupt(cpu, interrupt)
+        return // Let instruction execute at next CPU step
     }
 
     opcode: u8 = fetch_next_u8(cpu)
     cpu.last_instruction = opcode
-    if handle_instruction(cpu, opcode) == 0 do log.warnf("Opcode: %02x returned a cycle time of 0", opcode)
+    instruction_cycles := handle_instruction(cpu, opcode)
+    if instruction_cycles <= 0 do log.warnf("Opcode: %02x returned a cycle time of 0", opcode)
+
+    m_cycles += instruction_cycles
 
     if cpu.ime_enable_pending == 1 {
         cpu.ime = true
         cpu.ime_enable_pending = 0
     } else if cpu.ime_enable_pending > 1 do cpu.ime_enable_pending -= 1
+
+    return
 }
 
 @(private)
 fetch_next_u8 :: proc(cpu: ^CPU) -> u8 {
     pc := read_r16(cpu, .PC)
-    val := cpu.bus.read(cpu.bus.ctx, pc)
+    val := cpu.bus.read(cpu.bus, pc)
     inc_r16(cpu, .PC)
     return val
 }
@@ -73,9 +81,9 @@ fetch_next_u8 :: proc(cpu: ^CPU) -> u8 {
 @(private)
 fetch_next_u16 :: proc(cpu: ^CPU) -> u16 {
     pc := read_r16(cpu, .PC)
-    val := cpu.bus.read(cpu.bus.ctx, pc)
+    val := cpu.bus.read(cpu.bus, pc)
     inc_r16(cpu, .PC)
-    val2 := cpu.bus.read(cpu.bus.ctx, read_r16(cpu, .PC))
+    val2 := cpu.bus.read(cpu.bus, read_r16(cpu, .PC))
     inc_r16(cpu, .PC)
 
     return u16(val) | (u16(val2) << 8)
@@ -83,13 +91,13 @@ fetch_next_u16 :: proc(cpu: ^CPU) -> u16 {
 
 @(private)
 bus_read_u16 :: proc(bus: ^c.Bus_Access, address: u16) -> u16 {
-    lo := bus.read(bus.ctx, address)
-    hi := bus.read(bus.ctx, address + 1)
+    lo := bus.read(bus, address)
+    hi := bus.read(bus, address + 1)
     return (u16(hi) << 8) | u16(lo)
 }
 
 @(private)
 bus_write_u16 :: proc(bus: ^c.Bus_Access, address: u16, value: u16) {
-    bus.write(bus.ctx, address, u8(value & 0xFF))
-    bus.write(bus.ctx, address + 1, u8(value >> 8))
+    bus.write(bus, address, u8(value & 0xFF))
+    bus.write(bus, address + 1, u8(value >> 8))
 }

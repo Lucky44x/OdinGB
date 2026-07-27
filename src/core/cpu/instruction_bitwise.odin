@@ -121,7 +121,7 @@ ins_rl_r8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     operand := decode_r8_src(opcode)
 
     value: u8
-    if operand == .mem do value = cpu.bus.read(cpu.bus.ctx, read_r16(cpu, .HL))
+    if operand == .mem do value = cpu.bus.read(cpu.bus, read_r16(cpu, .HL))
     else do value = read_r8(cpu, REG_8(operand))
 
     b7 := (value >> 7) & 1
@@ -129,7 +129,7 @@ ins_rl_r8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     value <<= 1
     value |= is_circular ? b7 : u8(get_flag(cpu, .C))
 
-    if operand == .mem do cpu.bus.write(cpu.bus.ctx, read_r16(cpu, .HL), value)
+    if operand == .mem do cpu.bus.write(cpu.bus, read_r16(cpu, .HL), value)
     else do write_r8(cpu, REG_8(operand), value)
 
     set_flag(cpu, .Z, value == 0)
@@ -163,7 +163,7 @@ ins_rr_r8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     operand := decode_r8_src(opcode)
 
     value: u8
-    if operand == .mem do value = cpu.bus.read(cpu.bus.ctx, read_r16(cpu, .HL))
+    if operand == .mem do value = cpu.bus.read(cpu.bus, read_r16(cpu, .HL))
     else do value = read_r8(cpu, REG_8(operand))
 
     b0 := value & 1
@@ -171,7 +171,7 @@ ins_rr_r8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     value >>= 1
     value |= is_circular ? (b0 << 7) : (u8(get_flag(cpu, .C)) << 7)
 
-    if operand == .mem do cpu.bus.write(cpu.bus.ctx, read_r16(cpu, .HL), value)
+    if operand == .mem do cpu.bus.write(cpu.bus, read_r16(cpu, .HL), value)
     else do write_r8(cpu, REG_8(operand), value)
 
     set_flag(cpu, .Z, value == 0)
@@ -203,7 +203,7 @@ ins_shift_arithmetic :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     operand := decode_r8_src(opcode)
 
     value: u8
-    if operand == .mem do value = cpu.bus.read(cpu.bus.ctx, read_r16(cpu, .HL))
+    if operand == .mem do value = cpu.bus.read(cpu.bus, read_r16(cpu, .HL))
     else do value = read_r8(cpu, REG_8(operand))
 
     overflow := is_rightshift ? value & 1 : (value >> 7) & 1
@@ -213,7 +213,7 @@ ins_shift_arithmetic :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     if is_rightshift do value |= (value & 0x40) << 1 // Duplicate bit 7
     else do value &= 0xFE // Clear bit 0
 
-    if operand == .mem do cpu.bus.write(cpu.bus.ctx, read_r16(cpu, .HL), value)
+    if operand == .mem do cpu.bus.write(cpu.bus, read_r16(cpu, .HL), value)
     else do write_r8(cpu, REG_8(operand), value)
 
     set_flag(cpu, .Z, value == 0)
@@ -241,14 +241,14 @@ ins_swap :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     operand := decode_r8_src(opcode)
 
     value: u8
-    if operand == .mem do value = cpu.bus.read(cpu.bus.ctx, read_r16(cpu, .HL))
+    if operand == .mem do value = cpu.bus.read(cpu.bus, read_r16(cpu, .HL))
     else do value = read_r8(cpu, REG_8(operand))
 
     lo := value & 0x0F
     hi := value & 0xF0 >> 4
     value = lo << 4 | hi
 
-    if operand == .mem do cpu.bus.write(cpu.bus.ctx, read_r16(cpu, .HL), value)
+    if operand == .mem do cpu.bus.write(cpu.bus, read_r16(cpu, .HL), value)
     else do write_r8(cpu, REG_8(operand), value)
 
     set_flag(cpu, .Z, value == 0)
@@ -277,14 +277,14 @@ ins_shift_right_logical :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     operand := decode_r8_src(opcode)
 
     value: u8
-    if operand == .mem do value = cpu.bus.read(cpu.bus.ctx, read_r16(cpu, .HL))
+    if operand == .mem do value = cpu.bus.read(cpu.bus, read_r16(cpu, .HL))
     else do value = read_r8(cpu, REG_8(operand))
 
     b0 := value & 1
     value >>= 1
     value &= 0x7F // Clear bit 7
 
-    if operand == .mem do cpu.bus.write(cpu.bus.ctx, read_r16(cpu, .HL), value)
+    if operand == .mem do cpu.bus.write(cpu.bus, read_r16(cpu, .HL), value)
     else do write_r8(cpu, REG_8(operand), value)
 
     set_flag(cpu, .Z, value == 0)
@@ -314,7 +314,7 @@ ins_bit :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     operand := decode_r8_src(opcode)
 
     value: u8
-    if operand == .mem do value = cpu.bus.read(cpu.bus.ctx, read_r16(cpu, .HL))
+    if operand == .mem do value = cpu.bus.read(cpu.bus, read_r16(cpu, .HL))
     else do value = read_r8(cpu, REG_8(operand))
 
     bit := (value >> bit_index) & 1
@@ -346,13 +346,13 @@ ins_put :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     operand := decode_r8_src(opcode)
 
     value: u8
-    if operand == .mem do value = cpu.bus.read(cpu.bus.ctx, read_r16(cpu, .HL))
+    if operand == .mem do value = cpu.bus.read(cpu.bus, read_r16(cpu, .HL))
     else do value = read_r8(cpu, REG_8(operand))
 
     if is_set do value |= (1 << bit_index)
     else do value &= ~(1 << bit_index)
 
-    if operand == .mem do cpu.bus.write(cpu.bus.ctx, read_r16(cpu, .HL), value)
+    if operand == .mem do cpu.bus.write(cpu.bus, read_r16(cpu, .HL), value)
     else do write_r8(cpu, REG_8(operand), value)
 
     return operand == .mem ? 4 : 2

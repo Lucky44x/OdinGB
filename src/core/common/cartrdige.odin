@@ -1,7 +1,7 @@
 package common
 
-CART_Read :: proc(ctx: rawptr, addr: u16) -> u8
-CART_Write :: proc(ctx: rawptr, addr: u16, val: u8)
+CART_Read :: proc(cart: ^CART_Access, addr: u16) -> u8
+CART_Write :: proc(cart: ^CART_Access, addr: u16, val: u8)
 
 CART_Access :: struct {
     ctx: rawptr,

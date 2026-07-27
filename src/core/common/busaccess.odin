@@ -1,7 +1,7 @@
 package common
 
-Write_Proc :: proc(ctx: rawptr, address: u16, value: u8)
-Read_Proc :: proc(ctx: rawptr, address: u16) -> u8
+Write_Proc :: proc(ctx: ^Bus_Access, address: u16, value: u8)
+Read_Proc :: proc(ctx: ^Bus_Access, address: u16) -> u8
 
 Bus_Access :: struct {
     ctx: rawptr,

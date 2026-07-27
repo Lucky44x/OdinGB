@@ -10,6 +10,8 @@ import rl "vendor:raylib"
 import "core:flags"
 import "core:os"
 
+import "core/common"
+
 emulator_core: core.GB_Core 
 boot_rom: core.GB_Bios
 

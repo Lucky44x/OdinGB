@@ -44,12 +44,12 @@ register_arithmetic_8bit_instructions :: proc "contextless" (table: ^[256]Instru
 ins_inc_r8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     operand := decode_r8_dst(opcode)
     original: u8
-    if operand == .mem do original = cpu.bus.read(cpu.bus.ctx, read_r16(cpu, .HL))
+    if operand == .mem do original = cpu.bus.read(cpu.bus, read_r16(cpu, .HL))
     else do original = read_r8(cpu, REG_8(operand))
     
     value := original + 1
     
-    if operand == .mem do cpu.bus.write(cpu.bus.ctx, read_r16(cpu, .HL), value)
+    if operand == .mem do cpu.bus.write(cpu.bus, read_r16(cpu, .HL), value)
     else do write_r8(cpu, REG_8(operand), value)
 
     // Set Flags
@@ -76,12 +76,12 @@ ins_inc_r8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
 ins_dec_r8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     operand := decode_r8_dst(opcode)
     original: u8
-    if operand == .mem do original = cpu.bus.read(cpu.bus.ctx, read_r16(cpu, .HL))
+    if operand == .mem do original = cpu.bus.read(cpu.bus, read_r16(cpu, .HL))
     else do original = read_r8(cpu, REG_8(operand))
     
     value := original - 1
     
-    if operand == .mem do cpu.bus.write(cpu.bus.ctx, read_r16(cpu, .HL), value)
+    if operand == .mem do cpu.bus.write(cpu.bus, read_r16(cpu, .HL), value)
     else do write_r8(cpu, REG_8(operand), value)
 
     // Set Flags
@@ -115,7 +115,7 @@ ins_add_a_r8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     left := read_r8(cpu, .A)
     right, carry_in: u8 = 0, 0
 
-    if operand == .mem do right = cpu.bus.read(cpu.bus.ctx, read_r16(cpu, .HL))
+    if operand == .mem do right = cpu.bus.read(cpu.bus, read_r16(cpu, .HL))
     else do right = read_r8(cpu, REG_8(operand))
 
     if carry_flag do carry_in = (get_flag(cpu, .C) ? 1 : 0)
@@ -195,7 +195,7 @@ ins_sub_a_r8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     left := read_r8(cpu, .A)
     right, carry_in: u8 = 0, 0
 
-    if operand == .mem do right = cpu.bus.read(cpu.bus.ctx, read_r16(cpu, .HL))
+    if operand == .mem do right = cpu.bus.read(cpu.bus, read_r16(cpu, .HL))
     else do right = read_r8(cpu, REG_8(operand))
 
     if carry_flag do carry_in = (get_flag(cpu, .C) ? 1 : 0)
@@ -270,7 +270,7 @@ ins_and_a_r8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     operand := decode_r8_src(opcode)
     value := read_r8(cpu, .A)
     addend: u8
-    if operand == .mem do addend = cpu.bus.read(cpu.bus.ctx, read_r16(cpu, .HL))
+    if operand == .mem do addend = cpu.bus.read(cpu.bus, read_r16(cpu, .HL))
     else do addend = read_r8(cpu, REG_8(operand))
 
     value &= addend
@@ -333,7 +333,7 @@ ins_xor_a_r8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     operand := decode_r8_src(opcode)
     value := read_r8(cpu, .A)
     addend: u8
-    if operand == .mem do addend = cpu.bus.read(cpu.bus.ctx, read_r16(cpu, .HL))
+    if operand == .mem do addend = cpu.bus.read(cpu.bus, read_r16(cpu, .HL))
     else do addend = read_r8(cpu, REG_8(operand))
 
     value ~= addend
@@ -396,7 +396,7 @@ ins_or_a_r8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     operand := decode_r8_src(opcode)
     value := read_r8(cpu, .A)
     addend: u8
-    if operand == .mem do addend = cpu.bus.read(cpu.bus.ctx, read_r16(cpu, .HL))
+    if operand == .mem do addend = cpu.bus.read(cpu.bus, read_r16(cpu, .HL))
     else do addend = read_r8(cpu, REG_8(operand))
 
     value |= addend
@@ -460,7 +460,7 @@ ins_comp_a_r8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     left := read_r8(cpu, .A)
     right: u8 = 0
 
-    if operand == .mem do right = cpu.bus.read(cpu.bus.ctx, read_r16(cpu, .HL))
+    if operand == .mem do right = cpu.bus.read(cpu.bus, read_r16(cpu, .HL))
     else do right = read_r8(cpu, REG_8(operand))
 
     // Set Flags

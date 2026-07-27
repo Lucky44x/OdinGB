@@ -57,7 +57,7 @@ get_cart_accessor :: proc(
 }
 
 @(private)
-cart_read_adapter :: proc(ctx: rawptr, addr: u16) -> u8 { return cartridge_read(cast(^Cartridge)ctx, addr) }
+cart_read_adapter :: proc(cart: ^c.CART_Access, addr: u16) -> u8 { return cartridge_read(cast(^Cartridge)cart.ctx, addr) }
 @(private)
 cartridge_read :: proc(
     ctx: ^Cartridge,
@@ -76,7 +76,7 @@ cartridge_read :: proc(
 }
 
 @(private)
-cart_write_adapter :: proc(ctx: rawptr, addr: u16, val: u8) { cartridge_write(cast(^Cartridge)ctx, addr,val) }
+cart_write_adapter :: proc(cart: ^c.CART_Access, addr: u16, val: u8) { cartridge_write(cast(^Cartridge)cart.ctx, addr,val) }
 @(private)
 cartridge_write :: proc(
     ctx: ^Cartridge,

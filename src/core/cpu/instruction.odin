@@ -122,17 +122,17 @@ write_r16mem :: proc(cpu: ^CPU, r16mem: op_16_mem, value: u8) {
     switch r16mem {
     case .bc:
         addr := read_r16(cpu, .BC)
-        cpu.bus.write(cpu.bus.ctx, addr, value)
+        cpu.bus.write(cpu.bus, addr, value)
     case .de:
         addr := read_r16(cpu, .DE)
-        cpu.bus.write(cpu.bus.ctx, addr, value)
+        cpu.bus.write(cpu.bus, addr, value)
     case .hlp:
         addr := read_r16(cpu, .HL)
-        cpu.bus.write(cpu.bus.ctx, addr, value)
+        cpu.bus.write(cpu.bus, addr, value)
         inc_r16(cpu, .HL)
     case .hlm:
         addr := read_r16(cpu, .HL)
-        cpu.bus.write(cpu.bus.ctx, addr, value)
+        cpu.bus.write(cpu.bus, addr, value)
         dec_r16(cpu, .HL)
     }
 }
@@ -140,17 +140,17 @@ write_r16mem :: proc(cpu: ^CPU, r16mem: op_16_mem, value: u8) {
 read_r16mem :: proc(cpu: ^CPU, r16mem: op_16_mem) -> u8 {
     switch r16mem {
     case .bc:
-        return cpu.bus.read(cpu.bus.ctx, read_r16(cpu, .BC))
+        return cpu.bus.read(cpu.bus, read_r16(cpu, .BC))
     case .de:
-        return cpu.bus.read(cpu.bus.ctx, read_r16(cpu, .DE))
+        return cpu.bus.read(cpu.bus, read_r16(cpu, .DE))
     case .hlp:
         addr := read_r16(cpu, .HL)
-        value := cpu.bus.read(cpu.bus.ctx, addr)
+        value := cpu.bus.read(cpu.bus, addr)
         inc_r16(cpu, .HL)
         return value
     case .hlm:
         addr := read_r16(cpu, .HL)
-        value := cpu.bus.read(cpu.bus.ctx, addr)
+        value := cpu.bus.read(cpu.bus, addr)
         dec_r16(cpu, .HL)
         return value
     }

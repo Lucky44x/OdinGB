@@ -31,10 +31,10 @@ ins_ld_r8_r8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     src := decode_r8_src(opcode)
     dst := decode_r8_dst(opcode)
 
-    if src == .mem do srcValue = cpu.bus.read(cpu.bus.ctx, read_r16(cpu, .HL))
+    if src == .mem do srcValue = cpu.bus.read(cpu.bus, read_r16(cpu, .HL))
     else do srcValue = read_r8(cpu, REG_8(src))
 
-    if dst == .mem do cpu.bus.write(cpu.bus.ctx, read_r16(cpu, .HL), srcValue)
+    if dst == .mem do cpu.bus.write(cpu.bus, read_r16(cpu, .HL), srcValue)
     else do write_r8(cpu, REG_8(dst), srcValue)
 
     return (src == .mem || dst == .mem) ? 2 : 1
@@ -54,7 +54,7 @@ ins_ld_r8_imm8 :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     operand := decode_r8_dst(opcode)
     value := fetch_next_u8(cpu)
     
-    if operand == .mem do cpu.bus.write(cpu.bus.ctx, read_r16(cpu, .HL), value)
+    if operand == .mem do cpu.bus.write(cpu.bus, read_r16(cpu, .HL), value)
     else do write_r8(cpu, REG_8(operand), value)
     
     return operand == .mem ? 3 : 2
@@ -84,7 +84,7 @@ ins_ldh_a_mem :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     else do addr_off = u16(read_r8(cpu, .C))
 
     address := 0xFF00 + addr_off
-    value := cpu.bus.read(cpu.bus.ctx, address)
+    value := cpu.bus.read(cpu.bus, address)
 
     write_r8(cpu, .A, value)
 
@@ -117,7 +117,7 @@ ins_ldh_mem_a :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     value := read_r8(cpu, .A)
     address := 0xFF00 + addr_off
     
-    cpu.bus.write(cpu.bus.ctx, address, value)
+    cpu.bus.write(cpu.bus, address, value)
 
     return is_imm ? 3 : 2
 }

@@ -83,8 +83,8 @@ ins_ld_mmem_sp :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     address := fetch_next_u16(cpu)
     sp := read_r16(cpu, .SP)
 
-    cpu.bus.write(cpu.bus.ctx, address, u8(sp & 0xFF))
-    cpu.bus.write(cpu.bus.ctx, address + 1, u8(sp >> 8))
+    cpu.bus.write(cpu.bus, address, u8(sp & 0xFF))
+    cpu.bus.write(cpu.bus, address + 1, u8(sp >> 8))
     return 5;
 }
 
@@ -101,7 +101,7 @@ ins_ld_mmem_a :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     value := read_r8(cpu, .A)
     addr := fetch_next_u16(cpu)
 
-    cpu.bus.write(cpu.bus.ctx, addr, value)
+    cpu.bus.write(cpu.bus, addr, value)
     return 4
 }
 
@@ -116,7 +116,7 @@ ins_ld_mmem_a :: proc(cpu: ^CPU, opcode: u8) -> u8 {
 */
 ins_ld_a_mmem :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     addr := fetch_next_u16(cpu)
-    value := cpu.bus.read(cpu.bus.ctx, addr)
+    value := cpu.bus.read(cpu.bus, addr)
 
     write_r8(cpu, .A, value)
     return 4

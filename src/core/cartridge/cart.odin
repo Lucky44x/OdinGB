@@ -46,6 +46,21 @@ cartridge_load_direct :: proc(
     cart.mapper = MAPPER_Basic
 }
 
+cartridge_unload :: proc(
+    cart: ^Cartridge
+) {
+    switch type in cart.rom {
+        case ROM_Buffered:
+            delete(type.ages)
+            delete(type.bank_indecies)
+            delete(type.banks)
+            return
+        case ROM_Bulk:
+            delete(type.data)
+            return
+    }
+}
+
 get_cart_accessor :: proc(
     cart: ^Cartridge
 ) -> c.CART_Access {
@@ -70,10 +85,8 @@ cartridge_read :: proc(
         case ROM_Buffered:
             return read_rom_buffered(&type, phys_addr)
         case ROM_Bulk:
-            if addr == 0x0104 do log.info("ROM-Read: %02X", read_rom_bulk(&type, phys_addr))
             return read_rom_bulk(&type, phys_addr)
     }
-
     return 0xFF
 }
 

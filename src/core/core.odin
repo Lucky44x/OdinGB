@@ -47,6 +47,8 @@ cartridge_load :: proc {
     cart.cartridge_load_buffered
 }
 
+cartridge_unload :: proc { cart.cartridge_unload }
+
 step_emulation :: proc(
     core: ^GB_Core
 ) -> u8 {

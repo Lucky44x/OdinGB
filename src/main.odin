@@ -118,6 +118,7 @@ main :: proc() {
         rl.EndDrawing()
     }
 
+    core.cartridge_unload(&cart_rom)
     rl.CloseWindow()
 }
 
@@ -136,7 +137,6 @@ unload_bios :: proc(bios: ^core.GB_Bios, file: ^os.File) {
 
 load_rom :: proc(bios: ^core.GB_Bios, rom: ^os.File) {
     rom_data, err := os.read_entire_file_from_file(rom, context.allocator)
-    //defer delete(rom_data)
 
     if err != nil {
         log.errorf("Could not read rom: %e", err)

@@ -35,7 +35,16 @@ step :: proc(
     elapsed_m_cycles: u16
 ) {
     dots := elapsed_m_cycles * 4 // 4 Dots per M-Cycle
-    step_ppu_state(&ppu.renderer, ppu.bus, dots)
+    
+    its := 0
+    for dots > 0 {
+        its += 1
+        consumed := step_ppu_state(&ppu.renderer, ppu.bus, dots)
+        assert(consumed > 0)
+        assert(consumed <= dots)
+
+        dots -= consumed
+    }
 }
 
 ppu_read :: proc(ctx: ^c.PPU_Access, addr: u16) -> u8 { return read_vram(&(cast(^PPU)ctx.ctx).vram, addr) }

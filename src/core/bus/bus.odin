@@ -50,10 +50,11 @@ get_access :: proc(
     }
 }
 
-adapter_bus_write :: proc (bus: ^c.Bus_Access, addr: u16, val: u8) { bus_write(cast(^Bus)bus.ctx, addr, val) }
-bus_write :: proc(ctx: ^Bus, addr: u16, value: u8) {
+adapter_bus_write :: proc (bus: ^c.Bus_Access, addr: u16, val: u8, force: bool) { bus_write(cast(^Bus)bus.ctx, addr, val, force) }
+bus_write :: proc(ctx: ^Bus, addr: u16, value: u8, force: bool = false) {
     if addr == 0xFF50 {
         ctx.is_banked = true
+        write_IO_Registers(&ctx.io, 0xFF50, 0xFF, force = true)
         return
     }
 
@@ -72,7 +73,7 @@ bus_write :: proc(ctx: ^Bus, addr: u16, value: u8) {
             break
         case 0xFEA0 ..= 0xFEFF: return // Ignored -> Nothing in this range
         case 0xFF00 ..= 0xFF7F: 
-            write_IO_Registers(&ctx.io, addr, value); return
+            write_IO_Registers(&ctx.io, addr, value, force); return
         case 0xFF80 ..= 0xFFFE:
             write_ram(&ctx.ram, .HRAM, addr, value); return
         case 0xFFFF: 
@@ -81,8 +82,8 @@ bus_write :: proc(ctx: ^Bus, addr: u16, value: u8) {
 
 }
 
-adapter_bus_read :: proc (bus: ^c.Bus_Access, addr: u16) -> u8 { return bus_read(cast(^Bus)bus.ctx, addr) }
-bus_read :: proc(ctx: ^Bus, addr: u16) -> u8 {
+adapter_bus_read :: proc (bus: ^c.Bus_Access, addr: u16, force: bool = false) -> u8 { return bus_read(cast(^Bus)bus.ctx, addr, force) }
+bus_read :: proc(ctx: ^Bus, addr: u16, force: bool = false) -> u8 {
     if !ctx.is_banked && addr <= 0xFF do return ctx.boot_rom.data[addr]
 
     switch(addr) {
@@ -94,7 +95,7 @@ bus_read :: proc(ctx: ^Bus, addr: u16) -> u8 {
         case 0xFE00 ..= 0xFE9F: //TODO: Read from PPU
             break
         case 0xFEA0 ..= 0xFEFF: return 0xFF; // Nothing inside this region
-        case 0xFF00 ..= 0xFF7F: return read_IO_Registers(&ctx.io, addr)
+        case 0xFF00 ..= 0xFF7F: return read_IO_Registers(&ctx.io, addr, force)
         case 0xFF80 ..= 0xFFFE: return read_ram(&ctx.ram, .HRAM, addr)
         case 0xFFFF: return ctx.ie_reg
     }

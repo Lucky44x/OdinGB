@@ -36,9 +36,9 @@ run debug="false":
     @just build {{debug}}
 
     if [ {{debug}} = "false" ]; then \
-        ./{{release_binary}} -bios-file:"./roms/dmg_boot.bin" \
+        ./{{release_binary}} -bios-file:"./roms/dmg_boot.bin"; \
     else \
-        ./{{debug_binary}} -bios-file:"./roms/dmg_boot.bin" \
+        ./{{debug_binary}} -bios-file:"./roms/dmg_boot.bin"; \
     fi
 
 test name="" debug="false":

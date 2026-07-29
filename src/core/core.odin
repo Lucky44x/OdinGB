@@ -46,6 +46,14 @@ make_GB_Core :: proc(
     core.is_loaded = true
 }
 
+reload_GB_Core :: proc(
+    core: ^GB_Core
+) {
+    ppu.reset(&core.ppu_state)
+    cpu.reset(&core.cpu_state)
+    bus.reset(&core.bus_state)
+}
+
 teardown_GB_Core :: proc(
     core: ^GB_Core
 ) {

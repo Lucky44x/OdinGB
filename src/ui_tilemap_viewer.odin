@@ -39,7 +39,7 @@ tilemap_texture: rl.Texture2D
 tilemap_pixels: [TILEMAP_PX_WIDTH * TILEMAP_PX_HEIGHT]rl.Color
 
 @(private)
-ui_tilemap_viewer_init :: proc() {
+ui_init_tilemap_viewer :: proc() {
     image := rl.GenImageColor(TILEMAP_PX_WIDTH, TILEMAP_PX_HEIGHT, rl.BLANK)
     defer rl.UnloadImage(image)
 

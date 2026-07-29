@@ -8,7 +8,7 @@ import "core:log"
 
 import rl "vendor:raylib"
 
-M_CYCLES_PER_FRAME :: 1000 // 17556
+M_CYCLES_PER_FRAME :: 17556 // 17556
 
 emulator_core: core.GB_Core 
 boot_rom: core.GB_Bios
@@ -24,7 +24,7 @@ emulation_teardown :: proc(bios: ^os.File) {
 }
 
 emulation_step :: proc() {
-    if !emulator_core.is_loaded do return
+    if !emulator_core.is_loaded || DEBUG_STEPPING_ENABLED do return
 
     cycles := M_CYCLES_PER_FRAME
         
@@ -67,4 +67,9 @@ unload_rom :: proc() {
 
     core.cartridge_unload(&cart_rom)
     core.teardown_GB_Core(&emulator_core)
+}
+
+reset_rom :: proc() {
+    if !emulator_core.is_loaded do return
+    core.reload_GB_Core(&emulator_core)
 }

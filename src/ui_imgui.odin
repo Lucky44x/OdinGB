@@ -24,7 +24,8 @@ ui_init_imgui :: proc() {
     imgui_rl.init()
 
     ui_init_vram_tiles_viewer()
-    ui_tilemap_viewer_init()
+    ui_init_tilemap_viewer()
+    ui_init_cpu_viewer()
 }
 
 ui_deinit_imgui :: proc() {
@@ -43,6 +44,8 @@ ui_draw_imgui :: proc() {
     imgui_menu_bar()
     imgui_display_vram_tiles_viewer(emulator_core.ppu_state.vram.data[:])
     imgui_display_tilemap_viewer(&emulator_core)
+    imgui_display_cpu_viewer(&emulator_core)
+    imgui_display_debug_stepper(&emulator_core)
 
     imgui.Render()
     imgui_rl.render_draw_data(imgui.GetDrawData())

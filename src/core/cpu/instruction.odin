@@ -196,9 +196,11 @@ handle_instruction :: proc(
 ) -> (cycles: u8) {
     fetchedOpcode := opcode
     len := InstructionTable[opcode].length
+    cpu.last_instruction = &InstructionTable[opcode]
     if opcode == 0xCB {
         fetchedOpcode = fetch_next_u8(cpu)
         len = PrefixedTable[fetchedOpcode].length
+        cpu.last_instruction = &PrefixedTable[fetchedOpcode]
     }
 
     if len == 0 {

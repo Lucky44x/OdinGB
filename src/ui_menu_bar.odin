@@ -39,7 +39,11 @@ imgui_menu_bar :: proc() {
 
                 if imgui.MenuItem("Unload Rom", selected=false, enabled=emulator_core.is_loaded) {
                     unload_rom()
-                }                
+                }
+                
+                if imgui.MenuItem("Reset", selected=false, enabled=emulator_core.is_loaded) {
+                    reset_rom()
+                }
             } else {
                 if imgui.MenuItem("Load Boot-Rom", selected=false) {
                     filters := [2]nfd.Filter_Item { {"Gameboy Roms", "gb,bin"}, {"All Files", "*"} }
@@ -70,6 +74,8 @@ imgui_menu_bar :: proc() {
         } 
 
         if imgui.BeginMenu("Debug") {
+            if imgui.MenuItem("DEBUG STEPPER") do UI_DEBUG_STEPPER_ENABLED = !UI_DEBUG_STEPPER_ENABLED
+            if imgui.MenuItem("CPU") do UI_CPU_VIEWER_ENABLED = !UI_CPU_VIEWER_ENABLED
             if imgui.MenuItem("Vram-Tiles") do UI_VRAM_TILES_VIEWER_ENABLED = !UI_VRAM_TILES_VIEWER_ENABLED
             if imgui.MenuItem("Tile-Maps") do UI_TILEMAP_VIEWER_ENABLED = !UI_TILEMAP_VIEWER_ENABLED
 

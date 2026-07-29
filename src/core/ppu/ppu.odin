@@ -40,7 +40,6 @@ reset :: proc(
     self.rend.ppu_mode = .OAMScan
 
     self.vram.data = {}
-    self.frameBuffer = {}
 }
 
 get_access :: proc(

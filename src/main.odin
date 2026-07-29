@@ -45,7 +45,7 @@ main :: proc() {
 
     // CLI Argument parsing
     CONF :: struct {
-        bios: ^os.File `args:"name=bios-file,pos=0,required,file=r" usage:"The dmg_boot.bin"`,
+        bios: ^os.File `args:"name=bios-file,pos=0,file=r" usage:"The dmg_boot.bin"`,
         rom: ^os.File `args:"name=rom-file,pos=1,file=r" usage:"The game-rom"`
     }
 
@@ -53,7 +53,7 @@ main :: proc() {
     flags.parse_or_exit(&conf, os.args, .Odin)
 
     // Setup emulation environment
-    emulation_setup(conf.bios)
+    emulation_setup(conf.bios, conf.rom)
     defer emulation_teardown(conf.bios)
 
     // Initialize the RL window

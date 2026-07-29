@@ -286,6 +286,7 @@ imgui_display_tilemap_viewer :: proc(
     defer imgui.End()
 
     if !visible do return 
+    if emuCore == nil || !emuCore.is_loaded do return
 
     if emuCore == nil {
         imgui.Text("Cannot display tilemaps: core is nil.")

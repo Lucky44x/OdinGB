@@ -60,7 +60,7 @@ get_tile_pixel :: proc(
     bus: ^c.Bus_Access,
     tile_id:  u8,
     pixel_x, pixel_y: u8,
-    mode: AddressMode = .normal
+    mode: AddressMode
 ) -> u8 {
     assert(pixel_x < 8)
     assert(pixel_y < 8)

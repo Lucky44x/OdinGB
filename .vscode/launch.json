@@ -7,7 +7,7 @@
             "preLaunchTask": "Build",
             "name": "Debug",
             "program": "${workspaceRoot}/build/debug/gameboy-dbg.exe",
-            "args": [".\\roms\\dmg_boot.bin", ".\\roms\\Dr. Mario.gb"],
+            "args": [".\\roms\\dmg_boot.bin"],
             "cwd": "${workspaceRoot}"
         }
     ]

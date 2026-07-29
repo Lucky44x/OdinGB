@@ -8,14 +8,15 @@ import "core:log"
 
 import rl "vendor:raylib"
 
-M_CYCLES_PER_FRAME :: 17690
+M_CYCLES_PER_FRAME :: 1000 // 17556
 
 emulator_core: core.GB_Core 
 boot_rom: core.GB_Bios
 cart_rom: core.GB_Cartridge
 
-emulation_setup :: proc(bios: ^os.File) {
-    load_bios(&boot_rom, bios)
+emulation_setup :: proc(bios: ^os.File, rom: ^os.File) {
+    if bios != nil do load_bios(&boot_rom, bios)
+    if rom != nil do load_rom(&boot_rom, rom)
 }
 
 emulation_teardown :: proc(bios: ^os.File) {
@@ -28,13 +29,15 @@ emulation_step :: proc() {
     cycles := M_CYCLES_PER_FRAME
         
     for cycles > 0 {
-        //log.info("Next Instruction")
-        cycles -= int(core.step_emulation(&emulator_core))
+        steps := int(core.step_emulation(&emulator_core))
+        if steps <= 0 do log.info("Invalid return value")
+        cycles -= steps
     }
 }
 
 load_bios :: proc(bios: ^core.GB_Bios, file: ^os.File) {
     err: os.Error
+    bios.is_loaded = true
     bios.fileName = os.name(file)
     bios.data, err = os.read_entire_file_from_file(file, context.allocator)
     if err != nil do log.errorf("Error while loading %s", bios.fileName)

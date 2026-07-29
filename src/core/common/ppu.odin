@@ -3,6 +3,10 @@ package common
 PPU_Write :: proc(ctx: ^PPU_Access, addr: u16, val: u8)
 PPU_Read :: proc(ctx: ^PPU_Access, addr: u16) -> u8
 
+// The Framebuffer for the gameboy's screen
+// Stored in R5G5B5A1 -> 5 bits each, 1 alpha bit => 16 bit per pixel
+PPU_FrameBuffer :: [160 * 144]u16
+
 PPU_Access :: struct {
     ctx: rawptr,
     

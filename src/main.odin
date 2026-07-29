@@ -12,11 +12,13 @@ import "core:os"
 
 import "core/common"
 
-M_CYCLES_PER_FRAME :: 17_556
+M_CYCLES_PER_FRAME :: 500
 
 emulator_core: core.GB_Core 
 boot_rom: core.GB_Bios
 cart_rom: core.GB_Cartridge
+
+debug_mode := true
 
 main :: proc() {
     logger := log.create_console_logger(.Debug)
@@ -69,7 +71,15 @@ main :: proc() {
     viewer := vram_viewer_init()
     defer vram_viewer_destroy(&viewer)
 
+    init_renderer(&emulator_core)
+    defer deinit_renderer()
+
     for !rl.WindowShouldClose() {
+        // Input
+        if rl.IsKeyPressed(.SPACE) {
+            debug_mode = !debug_mode
+        }
+
         // Logic
         if rl.IsFileDropped() {
             fileList := rl.LoadDroppedFiles()
@@ -107,13 +117,15 @@ main :: proc() {
                 cycles -= int(core.step_emulation(&emulator_core))
             }
             vram_viewer_update(&viewer, &emulator_core.ppu_state.vram.data)
+            update_renderer(&emulator_core)
         }
 
         // Rendering
         rl.BeginDrawing()
         rl.ClearBackground(rl.GRAY)
 
-        vram_viewer_draw(&viewer, {16, 16}, 3)
+        if debug_mode do vram_viewer_draw(&viewer, {16, 16}, 3)
+        else do draw_renderer(4)
 
         rl.EndDrawing()
     }

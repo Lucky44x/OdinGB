@@ -17,8 +17,11 @@ GB_Core :: struct {
     ppu_state: ppu.PPU, ppu: c.PPU_Access,
 
     cart_state: ^cart.Cartridge, cartridge: c.CART_Access,
+
+    ppu_frameBuffer: GB_FrameBuffer
 }
 
+GB_FrameBuffer :: c.PPU_FrameBuffer
 GB_Bios :: bus.Boot_Rom
 GB_Cartridge :: cart.Cartridge
 
@@ -37,7 +40,7 @@ make_GB_Core :: proc(
     bus.init(&core.bus_state, core.bios, &core.cartridge, &core.ppu)
     core.bus = bus.get_access(&core.bus_state)
 
-    ppu.init(&core.ppu_state, &core.bus)
+    ppu.init(&core.ppu_state, &core.bus, &core.ppu_frameBuffer)
     cpu.init(&core.cpu_state, &core.bus)
 
     core.is_loaded = true

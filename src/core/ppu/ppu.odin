@@ -3,21 +3,33 @@ package ppu
 import "core:log"
 import c "../common"
 
+PPU_Mode :: enum(u8) {
+    HorizontalBlank = 0,
+    VerticalBlank = 1,
+    OAMScan = 2,
+    Drawing = 3,
+}
+
+PPU_Renderer :: struct {
+    ppu_mode: PPU_Mode,
+    line_dots: u16,
+    current_line: u8
+}
+
 PPU :: struct {
     bus: ^c.Bus_Access,
     vram: VRAM,
-    renderer: PPU_Renderer
+    rend: PPU_Renderer,
+    frameBuffer: ^c.PPU_FrameBuffer
 }
-
-// The Framebuffer for the gameboy's screen
-// Stored in R5G5B5A1 -> 5 bits each, 1 alpha bit => 16 bit per pixel
-PPU_FrameBuffer :: [160 * 144]u16
 
 init :: proc(
     self: ^PPU,
-    bus: ^c.Bus_Access
+    bus: ^c.Bus_Access,
+    fb: ^c.PPU_FrameBuffer
 ) {
     self.bus = bus
+    self.frameBuffer = fb
 }
 
 get_access :: proc(
@@ -39,7 +51,7 @@ step :: proc(
     its := 0
     for dots > 0 {
         its += 1
-        consumed := step_ppu_state(&ppu.renderer, ppu.bus, dots)
+        consumed := step_ppu_state(ppu, dots)
         assert(consumed > 0)
         assert(consumed <= dots)
 

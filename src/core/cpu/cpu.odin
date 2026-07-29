@@ -52,7 +52,7 @@ step :: proc(
         // log.info("Scanning for interrupts")
         found, interrupt := fetch_interrupt(cpu)
         if found do m_cycles += dispatch_interrupt(cpu, interrupt)
-        return // Let instruction execute at next CPU step
+        return 5 // Let instruction execute at next CPU step
     }
 
     opcode: u8 = fetch_next_u8(cpu)
@@ -68,7 +68,7 @@ step :: proc(
         cpu.ime_enable_pending = 0
     } else if cpu.ime_enable_pending > 1 do cpu.ime_enable_pending -= 1
 
-    return
+    return m_cycles
 }
 
 @(private)

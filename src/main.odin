@@ -12,13 +12,14 @@ import "core:os"
 
 import "core/common"
 
+import imgui_rl "../libs/rlimgui"
+import imgui "../libs/odin-imgui"
+
 M_CYCLES_PER_FRAME :: 17690
 
 emulator_core: core.GB_Core 
 boot_rom: core.GB_Bios
 cart_rom: core.GB_Cartridge
-
-debug_mode := true
 
 main :: proc() {
     logger := log.create_console_logger(.Debug)
@@ -51,6 +52,7 @@ main :: proc() {
 		}
     }
 
+    // CLI Argument parsing
     CONF :: struct {
         bios: ^os.File `args:"name=bios-file,pos=0,required,file=r" usage:"The dmg_boot.bin"`,
         rom: ^os.File `args:"name=rom-file,pos=1,file=r" usage:"The game-rom"`
@@ -59,26 +61,36 @@ main :: proc() {
     conf: CONF
     flags.parse_or_exit(&conf, os.args, .Odin)
 
+    // Loading Bios file
     load_bios(&boot_rom, conf.bios)
     defer unload_bios(&boot_rom, conf.bios)
 
+    // If ROM is given, try to load immediatly
     if conf.rom != nil do load_rom(&boot_rom, conf.rom)
 
-    //rl.SetTraceLogLevel(.WARNING)
+    // Initialize the RL window
+    rl.SetConfigFlags({ .WINDOW_RESIZABLE })
     rl.InitWindow(640, 576, "AcornGB")
     rl.SetTargetFPS(60)
 
+    // Create the ImGUI context
+    imgui.CreateContext(nil)
+	defer imgui.DestroyContext(nil)
+    imgui_rl.init()
+	defer imgui_rl.shutdown()
+
+    // Create the debug VRAM Inspector
     viewer := vram_viewer_init()
     defer vram_viewer_destroy(&viewer)
 
+    // Initialize the proper renderer
     init_renderer(&emulator_core)
     defer deinit_renderer()
 
     for !rl.WindowShouldClose() {
-        // Input
-        if rl.IsKeyPressed(.SPACE) {
-            debug_mode = !debug_mode
-        }
+		imgui_rl.process_events()
+		imgui_rl.new_frame()
+		imgui.NewFrame()
 
         // Logic
         if rl.IsFileDropped() {
@@ -124,8 +136,12 @@ main :: proc() {
         rl.BeginDrawing()
         rl.ClearBackground(rl.GRAY)
 
-        if debug_mode do vram_viewer_draw(&viewer, {16, 16}, 3)
-        else do draw_renderer(4)
+        draw_renderer(4);
+
+        imgui.ShowDemoWindow(nil)
+
+        imgui.Render()
+		imgui_rl.render_draw_data(imgui.GetDrawData())
 
         rl.EndDrawing()
     }

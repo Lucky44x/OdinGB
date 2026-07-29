@@ -51,7 +51,7 @@ render_scanline :: proc(
 
         // TODO: Render pixels here
         fb_addr := u16(x) + (u16(scanline) * 160)
-        color_id := get_tile_pixel(ppu.bus, tile_id, u8(realX % 8), u8(realY % 8))
+        color_id := get_tile_pixel(ppu.bus, tile_id, u8(realX % 8), u8(realY % 8), adressMode)
         ppu.frameBuffer[fb_addr] = DMG_COLORS[color_id]
     }
 }

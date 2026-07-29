@@ -122,5 +122,5 @@ write_IO_Protected :: proc(
 // =========== SPECIAL FALLBACKS FOR IO REGISTERS
 fb_read_joyp :: proc(ctx: ^IO_Registers) -> u8 {
     //TODO: Implement joyp logic
-    return 0xF // TEMP: All buttons released
+    return 0x00 // TEMP: All buttons released
 }

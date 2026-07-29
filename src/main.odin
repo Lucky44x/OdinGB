@@ -12,7 +12,7 @@ import "core:os"
 
 import "core/common"
 
-M_CYCLES_PER_FRAME :: 500
+M_CYCLES_PER_FRAME :: 17690
 
 emulator_core: core.GB_Core 
 boot_rom: core.GB_Bios

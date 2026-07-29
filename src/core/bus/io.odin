@@ -2,6 +2,7 @@
 #+feature dynamic-literals
 package bus
 
+import "core:log"
 import c "../common"
 
 IO_Registers :: struct {
@@ -73,6 +74,8 @@ write_IO_Registers :: proc(
     force: bool = false
 ) {
     register := cast(c.IO_Regs)addr
+
+    //if register == .SCY do log.warnf("Written %d - %02X to SCY", val, val)
 
     if !force {
         if register in IO_W_FALLBACKS {

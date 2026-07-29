@@ -4,3 +4,6 @@
 [submodule "libs/odin-imgui"]
 	path = libs/odin-imgui
 	url = https://gitlab.com/L-4/odin-imgui.git
+[submodule "libs/nativefiledialog"]
+	path = libs/nativefiledialog
+	url = https://github.com/ivansouzamf/nativefiledialog-odin.git

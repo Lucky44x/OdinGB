@@ -46,16 +46,31 @@ make_GB_Core :: proc(
     core.is_loaded = true
 }
 
+teardown_GB_Core :: proc(
+    core: ^GB_Core
+) {
+    core.is_loaded = false
+    core.cart_state = nil
+
+    ppu.reset(&core.ppu_state)
+    cpu.reset(&core.cpu_state)
+    bus.reset(&core.bus_state)
+}
+
 cartridge_load :: proc {
     cart.cartridge_load_direct,
     cart.cartridge_load_buffered
 }
 
-cartridge_unload :: proc { cart.cartridge_unload }
+cartridge_unload :: proc { 
+    cart.cartridge_unload 
+}
 
 step_emulation :: proc(
     core: ^GB_Core
 ) -> u8 {
+    if !core.is_loaded do return 0
+
     elapsed_m := cpu.step(&core.cpu_state, &core.bus)
     ppu.step(&core.ppu_state, u16(elapsed_m))
     

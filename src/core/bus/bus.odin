@@ -40,6 +40,18 @@ init :: proc(
     self.ppu = ppu
 }
 
+reset :: proc(
+    self: ^Bus
+) {
+    self.ie_reg = 0x00
+    self.is_banked = false
+    
+    self.io.data = {}
+    self.ram.hram = {}
+    self.ram.wram = {}
+    self.ram.wram_bank = 0
+}
+
 get_access :: proc(
     bus: ^Bus
 ) -> c.Bus_Access {

@@ -29,6 +29,20 @@ init :: proc(
     cpu.bus = bus
 }
 
+reset :: proc(
+    cpu: ^CPU,
+) {
+    cpu.ime = false
+    cpu.ime_enable_pending = 0
+    cpu.last_instruction = 0
+
+    cpu.regs.bytes = {}
+    cpu.regs.pc = 0
+    cpu.regs.sp = 0
+
+    cpu.state = .Running
+}
+
 step :: proc(
     cpu: ^CPU,
     bus: ^c.Bus_Access,

@@ -32,6 +32,17 @@ init :: proc(
     self.frameBuffer = fb
 }
 
+reset :: proc(
+    self: ^PPU
+) {
+    self.rend.current_line = 0
+    self.rend.line_dots = 0
+    self.rend.ppu_mode = .OAMScan
+
+    self.vram.data = {}
+    self.frameBuffer = {}
+}
+
 get_access :: proc(
     ppu: ^PPU
 ) -> c.PPU_Access {

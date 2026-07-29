@@ -16,6 +16,7 @@ ROM_Source :: union {
 }
 
 Cartridge :: struct {
+    loaded: bool,
     mapper: ROM_Mapper,
     rom: ROM_Source,
     //TODO: Implement external RAM
@@ -26,6 +27,8 @@ cartridge_load_buffered :: proc(
     file_accessor: ^ROM_Access,
     max_buffered_banks: int
 ) {
+    cart.loaded = true
+
     // TODO: Load Mapper etc from cart header
     cart_header: []u8 = make([]u8, 79)
     defer delete(cart_header)
@@ -41,6 +44,8 @@ cartridge_load_direct :: proc(
     cart: ^Cartridge,
     data: []u8
 ) {
+    cart.loaded = true
+
     read_cart_header(data[0x0100:0x014F])
     cart.rom = init_bulk_rom(data)
     cart.mapper = MAPPER_Basic
@@ -49,6 +54,9 @@ cartridge_load_direct :: proc(
 cartridge_unload :: proc(
     cart: ^Cartridge
 ) {
+    if !cart.loaded do return
+    cart.loaded = false
+
     switch type in cart.rom {
         case ROM_Buffered:
             delete(type.ages)

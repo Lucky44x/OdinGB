@@ -2,6 +2,10 @@ package bus
 
 import c "../common"
 
+/*
+    TODO: Implement DMA transfer -> lasts for 160M and blocks access to everything except HRAM (0xFF80 - 0xFFFE)
+*/
+
 // [CART] 0x0000 - 0x7FFF -> 32KiB Cartridge, reads provided by frontend handle
 // [PPU] 0x8000 - 0x9FFF -> 8 KiB Window, owned by PPU
 // [CART] 0xA000 - 0xBFFF -> 8 KiB Window, owned by Cartridge (switchable External RAM)
@@ -82,7 +86,7 @@ bus_write :: proc(ctx: ^Bus, addr: u16, value: u8, force: bool = false) {
         case 0xE000 ..= 0xFDFF:
             write_ram(&ctx.ram, .WRAM, addr - 0x2000, value); return
         case 0xFE00 ..= 0xFE9F: //TODO: Write to PPU
-            break
+            ctx.ppu.write(ctx.ppu, addr, value); return
         case 0xFEA0 ..= 0xFEFF: return // Ignored -> Nothing in this range
         case 0xFF00 ..= 0xFF7F: 
             write_IO_Registers(&ctx.io, addr, value, force); return
@@ -104,8 +108,7 @@ bus_read :: proc(ctx: ^Bus, addr: u16, force: bool = false) -> u8 {
         case 0xA000 ..= 0xBFFF: return ctx.cart_rom.read_rom(ctx.cart_rom, addr) //FIXME: Reading RAM not ROM
         case 0xC000 ..= 0xDFFF: return read_ram(&ctx.ram, .WRAM, addr)
         case 0xE000 ..= 0xFDFF: return read_ram(&ctx.ram, .WRAM, addr - 0x2000)
-        case 0xFE00 ..= 0xFE9F: //TODO: Read from PPU
-            break
+        case 0xFE00 ..= 0xFE9F: return ctx.ppu.read(ctx.ppu, addr)
         case 0xFEA0 ..= 0xFEFF: return 0xFF; // Nothing inside this region
         case 0xFF00 ..= 0xFF7F: return read_IO_Registers(&ctx.io, addr, force)
         case 0xFF80 ..= 0xFFFE: return read_ram(&ctx.ram, .HRAM, addr)

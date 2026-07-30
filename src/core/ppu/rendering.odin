@@ -30,7 +30,7 @@ render_scanline :: proc(
     adressMode: AddressMode = LCDC & 0x10 != 0 ? .normal : .minus
     scanline := ppu.rend.current_line
 
-    bg_tilemap : TileMap = LCDC & 0x08 != 0 ? .low : .high
+    bg_tilemap : TileMap = LCDC & 0x08 != 0 ? .high : .low
 
     SCX := ppu.bus.read(ppu.bus, u16(c.IO_Regs.SCX), force=true)
     SCY := ppu.bus.read(ppu.bus, u16(c.IO_Regs.SCY), force=true)

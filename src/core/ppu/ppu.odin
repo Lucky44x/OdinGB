@@ -19,6 +19,7 @@ PPU_Renderer :: struct {
 PPU :: struct {
     bus: ^c.Bus_Access,
     vram: VRAM,
+    oam: OAM,
     rend: PPU_Renderer,
     callback: c.PPU_Callback
 }
@@ -71,5 +72,12 @@ step :: proc(
     }
 }
 
-ppu_read :: proc(ctx: ^c.PPU_Access, addr: u16) -> u8 { return read_vram(&(cast(^PPU)ctx.ctx).vram, addr) }
-ppu_write :: proc(ctx: ^c.PPU_Access, addr: u16, val: u8) { write_vram(&(cast(^PPU)ctx.ctx).vram, addr, val) }
+ppu_read :: proc(ctx: ^c.PPU_Access, addr: u16) -> u8 { 
+    if addr >= 0xFE00 do return read_oam(cast(^PPU)ctx, addr)
+    else do return read_vram(&(cast(^PPU)ctx.ctx).vram, addr) 
+}
+
+ppu_write :: proc(ctx: ^c.PPU_Access, addr: u16, val: u8) { 
+    if addr >= 0xFE00 do write_oam(cast(^PPU)ctx, addr, val)
+    else do write_vram(&(cast(^PPU)ctx.ctx).vram, addr, val) 
+}

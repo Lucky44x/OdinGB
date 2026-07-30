@@ -36,8 +36,9 @@ emulation_init_renderer :: proc(
 
 @(private)
 emulation_draw_renderer :: proc() {
-    rl.UpdateTexture(renderer_texture, &renderer_pixels)
+    if ACTIVE_PALETTE == nil do return
 
+    rl.UpdateTexture(renderer_texture, &renderer_pixels)
     rl.DrawTextureEx(renderer_texture, {0,0}, 0, renderer_scale, rl.WHITE)
 }
 

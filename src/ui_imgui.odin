@@ -11,13 +11,6 @@ TILE_HEIGHT :: 8
 BYTES_PER_TILE :: 16
 TILE_COUNT :: 384
 
-dmg_palette := [4]rl.Color {
-    {224, 248, 208, 255},
-    {136, 192, 112, 255},
-    {52, 104, 86, 255},
-    {8, 24, 32, 255},
-}
-
 ui_init_imgui :: proc() {
     nfd.Init()
     imgui.CreateContext(nil)

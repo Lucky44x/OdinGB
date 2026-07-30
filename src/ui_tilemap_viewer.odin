@@ -40,7 +40,7 @@ tilemap_pixels: [TILEMAP_PX_WIDTH * TILEMAP_PX_HEIGHT]rl.Color
 
 @(private)
 ui_init_tilemap_viewer :: proc() {
-    image := rl.GenImageColor(TILEMAP_PX_WIDTH, TILEMAP_PX_HEIGHT, rl.BLANK)
+    image := rl.GenImageColor(TILEMAP_PX_WIDTH, TILEMAP_PX_HEIGHT, ACTIVE_PALETTE[0])
     defer rl.UnloadImage(image)
 
     tilemap_texture = rl.LoadTextureFromImage(image)
@@ -109,7 +109,7 @@ render_tile_to_pixels :: proc(
             output_index := output_y * TILEMAP_PX_WIDTH + output_x
 
             tilemap_pixels[output_index] =
-                dmg_palette[colour_index]
+                ACTIVE_PALETTE[colour_index]
         }
     }
 }

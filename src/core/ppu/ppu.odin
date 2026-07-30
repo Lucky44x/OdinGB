@@ -20,16 +20,18 @@ PPU :: struct {
     bus: ^c.Bus_Access,
     vram: VRAM,
     rend: PPU_Renderer,
-    frameBuffer: ^c.PPU_FrameBuffer
+    callback: c.PPU_Callback
 }
 
 init :: proc(
     self: ^PPU,
     bus: ^c.Bus_Access,
-    fb: ^c.PPU_FrameBuffer
+    callback_function: c.PPU_ScanlineCallback,
+    callback_ctx: rawptr = nil
 ) {
     self.bus = bus
-    self.frameBuffer = fb
+    self.callback.callback = callback_function
+    self.callback.ctx = callback_ctx
 }
 
 reset :: proc(

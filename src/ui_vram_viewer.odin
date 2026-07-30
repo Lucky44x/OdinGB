@@ -21,7 +21,7 @@ UI_VRAM_TILES_VIEWER_ENABLED := false
 @(private)
 ui_init_vram_tiles_viewer :: proc() {
     image := rl.GenImageColor(
-        ATLAS_WIDTH, ATLAS_HEIGHT, rl.BLANK
+        ATLAS_WIDTH, ATLAS_HEIGHT, ACTIVE_PALETTE[0]
     )
 
     tile_atlas = rl.LoadTextureFromImage(image)
@@ -58,7 +58,7 @@ ui_update_vram_tiles_viewer :: proc(
                 atlas_y := tile_y + row
 
                 atlas_pixels[atlas_y * ATLAS_WIDTH + atlas_x] =
-                    dmg_palette[color_index]
+                    ACTIVE_PALETTE[color_index]
             }
         }
     }

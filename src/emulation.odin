@@ -14,7 +14,16 @@ emulator_core: core.GB_Core
 boot_rom: core.GB_Bios
 cart_rom: core.GB_Cartridge
 
+DMG_PALETTE := GB_Palette {
+    {224, 248, 208, 255},
+    {136, 192, 112, 255},
+    {52, 104, 86, 255},
+    {8, 24, 32, 255},
+}
+
 emulation_setup :: proc(bios: ^os.File, rom: ^os.File) {
+    emulation_init_renderer(&DMG_PALETTE, 4)
+
     if bios != nil do load_bios(&boot_rom, bios)
     if rom != nil do load_rom(&boot_rom, rom)
 }
@@ -59,7 +68,12 @@ load_rom :: proc(bios: ^core.GB_Bios, rom: ^os.File) {
     core.cartridge_load(&cart_rom, rom_data)
 
     // Initialize emulator core
-    core.make_GB_Core(&emulator_core, &cart_rom, &boot_rom)
+    core.make_GB_Core(
+        &emulator_core, 
+        &cart_rom, 
+        &boot_rom,
+        render_scanline_adapter
+    )
 }
 
 unload_rom :: proc() {

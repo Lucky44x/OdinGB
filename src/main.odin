@@ -52,14 +52,14 @@ main :: proc() {
     conf: CONF
     flags.parse_or_exit(&conf, os.args, .Odin)
 
-    // Setup emulation environment
-    emulation_setup(conf.bios, conf.rom)
-    defer emulation_teardown(conf.bios)
-
     // Initialize the RL window
     rl.SetConfigFlags({ .WINDOW_RESIZABLE })
     rl.InitWindow(640, 576, "AcornGB")
     rl.SetTargetFPS(60)
+
+    // Setup emulation environment
+    emulation_setup(conf.bios, conf.rom)
+    defer emulation_teardown(conf.bios)
 
     ui_init_imgui()
 
@@ -72,6 +72,8 @@ main :: proc() {
         // Rendering
         rl.BeginDrawing()
         rl.ClearBackground(rl.GRAY)
+
+        emulation_draw_renderer()
 
         ui_draw_imgui()
         rl.EndDrawing()

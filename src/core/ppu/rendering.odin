@@ -10,6 +10,9 @@ DMG_COLORS := [4]u16 {
     0b00000_00000_00000_1, // Black
 }
 
+@(private="file")
+SCANLINE_PIXEL_BUFFER: [160]u8
+
 render_scanline :: proc(
     ppu: ^PPU
 ) {
@@ -52,8 +55,11 @@ render_scanline :: proc(
         // TODO: Render pixels here
         fb_addr := u16(x) + (u16(scanline) * 160)
         color_id := get_tile_pixel(ppu.bus, tile_id, u8(realX % 8), u8(realY % 8), adressMode)
-        ppu.frameBuffer[fb_addr] = DMG_COLORS[color_id]
+
+        SCANLINE_PIXEL_BUFFER[x] = color_id
     }
+
+    ppu.callback.callback(ppu.callback.ctx, scanline, &SCANLINE_PIXEL_BUFFER)
 }
 
 get_tile_pixel :: proc(

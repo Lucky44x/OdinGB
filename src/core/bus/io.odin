@@ -9,14 +9,16 @@ IO_Registers :: struct {
     data: [128]u8
 }
 
-IO_READ_FALLBACK :: proc(ctx: ^IO_Registers) -> u8
-IO_WRITE_FALLBACK :: proc(ctx: ^IO_Registers, val: u8)
+IO_READ_FALLBACK :: proc(ctx: ^Bus) -> u8
+IO_WRITE_FALLBACK :: proc(ctx: ^Bus, val: u8)
 
 IO_R_FALLBACKS := map[c.IO_Regs] IO_READ_FALLBACK {
     .JOYP = fb_read_joyp
 }
 
-IO_W_FALLBACKS := map[c.IO_Regs] IO_WRITE_FALLBACK {}
+IO_W_FALLBACKS := map[c.IO_Regs] IO_WRITE_FALLBACK {
+    .DMA = fb_write_dma
+}
 
 IO_READ_MASK := map[c.IO_Regs] u8 {
     .STAT = 0x7F,
@@ -53,7 +55,7 @@ IO_BIT_OR_READ := map[c.IO_Regs]u8 {
 }
 
 read_IO_Registers :: proc(
-    ctx: ^IO_Registers,
+    ctx: ^Bus,
     addr: u16,
     force: bool = false
 ) -> u8 {
@@ -64,11 +66,11 @@ read_IO_Registers :: proc(
         else if register in IO_READ_MASK do return read_IO_Protected(ctx, addr)
     }
 
-    return ctx.data[addr - 0xFF00]
+    return ctx.io.data[addr - 0xFF00]
 }
 
 write_IO_Registers :: proc(
-    ctx: ^IO_Registers,
+    ctx: ^Bus,
     addr: u16,
     val: u8,
     force: bool = false
@@ -88,11 +90,11 @@ write_IO_Registers :: proc(
         }
     }
 
-    ctx.data[addr - 0xFF00] = val
+    ctx.io.data[addr - 0xFF00] = val
 }
 
 read_IO_Protected :: proc(
-    ctx: ^IO_Registers,
+    ctx: ^Bus,
     addr: u16,
 ) -> u8 {
     reg := cast(c.IO_Regs)addr
@@ -107,7 +109,7 @@ read_IO_Protected :: proc(
 }
 
 write_IO_Protected :: proc(
-    ctx: ^IO_Registers,
+    ctx: ^Bus,
     addr: u16,
     val: u8
 ) {
@@ -123,7 +125,24 @@ write_IO_Protected :: proc(
 }
 
 // =========== SPECIAL FALLBACKS FOR IO REGISTERS
-fb_read_joyp :: proc(ctx: ^IO_Registers) -> u8 {
+fb_read_joyp :: proc(ctx: ^Bus) -> u8 {
     //TODO: Implement joyp logic
     return 0x00 // TEMP: All buttons released
+}
+
+fb_write_dma :: proc(ctx: ^Bus, val: u8) {
+    
+    //FIXME: Replace with explicit DMA Stateful Handler executing over 160 M-Cycles instead
+    ctx.io.data[u16(c.IO_Regs.DMA) - 0xFF00] = val
+
+    start_addr := u16(val) << 8
+
+    log.infof("Started DMA Transfer from %04x", start_addr)
+
+    for i in 0..<160 {
+        byte_val := bus_read(ctx, start_addr + u16(i), true)
+        bus_write(ctx, 0xFE00 + u16(i), byte_val, true)
+    }
+
+    ctx.extra_m_delay = 160 // Delay system by 160 M-Cycles
 }

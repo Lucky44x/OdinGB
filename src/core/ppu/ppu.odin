@@ -43,6 +43,7 @@ reset :: proc(
     self.rend.ppu_mode = .OAMScan
 
     self.vram.data = {}
+    self.oam.data = {}
 }
 
 get_access :: proc(
@@ -73,11 +74,11 @@ step :: proc(
 }
 
 ppu_read :: proc(ctx: ^c.PPU_Access, addr: u16) -> u8 { 
-    if addr >= 0xFE00 do return read_oam(cast(^PPU)ctx, addr)
+    if addr >= 0xFE00 do return read_oam(cast(^PPU)ctx.ctx, addr)
     else do return read_vram(&(cast(^PPU)ctx.ctx).vram, addr) 
 }
 
 ppu_write :: proc(ctx: ^c.PPU_Access, addr: u16, val: u8) { 
-    if addr >= 0xFE00 do write_oam(cast(^PPU)ctx, addr, val)
+    if addr >= 0xFE00 do write_oam(cast(^PPU)ctx.ctx, addr, val)
     else do write_vram(&(cast(^PPU)ctx.ctx).vram, addr, val) 
 }

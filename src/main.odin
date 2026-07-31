@@ -13,7 +13,9 @@ import "core:os"
 import "core/common"
 
 main :: proc() {
-    logger := log.create_console_logger(.Debug)
+    logFile, err := os.create("dbg_log.log")
+
+    logger := log.create_file_logger(logFile, .Debug)
     context.logger = logger
     defer log.destroy_console_logger(logger)
 
@@ -54,7 +56,8 @@ main :: proc() {
 
     // Initialize the RL window
     rl.SetConfigFlags({ .WINDOW_RESIZABLE })
-    rl.InitWindow(640, 576, "AcornGB")
+    //rl.InitWindow(640, 576, "AcornGB")
+    rl.InitWindow(1920, 1080, "AcornGB")
     rl.SetTargetFPS(60)
 
     // Setup emulation environment

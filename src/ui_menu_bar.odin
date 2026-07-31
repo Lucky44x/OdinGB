@@ -78,6 +78,7 @@ imgui_menu_bar :: proc() {
             if imgui.MenuItem("CPU") do UI_CPU_VIEWER_ENABLED = !UI_CPU_VIEWER_ENABLED
             if imgui.MenuItem("Vram-Tiles") do UI_VRAM_TILES_VIEWER_ENABLED = !UI_VRAM_TILES_VIEWER_ENABLED
             if imgui.MenuItem("Tile-Maps") do UI_TILEMAP_VIEWER_ENABLED = !UI_TILEMAP_VIEWER_ENABLED
+            if imgui.MenuItem("Objects") do UI_OBJECT_VIEWER_ENABLED = !UI_OBJECT_VIEWER_ENABLED
 
             imgui.EndMenu()
         }

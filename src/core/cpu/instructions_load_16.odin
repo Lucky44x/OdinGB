@@ -172,12 +172,12 @@ ins_ld_hl_sp_e :: proc(cpu: ^CPU, opcode: u8) -> u8 {
 stack_push_SP :: proc(cpu: ^CPU, val: u16) {
     dec_r16(cpu, .SP, 2)
     address := read_r16(cpu, .SP)
-    bus_write_u16(cpu.bus, address, val)
+    bus_write_u16(cpu, address, val)
 }
 
 stack_pop_SP :: proc(cpu: ^CPU) -> u16 {
     address := read_r16(cpu, .SP)
-    value := bus_read_u16(cpu.bus, address)
+    value := bus_read_u16(cpu, address)
     inc_r16(cpu, .SP, 2)
 
     return value

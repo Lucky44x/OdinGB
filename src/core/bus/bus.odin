@@ -18,6 +18,9 @@ import c "../common"
 // 0xFFFF -> 1 bytes Interrupt register
 
 Bus :: struct {
+    // Elapsed M-Cycles triggered by IO-Events
+    extra_m_delay: u16,
+
     // Accessors
     boot_rom: ^Boot_Rom,
     cart_rom: ^c.CART_Access,
@@ -66,11 +69,17 @@ get_access :: proc(
     }
 }
 
+consume_system_delay :: proc(ctx: ^Bus) -> u16 {
+    cycles := ctx.extra_m_delay
+    ctx.extra_m_delay = 0
+    return cycles
+}
+
 adapter_bus_write :: proc (bus: ^c.Bus_Access, addr: u16, val: u8, force: bool) { bus_write(cast(^Bus)bus.ctx, addr, val, force) }
 bus_write :: proc(ctx: ^Bus, addr: u16, value: u8, force: bool = false) {
     if addr == 0xFF50 {
         ctx.is_banked = true
-        write_IO_Registers(&ctx.io, 0xFF50, 0xFF, force = true)
+        write_IO_Registers(ctx, 0xFF50, 0xFF, force = true)
         return
     }
 
@@ -85,11 +94,11 @@ bus_write :: proc(ctx: ^Bus, addr: u16, value: u8, force: bool = false) {
             write_ram(&ctx.ram, .WRAM, addr, value); return
         case 0xE000 ..= 0xFDFF:
             write_ram(&ctx.ram, .WRAM, addr - 0x2000, value); return
-        case 0xFE00 ..= 0xFE9F: //TODO: Write to PPU
+        case 0xFE00 ..= 0xFE9F:
             ctx.ppu.write(ctx.ppu, addr, value); return
         case 0xFEA0 ..= 0xFEFF: return // Ignored -> Nothing in this range
         case 0xFF00 ..= 0xFF7F: 
-            write_IO_Registers(&ctx.io, addr, value, force); return
+            write_IO_Registers(ctx, addr, value, force); return
         case 0xFF80 ..= 0xFFFE:
             write_ram(&ctx.ram, .HRAM, addr, value); return
         case 0xFFFF: 
@@ -110,7 +119,7 @@ bus_read :: proc(ctx: ^Bus, addr: u16, force: bool = false) -> u8 {
         case 0xE000 ..= 0xFDFF: return read_ram(&ctx.ram, .WRAM, addr - 0x2000)
         case 0xFE00 ..= 0xFE9F: return ctx.ppu.read(ctx.ppu, addr)
         case 0xFEA0 ..= 0xFEFF: return 0xFF; // Nothing inside this region
-        case 0xFF00 ..= 0xFF7F: return read_IO_Registers(&ctx.io, addr, force)
+        case 0xFF00 ..= 0xFF7F: return read_IO_Registers(ctx, addr, force)
         case 0xFF80 ..= 0xFFFE: return read_ram(&ctx.ram, .HRAM, addr)
         case 0xFFFF: return ctx.ie_reg
     }

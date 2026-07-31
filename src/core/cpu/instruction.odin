@@ -193,7 +193,7 @@ register_instruction :: proc "contextless"(
 handle_instruction :: proc(
     cpu: ^CPU,
     opcode: u8
-) -> (cycles: u8) {
+) -> (cycles: u16) {
     fetchedOpcode := opcode
     len := InstructionTable[opcode].length
     cpu.last_instruction = &InstructionTable[opcode]
@@ -212,5 +212,5 @@ handle_instruction :: proc(
     if opcode == 0xCB do m_cycles = PrefixedTable[fetchedOpcode].handle(cpu, fetchedOpcode)
     else do m_cycles = InstructionTable[fetchedOpcode].handle(cpu, fetchedOpcode)
 
-    return m_cycles
+    return u16(m_cycles)
 }

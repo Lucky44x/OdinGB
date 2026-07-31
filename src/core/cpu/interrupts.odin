@@ -38,7 +38,7 @@ fetch_interrupt :: proc(
 dispatch_interrupt :: proc(
     cpu: ^CPU,
     interrupt: c.InterruptSource
-) -> u8 {
+) -> u16 {
     // Disable IME
     cpu.ime = false
     addr := INTERRUPT_JMP_ADDR[interrupt]
@@ -50,7 +50,7 @@ dispatch_interrupt :: proc(
     // Clear the interrupt bit
     c.clear_interrupt(cpu.bus, interrupt)
 
-    //log.infof("Dispatched interrupt: %e", interrupt)
+    log.infof("Dispatched interrupt: %e", interrupt)
 
     return 5
 }

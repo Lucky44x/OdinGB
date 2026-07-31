@@ -16,7 +16,7 @@ DEBUG_STEPPING_ENABLED: bool
 @(private)
 UI_DEBUG_STEPPER_ENABLED: bool = false
 
-last_m_cycles: u8
+last_m_cycles: u16
 
 draw_last_instruction :: proc(emuCore: ^c.GB_Core) {
     imgui.TextUnformatted("Last Instruction")

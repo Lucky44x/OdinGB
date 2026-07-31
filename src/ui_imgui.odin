@@ -11,14 +11,22 @@ TILE_HEIGHT :: 8
 BYTES_PER_TILE :: 16
 TILE_COUNT :: 384
 
+UI_SCALE :: 2
+
 ui_init_imgui :: proc() {
     nfd.Init()
     imgui.CreateContext(nil)
     imgui_rl.init()
 
+    style := imgui.GetStyle()
+    imgui.StyleColorsDark(style)
+    style.FontSizeBase = 16 * UI_SCALE
+    imgui.Style_ScaleAllSizes(style, UI_SCALE)
+
     ui_init_vram_tiles_viewer()
     ui_init_tilemap_viewer()
     ui_init_cpu_viewer()
+    ui_init_object_viewer()
 }
 
 ui_deinit_imgui :: proc() {
@@ -39,6 +47,7 @@ ui_draw_imgui :: proc() {
     imgui_display_tilemap_viewer(&emulator_core)
     imgui_display_cpu_viewer(&emulator_core)
     imgui_display_debug_stepper(&emulator_core)
+    imgui_display_object_viewer(&emulator_core)
 
     imgui.Render()
     imgui_rl.render_draw_data(imgui.GetDrawData())

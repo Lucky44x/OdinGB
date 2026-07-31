@@ -77,10 +77,12 @@ cartridge_unload :: proc {
 
 step_emulation :: proc(
     core: ^GB_Core
-) -> u8 {
+) -> u16 {
     if !core.is_loaded do return 0
 
     elapsed_m := cpu.step(&core.cpu_state, &core.bus)
+    elapsed_m += bus.consume_system_delay(&core.bus_state)
+
     ppu.step(&core.ppu_state, u16(elapsed_m))
     
     return elapsed_m

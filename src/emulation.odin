@@ -22,7 +22,7 @@ DMG_PALETTE := GB_Palette {
 }
 
 emulation_setup :: proc(bios: ^os.File, rom: ^os.File) {
-    emulation_init_renderer(&DMG_PALETTE, 4)
+    emulation_init_renderer(&DMG_PALETTE, 7)
 
     if bios != nil do load_bios(&boot_rom, bios)
     if rom != nil do load_rom(&boot_rom, rom)

@@ -70,16 +70,20 @@ render_scanline :: proc(
             
             prio := obj.bg_priority
             x_base := obj.x_position
+            palette_addr: u16 = obj.palette == 0 ? u16(c.IO_Regs.OBP0) : u16(c.IO_Regs.OBP1)
+            palette := ppu.bus.read(ppu.bus, palette_addr, force=true)
 
             for x in 0..<8 {
                 pixel_idx := x_base + x
-                bg_value := SCANLINE_PIXEL_BUFFER[pixel_idx]
+                if pixel_idx < 0 || pixel_idx >= 160 do continue
 
-                // Skip pixels that are not 
-                if prio && bg_value != 0x00 do continue 
+                object_color := obj.pixels[x]
+                if object_color == 0 do continue
 
-                // Set Pixel
-                SCANLINE_PIXEL_BUFFER[pixel_idx] = obj.pixels[x]
+                // Priority only suppresses non-zero background pixels.
+                if prio && SCANLINE_PIXEL_BUFFER[pixel_idx] != 0x00 do continue
+
+                SCANLINE_PIXEL_BUFFER[pixel_idx] = (palette >> (object_color * 2)) & 0x03
             }
         }
     }

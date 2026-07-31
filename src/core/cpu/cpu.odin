@@ -50,7 +50,7 @@ reset :: proc(
 step :: proc(
     cpu: ^CPU,
     bus: ^c.Bus_Access,
-) -> (m_cycles: u8) {
+) -> (m_cycles: u16) {
     if cpu.bus == nil do cpu.bus = bus
     cpu.last_instruction = nil
     cpu.last_instruction_length = 0
@@ -123,14 +123,25 @@ fetch_next_u16 :: proc(cpu: ^CPU) -> u16 {
 }
 
 @(private)
-bus_read_u16 :: proc(bus: ^c.Bus_Access, address: u16) -> u16 {
-    lo := bus.read(bus, address)
-    hi := bus.read(bus, address + 1)
+bus_write :: proc(ctx: ^CPU, address: u16, val: u8, force: bool = false) {
+    //TODO: Handle DMA
+    ctx.bus.write(ctx.bus, address, val, force)
+}
+
+@(private)
+bus_read :: proc(ctx: ^CPU, address: u16, force: bool = false) -> u8 {
+    return ctx.bus.read(ctx.bus, address, force)
+}
+
+@(private)
+bus_read_u16 :: proc(ctx: ^CPU, address: u16) -> u16 {
+    lo := bus_read(ctx, address)
+    hi := bus_read(ctx, address + 1)
     return (u16(hi) << 8) | u16(lo)
 }
 
 @(private)
-bus_write_u16 :: proc(bus: ^c.Bus_Access, address: u16, value: u16) {
-    bus.write(bus, address, u8(value & 0x00FF))
-    bus.write(bus, address + 1, u8(value >> 8))
+bus_write_u16 :: proc(ctx: ^CPU, address: u16, value: u16) {
+    bus_write(ctx, address, u8(value & 0x00FF))
+    bus_write(ctx, address + 1, u8(value >> 8))
 }

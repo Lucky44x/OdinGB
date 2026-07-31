@@ -1,6 +1,8 @@
 #+private
 package ppu
 
+import "core:text/scanner"
+import "core:crypto/x25519"
 import c "../common"
 
 DMG_COLORS := [4]u16 {
@@ -57,6 +59,29 @@ render_scanline :: proc(
         color_id := get_tile_pixel(ppu.bus, tile_id, u8(realX % 8), u8(realY % 8), adressMode)
 
         SCANLINE_PIXEL_BUFFER[x] = color_id
+    }
+
+    if LCDC & 0x02 != 0 {
+        // Render OAM objects
+        objects := collect_objects(ppu, scanline, LCDC)
+        // Iterate over objects left -> right (lower priority is left, meaing right will overdraw)
+        for obj in objects {
+            if !obj.render do break 
+            
+            prio := obj.bg_priority
+            x_base := obj.x_position
+
+            for x in 0..<8 {
+                pixel_idx := x_base + x
+                bg_value := SCANLINE_PIXEL_BUFFER[pixel_idx]
+
+                // Skip pixels that are not 
+                if prio && bg_value != 0x00 do continue 
+
+                // Set Pixel
+                SCANLINE_PIXEL_BUFFER[pixel_idx] = obj.pixels[x]
+            }
+        }
     }
 
     ppu.callback.callback(ppu.callback.ctx, scanline, &SCANLINE_PIXEL_BUFFER)

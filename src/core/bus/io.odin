@@ -46,7 +46,6 @@ IO_WRITE_MASK := map[c.IO_Regs] u8 {
     .LY = 0x00, .BANK = 0x00, .PCM12 = 0x00, .PCM34 = 0x00
 }
 
-// TODO: Add all masks where needed
 IO_BIT_OR_READ := map[c.IO_Regs]u8 {
     .STAT = 0x80,
 
@@ -145,7 +144,6 @@ fb_write_div :: proc(ctx: ^Bus, val: u8) {
 }
 
 fb_write_dma :: proc(ctx: ^Bus, val: u8) {
-    //FIXME: Replace with explicit DMA Stateful Handler executing over 160 M-Cycles instead
     ctx.io.data[u16(c.IO_Regs.DMA) - 0xFF00] = val
 
     start_addr := u16(val) << 8

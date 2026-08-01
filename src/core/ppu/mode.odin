@@ -1,6 +1,7 @@
 #+private
 package ppu
 
+import "core:log"
 import c "../common"
 
 /*
@@ -14,7 +15,7 @@ step_ppu_state :: proc(
 
     if ppu.rend.ppu_mode == .OAMScan {
         if ppu.rend.line_dots < 80 do return elapsed_dots // We stay inside the OAMScan mode and consume all dots
-        ppu.rend.ppu_mode = .Drawing
+        switch_mode(ppu, .Drawing)
 
         apply_ppu_io_flags(ppu)
     }
@@ -23,8 +24,7 @@ step_ppu_state :: proc(
         if ppu.rend.line_dots < 252 do return elapsed_dots // We stay inside the Drawing mode and consume all dots
         
         render_scanline(ppu)
-
-        ppu.rend.ppu_mode = .HorizontalBlank
+        switch_mode(ppu, .HorizontalBlank)
 
         apply_ppu_io_flags(ppu)
     }
@@ -37,8 +37,8 @@ step_ppu_state :: proc(
         ppu.rend.current_line += 1
 
         // Choose next mode:
-        if ppu.rend.current_line >= 144 do ppu.rend.ppu_mode = .VerticalBlank 
-        else do ppu.rend.ppu_mode = .OAMScan
+        if ppu.rend.current_line >= 144 do switch_mode(ppu, .VerticalBlank)
+        else do switch_mode(ppu, .OAMScan)
 
         // Reset other parameters
         ppu.rend.line_dots = 0
@@ -55,10 +55,10 @@ step_ppu_state :: proc(
         ppu.rend.line_dots = 0
 
         if ppu.rend.current_line >= 154 {
-            ppu.rend.ppu_mode = .OAMScan
+            switch_mode(ppu, .OAMScan)
             ppu.rend.current_line = 0
         }
-        else do ppu.rend.ppu_mode = .VerticalBlank // Redundant but better safe than sorry
+        else do switch_mode(ppu, .VerticalBlank) // Redundant but better safe than sorry
 
         apply_ppu_io_flags(ppu)
         return consumed
@@ -68,16 +68,34 @@ step_ppu_state :: proc(
     return 0
 }
 
+switch_mode :: proc(
+    ppu: ^PPU,
+    newMode: PPU_Mode
+) {
+    changed_mode: bool = ppu.rend.ppu_mode != newMode
+    ppu.rend.ppu_mode = newMode
+
+    if !changed_mode do return
+    STAT := ppu.bus.read(ppu.bus, u16(c.IO_Regs.STAT), true)
+    LYC := ppu.bus.read(ppu.bus, u16(c.IO_Regs.LYC), true)
+
+    if newMode == .HorizontalBlank && STAT & 0x08 != 0 do c.set_interrupt(ppu.bus, .Stat)
+    if newMode == .VerticalBlank && STAT & 0x10 != 0 do c.set_interrupt(ppu.bus, .Stat)
+    if newMode == .OAMScan && STAT & 0x20 != 0 do c.set_interrupt(ppu.bus, .Stat)
+
+    if ppu.rend.current_line == LYC && STAT & 0x40 != 0 do c.set_interrupt(ppu.bus, .Stat)
+}
+
 apply_ppu_io_flags :: proc(
     ppu: ^PPU,
 ) {
     if ppu.rend.ppu_mode == .VerticalBlank && ppu.rend.line_dots == 0 do c.set_interrupt(ppu.bus, .VBlank)
-    //TODO: Evaluate STAT: The increment of ppu.rend.current_line means that STAT LCY = LY will always trigger at the start of the targetetd scanline
 
     ppu.bus.write(ppu.bus, u16(c.IO_Regs.LY), ppu.rend.current_line, force=true) // Write LY
     lyc := ppu.bus.read(ppu.bus, u16(c.IO_Regs.LYC), force=true)
 
     stat_orig := ppu.bus.read(ppu.bus, u16(c.IO_Regs.STAT), force=true)
+    
     if lyc == ppu.rend.current_line do stat_orig |= (1 << 2) // Set bit 2
     else do stat_orig &= 0xFB // Reset bit 2
 
@@ -87,6 +105,4 @@ apply_ppu_io_flags :: proc(
     stat_orig = (stat_orig & 0xFC) | ppu_mode // Clear the two lowest bits and then set them to our ppu_mode
 
     ppu.bus.write(ppu.bus, u16(c.IO_Regs.STAT), stat_orig, force=true) // Write combined new STAT state to the STAT register
-
-    //TODO: Send interrupts depending on STAT
 }

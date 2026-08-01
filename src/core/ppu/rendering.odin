@@ -18,14 +18,6 @@ SCANLINE_PIXEL_BUFFER: [160]u8
 render_scanline :: proc(
     ppu: ^PPU
 ) {
-    /*
-        TODO: Rendering procedure ->
-            For current-line (LY) do:
-                1. Collect background pixels from background tiles
-                2. Collect 
-                (3.) Walk OAM and calculate overlapping objects, and override necessary pixels in frame-buffer 
-    */
-
     LCDC := ppu.bus.read(ppu.bus, u16(c.IO_Regs.LCDC), force=true)
     wbg_enabled := LCDC & 1 != 0
 
@@ -54,7 +46,6 @@ render_scanline :: proc(
         tile_index := tile_x + (tile_y * 32)
         tile_id := ppu.bus.read(ppu.bus, u16(bg_tilemap) + tile_index , force=true)
 
-        // TODO: Render pixels here
         fb_addr := u16(x) + (u16(scanline) * 160)
         color_id := get_tile_pixel(ppu.bus, tile_id, u8(realX % 8), u8(realY % 8), adressMode)
 

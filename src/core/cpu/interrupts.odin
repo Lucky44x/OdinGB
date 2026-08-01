@@ -50,7 +50,5 @@ dispatch_interrupt :: proc(
     // Clear the interrupt bit
     c.clear_interrupt(cpu.bus, interrupt)
 
-    //log.infof("Dispatched interrupt: %e", interrupt)
-
     return 5
 }

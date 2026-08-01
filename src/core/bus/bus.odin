@@ -2,10 +2,6 @@ package bus
 
 import c "../common"
 
-/*
-    TODO: Implement DMA transfer -> lasts for 160M and blocks access to everything except HRAM (0xFF80 - 0xFFFE)
-*/
-
 // [CART] 0x0000 - 0x7FFF -> 32KiB Cartridge, reads provided by frontend handle
 // [PPU] 0x8000 - 0x9FFF -> 8 KiB Window, owned by PPU
 // [CART] 0xA000 - 0xBFFF -> 8 KiB Window, owned by Cartridge (switchable External RAM)

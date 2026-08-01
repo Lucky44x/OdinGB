@@ -124,7 +124,6 @@ fetch_next_u16 :: proc(cpu: ^CPU) -> u16 {
 
 @(private)
 bus_write :: proc(ctx: ^CPU, address: u16, val: u8, force: bool = false) {
-    //TODO: Handle DMA
     ctx.bus.write(ctx.bus, address, val, force)
 }
 

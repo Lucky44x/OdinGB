@@ -19,7 +19,7 @@ write_ram :: proc(
     addr: u16,
     val: u8
 ) {
-    if reg == .HRAM do log.infof("Writing %#02x to %04X in HRAM", val, addr)
+    //if reg == .HRAM do log.infof("Writing %#02x to %04X in HRAM", val, addr)
 
     phys_addr := addr - u16(reg)
     if reg == .WRAM do ram.wram[phys_addr] = val

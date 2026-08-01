@@ -47,7 +47,7 @@ ui_update_object :: proc(
 ) {
     if !emuCore.is_loaded do return
 
-    oam_addr := 0xFE00 + (u16(object_id) * 4)
+    oam_addr := 0xFE00 + u16(object_id) * 4
     tile_id := emuCore.bus.read(&emuCore.bus, oam_addr + 2, true)
 
     object_metas[object_id].pos_y = emuCore.bus.read(&emuCore.bus, oam_addr, true)
@@ -64,11 +64,11 @@ ui_render_tile :: proc(
     tile_id: u8,
     buffer: ^[OBJECT_BUFFER_SIZE]rl.Color
 ) {
-    tile_offset := tile_id * BYTES_PER_TILE
+    tile_offset := u16(tile_id) * BYTES_PER_TILE
 
     for pixel_y in 0..<TILE_HEIGHT {
-        low := emuCore.bus.read(&emuCore.bus, 0x8000 + u16(tile_offset) + (u16(pixel_y) * 2), true)
-        hi := emuCore.bus.read(&emuCore.bus, 0x8000 + u16(tile_offset) + (u16(pixel_y) * 2) + 1, true)
+        low := emuCore.bus.read(&emuCore.bus, 0x8000 + tile_offset + (u16(pixel_y) * 2), true)
+        hi := emuCore.bus.read(&emuCore.bus, 0x8000 + tile_offset + (u16(pixel_y) * 2) + 1, true)
 
         for pixel_x in 0 ..< TILE_WIDTH {
             // Game Boy tile pixels are stored most-significant bit first.

@@ -2,8 +2,10 @@
 #+feature dynamic-literals
 package bus
 
+import "core:os"
 import "core:log"
 import c "../common"
+import "../ppu"
 
 IO_Registers :: struct {
     data: [128]u8
@@ -136,8 +138,6 @@ fb_write_dma :: proc(ctx: ^Bus, val: u8) {
     ctx.io.data[u16(c.IO_Regs.DMA) - 0xFF00] = val
 
     start_addr := u16(val) << 8
-
-    log.infof("Started DMA Transfer from %04x", start_addr)
 
     for i in 0..<160 {
         byte_val := bus_read(ctx, start_addr + u16(i), true)

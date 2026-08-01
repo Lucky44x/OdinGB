@@ -13,9 +13,10 @@ import "core:os"
 import "core/common"
 
 main :: proc() {
-    logFile, err := os.create("dbg_log.log")
+    //logFile, err := os.create("dbg_log.log")
+    //logger := log.create_file_logger(logFile, .Debug)
+    logger := log.create_console_logger(.Debug)
 
-    logger := log.create_file_logger(logFile, .Debug)
     context.logger = logger
     defer log.destroy_console_logger(logger)
 

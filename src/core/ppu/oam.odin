@@ -46,7 +46,7 @@ collect_objects :: proc(
     LCDC: u8
 ) -> (out: [10]OAM_Entry) {
 
-    mode_16px := LCDC & 0x02 != 0
+    mode_16px := LCDC & 0x04 != 0
     collected := 0
 
     // Walk along all OAM entries, but collect only the first 10 that fit our scanline

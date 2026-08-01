@@ -7,6 +7,7 @@ import "bus"
 import "ppu"
 import cart "cartridge"
 import "input"
+import "timer"
 
 GB_Core :: struct {
     is_loaded: bool,
@@ -14,6 +15,7 @@ GB_Core :: struct {
     bios: ^GB_Bios,
 
     cpu_state: cpu.CPU,
+    timer_state: timer.Timer,
     bus_state: bus.Bus, bus: c.Bus_Access,
     ppu_state: ppu.PPU, ppu: c.PPU_Access,
 
@@ -95,7 +97,8 @@ step_emulation :: proc(
     bus.step_dma(&core.bus_state, elapsed_m)
 
     ppu.step(&core.ppu_state, u16(elapsed_m))
-    
+    timer.step_timer(&core.timer_state, &core.bus, elapsed_m)
+
     return elapsed_m
 }
 

@@ -19,7 +19,8 @@ IO_R_FALLBACKS := map[c.IO_Regs] IO_READ_FALLBACK {
 }
 
 IO_W_FALLBACKS := map[c.IO_Regs] IO_WRITE_FALLBACK {
-    .DMA = fb_write_dma
+    .DMA = fb_write_dma,
+    .DIV = fb_write_div
 }
 
 IO_READ_MASK := map[c.IO_Regs] u8 {
@@ -139,6 +140,10 @@ fb_read_joyp :: proc(ctx: ^Bus) -> u8 {
     return 0xC0 | (val & 0x30) | (buttons_nibble & dpad_nibble)
 }
 
+fb_write_div :: proc(ctx: ^Bus, val: u8) {
+    ctx.io.data[u16(c.IO_Regs.DIV) - 0xFF00] = 0x00 // Reset DIV register to 0, regardless of value
+}
+
 fb_write_dma :: proc(ctx: ^Bus, val: u8) {
     //FIXME: Replace with explicit DMA Stateful Handler executing over 160 M-Cycles instead
     ctx.io.data[u16(c.IO_Regs.DMA) - 0xFF00] = val
@@ -148,13 +153,4 @@ fb_write_dma :: proc(ctx: ^Bus, val: u8) {
     ctx.dma.origin_addr = start_addr
     ctx.dma.progress = 0
     ctx.dma.enabled = true
-
-    /*
-    for i in 0..<160 {
-        byte_val := bus_read(ctx, start_addr + u16(i), true)
-        bus_write(ctx, 0xFE00 + u16(i), byte_val, true)
-    }
-
-    ctx.extra_m_delay = 160 // Delay system by 160 M-Cycles
-    */
 }

@@ -9,3 +9,5 @@ log.txt
 logs/
 .docs/
 imgui.ini
+
+.audio-backup*/

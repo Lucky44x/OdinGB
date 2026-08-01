@@ -5,7 +5,7 @@ package bus
 import "core:os"
 import "core:log"
 import c "../common"
-import "../ppu"
+import "../apu"
 
 IO_Registers :: struct {
     data: [128]u8
@@ -20,7 +20,13 @@ IO_R_FALLBACKS := map[c.IO_Regs] IO_READ_FALLBACK {
 
 IO_W_FALLBACKS := map[c.IO_Regs] IO_WRITE_FALLBACK {
     .DMA = fb_write_dma,
-    .DIV = fb_write_div
+    .DIV = fb_write_div,
+
+    .NR14 = fb_write_nr14,
+    .NR24 = fb_write_nr24,
+    .NR34 = fb_write_nr34,
+    .NR44 = fb_write_nr44,
+    .NR52 = fb_write_nr52
 }
 
 IO_READ_MASK := map[c.IO_Regs] u8 {
@@ -151,4 +157,35 @@ fb_write_dma :: proc(ctx: ^Bus, val: u8) {
     ctx.dma.origin_addr = start_addr
     ctx.dma.progress = 0
     ctx.dma.enabled = true
+}
+
+// == AUDIO
+fb_write_nr14 :: proc(ctx: ^Bus, value: u8) {
+    write_IO_Protected(ctx, u16(c.IO_Regs.NR14), value)
+    if value & 0x80 != 0 do apu.trigger_channel_1(ctx.apu)
+}
+
+fb_write_nr24 :: proc(ctx: ^Bus, value: u8) {
+    write_IO_Protected(ctx, u16(c.IO_Regs.NR24), value)
+    if value & 0x80 != 0 do apu.trigger_channel_2(ctx.apu)
+}
+
+fb_write_nr34 :: proc(ctx: ^Bus, value: u8) {
+    write_IO_Protected(ctx, u16(c.IO_Regs.NR34), value)
+    if value & 0x80 != 0 do apu.trigger_channel_3(ctx.apu)
+}
+
+fb_write_nr44 :: proc(ctx: ^Bus, value: u8) {
+    write_IO_Protected(ctx, u16(c.IO_Regs.NR44), value)
+    if value & 0x80 != 0 do apu.trigger_channel_4(ctx.apu)
+}
+
+fb_write_nr52 :: proc(ctx: ^Bus, value: u8) {
+    if value & 0x80 == 0 {
+        apu.reset(ctx.apu)
+        write_IO_Registers(ctx, u16(c.IO_Regs.NR52), 0x00, force=true)
+        return
+    }
+
+    write_IO_Protected(ctx, u16(c.IO_Regs.NR52), value)
 }

@@ -1,6 +1,7 @@
 package bus
 
 import c "../common"
+import audio "../apu"
 
 // [CART] 0x0000 - 0x7FFF -> 32KiB Cartridge, reads provided by frontend handle
 // [PPU] 0x8000 - 0x9FFF -> 8 KiB Window, owned by PPU
@@ -18,6 +19,7 @@ Bus :: struct {
     boot_rom: ^Boot_Rom,
     cart_rom: ^c.CART_Access,
     ppu: ^c.PPU_Access,
+    apu: ^audio.APU, //FIXME: Replace with common Access Struct
     input: ^c.Input_State,
 
     // In-Bus Memory
@@ -38,12 +40,14 @@ init :: proc(
     boot_rom: ^Boot_Rom,
     cart: ^c.CART_Access,
     ppu: ^c.PPU_Access,
+    apu: ^audio.APU,
     input: ^c.Input_State
 ) {
     self.boot_rom = boot_rom
     self.cart_rom = cart
     self.ppu = ppu
     self.input = input
+    self.apu = apu
 }
 
 reset :: proc(

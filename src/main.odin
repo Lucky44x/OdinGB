@@ -59,6 +59,7 @@ main :: proc() {
     rl.SetConfigFlags({ .WINDOW_RESIZABLE })
     //rl.InitWindow(640, 576, "AcornGB")
     rl.InitWindow(1920, 1080, "AcornGB")
+
     rl.SetTargetFPS(60)
 
     // Setup emulation environment
@@ -80,6 +81,8 @@ main :: proc() {
         emulation_draw_renderer()
 
         ui_draw_imgui()
+
+        rl.DrawFPS(16, 16)
         rl.EndDrawing()
     }
 

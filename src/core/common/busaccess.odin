@@ -9,6 +9,9 @@ package common
 // OBPD == OCPD
 // WBK  == SVBK
 
+GB_T_CYCLES_PER_SECOND :: 4194304
+GB_M_CYCLES_PER_SECOND :: GB_T_CYCLES_PER_SECOND / 4
+
 IO_Regs :: enum(u16) {
     // Joypad
     JOYP = 0xFF00,

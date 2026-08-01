@@ -1,5 +1,6 @@
 package core
 
+import "core:log"
 import c "common"
 
 import "cpu"
@@ -8,6 +9,7 @@ import "ppu"
 import cart "cartridge"
 import "input"
 import "timer"
+import "apu"
 
 GB_Core :: struct {
     is_loaded: bool,
@@ -18,6 +20,7 @@ GB_Core :: struct {
     timer_state: timer.Timer,
     bus_state: bus.Bus, bus: c.Bus_Access,
     ppu_state: ppu.PPU, ppu: c.PPU_Access,
+    apu_state: apu.APU,
 
     cart_state: ^cart.Cartridge, cartridge: c.CART_Access,
 
@@ -36,7 +39,8 @@ make_GB_Core :: proc(
     bios: ^GB_Bios,
 
     render_callback: GB_PPU_Callback,
-    render_callback_ctx: rawptr = nil
+    render_callback_ctx: rawptr = nil,
+    audio_sample_rate: u32 = 0
 ) {
     core.bios = bios
 
@@ -45,11 +49,12 @@ make_GB_Core :: proc(
 
     core.ppu = ppu.get_access(&core.ppu_state)
 
-    bus.init(&core.bus_state, core.bios, &core.cartridge, &core.ppu, &core.input_state)
+    bus.init(&core.bus_state, core.bios, &core.cartridge, &core.ppu, &core.apu_state, &core.input_state)
     core.bus = bus.get_access(&core.bus_state)
 
     ppu.init(&core.ppu_state, &core.bus, render_callback, render_callback_ctx)
     cpu.init(&core.cpu_state, &core.bus)
+    apu.init(&core.apu_state, &core.bus, audio_sample_rate)
 
     core.input_state.buttons = 0x0F
     core.input_state.dpad = 0x0F
@@ -66,6 +71,7 @@ reload_GB_Core :: proc(
     ppu.reset(&core.ppu_state)
     cpu.reset(&core.cpu_state)
     bus.reset(&core.bus_state)
+    apu.reset(&core.apu_state)
 }
 
 teardown_GB_Core :: proc(
@@ -77,6 +83,7 @@ teardown_GB_Core :: proc(
     ppu.reset(&core.ppu_state)
     cpu.reset(&core.cpu_state)
     bus.reset(&core.bus_state)
+    apu.reset(&core.apu_state)
 }
 
 cartridge_load :: proc {
@@ -99,6 +106,8 @@ step_emulation :: proc(
     ppu.step(&core.ppu_state, u16(elapsed_m))
     timer.step_timer(&core.timer_state, &core.bus, elapsed_m)
 
+    apu.step(&core.apu_state, elapsed_m)
+
     return elapsed_m
 }
 
@@ -118,4 +127,25 @@ set_dpad :: proc(
 ) {
     if is_pressed do input.dpad_pressed(dpad, &core.input_state, &core.bus)
     else do input.dpad_released(dpad, &core.input_state)
+}
+
+audio_render :: proc(
+    emu_core: ^GB_Core,
+    sample_count: u16,
+    samples_out: []i16
+) {
+    for frame in 0..<int(sample_count) {
+        sample, ok := apu.pop_frame(&emu_core.apu_state)
+        if !ok {
+            log.warnf("Sample: %d was defaulted to 0", frame)
+            sample = 0
+        }
+
+        samples_out[frame * 2 + 0] = sample
+        samples_out[frame * 2 + 1] = sample
+    }
+}
+
+audio_available :: proc(emu_core: ^GB_Core) -> int {
+    return apu.available_frames(&emu_core.apu_state)
 }

@@ -36,8 +36,10 @@ emulation_step :: proc() {
     if !emulator_core.is_loaded || DEBUG_STEPPING_ENABLED do return
 
     cycles := M_CYCLES_PER_FRAME
-        
+       
     for cycles > 0 {
+        emulation_check_input()
+
         steps := int(core.step_emulation(&emulator_core))
         if steps <= 0 do log.info("Invalid return value")
         cycles -= steps
@@ -74,6 +76,8 @@ load_rom :: proc(bios: ^core.GB_Bios, rom: ^os.File) {
         &boot_rom,
         render_scanline_adapter
     )
+
+    UI_SHOW_MENU_BAR = false
 }
 
 unload_rom :: proc() {

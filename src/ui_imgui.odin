@@ -13,6 +13,8 @@ TILE_COUNT :: 384
 
 UI_SCALE :: 2
 
+UI_SHOW_MENU_BAR: bool = true
+
 ui_init_imgui :: proc() {
     nfd.Init()
     imgui.CreateContext(nil)
@@ -36,13 +38,16 @@ ui_deinit_imgui :: proc() {
 }
 
 ui_update_imgui :: proc() {
+    if rl.IsKeyPressed(.TAB) do UI_SHOW_MENU_BAR = !UI_SHOW_MENU_BAR
+
     imgui_rl.process_events()
     imgui_rl.new_frame()
     imgui.NewFrame()
 }
 
 ui_draw_imgui :: proc() {
-    imgui_menu_bar()
+    if UI_SHOW_MENU_BAR do imgui_menu_bar()
+
     imgui_display_vram_tiles_viewer(emulator_core.ppu_state.vram.data[:])
     imgui_display_tilemap_viewer(&emulator_core)
     imgui_display_cpu_viewer(&emulator_core)

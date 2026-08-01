@@ -128,12 +128,18 @@ write_IO_Protected :: proc(
 
 // =========== SPECIAL FALLBACKS FOR IO REGISTERS
 fb_read_joyp :: proc(ctx: ^Bus) -> u8 {
-    //TODO: Implement joyp logic
-    return 0x00 // TEMP: All buttons released
+    val := ctx.io.data[u16(c.IO_Regs.JOYP) - 0xFF00]
+
+    dpad_select := val & 0x10 == 0
+    buttons_select := val & 0x20 == 0
+    
+    buttons_nibble := buttons_select ? ctx.input.buttons : 0xF
+    dpad_nibble := dpad_select ? ctx.input.dpad : 0xF
+
+    return 0xC0 | (val & 0x30) | (buttons_nibble & dpad_nibble)
 }
 
 fb_write_dma :: proc(ctx: ^Bus, val: u8) {
-    
     //FIXME: Replace with explicit DMA Stateful Handler executing over 160 M-Cycles instead
     ctx.io.data[u16(c.IO_Regs.DMA) - 0xFF00] = val
 

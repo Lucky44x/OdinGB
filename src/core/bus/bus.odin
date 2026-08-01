@@ -25,6 +25,7 @@ Bus :: struct {
     boot_rom: ^Boot_Rom,
     cart_rom: ^c.CART_Access,
     ppu: ^c.PPU_Access,
+    input: ^c.Input_State,
 
     // In-Bus Memory
     ram: Bus_RAM,
@@ -40,11 +41,13 @@ init :: proc(
     self: ^Bus,
     boot_rom: ^Boot_Rom,
     cart: ^c.CART_Access,
-    ppu: ^c.PPU_Access
+    ppu: ^c.PPU_Access,
+    input: ^c.Input_State
 ) {
     self.boot_rom = boot_rom
     self.cart_rom = cart
     self.ppu = ppu
+    self.input = input
 }
 
 reset :: proc(

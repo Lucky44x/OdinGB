@@ -6,6 +6,7 @@ import "cpu"
 import "bus"
 import "ppu"
 import cart "cartridge"
+import "input"
 
 GB_Core :: struct {
     is_loaded: bool,
@@ -17,11 +18,15 @@ GB_Core :: struct {
     ppu_state: ppu.PPU, ppu: c.PPU_Access,
 
     cart_state: ^cart.Cartridge, cartridge: c.CART_Access,
+
+    input_state: c.Input_State
 }
 
 GB_PPU_Callback :: c.PPU_ScanlineCallback
 GB_Bios :: bus.Boot_Rom
 GB_Cartridge :: cart.Cartridge
+GB_DPAD_Button :: input.Dpad_Input
+GB_Button :: input.Button_Input
 
 make_GB_Core :: proc(
     core: ^GB_Core,
@@ -38,7 +43,7 @@ make_GB_Core :: proc(
 
     core.ppu = ppu.get_access(&core.ppu_state)
 
-    bus.init(&core.bus_state, core.bios, &core.cartridge, &core.ppu)
+    bus.init(&core.bus_state, core.bios, &core.cartridge, &core.ppu, &core.input_state)
     core.bus = bus.get_access(&core.bus_state)
 
     ppu.init(&core.ppu_state, &core.bus, render_callback, render_callback_ctx)
@@ -86,4 +91,22 @@ step_emulation :: proc(
     ppu.step(&core.ppu_state, u16(elapsed_m))
     
     return elapsed_m
+}
+
+set_button :: proc(
+    core: ^GB_Core,
+    button: GB_Button,
+    is_pressed: bool
+) {
+    if is_pressed do input.button_pressed(button, &core.input_state, &core.bus) 
+    else do input.button_released(button, &core.input_state)
+}
+
+set_dpad :: proc(
+    core: ^GB_Core,
+    dpad: GB_DPAD_Button,
+    is_pressed: bool
+) {
+    if is_pressed do input.dpad_pressed(dpad, &core.input_state, &core.bus)
+    else do input.dpad_released(dpad, &core.input_state)
 }

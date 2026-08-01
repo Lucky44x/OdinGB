@@ -18,9 +18,6 @@ import c "../common"
 // 0xFFFF -> 1 bytes Interrupt register
 
 Bus :: struct {
-    // Elapsed M-Cycles triggered by IO-Events
-    extra_m_delay: u16,
-
     // Accessors
     boot_rom: ^Boot_Rom,
     cart_rom: ^c.CART_Access,
@@ -33,6 +30,9 @@ Bus :: struct {
 
     // Interrupt enable reg
     ie_reg: u8,
+
+    // DMA Controller
+    dma: DMA_State,
 
     is_banked: bool
 }
@@ -60,6 +60,10 @@ reset :: proc(
     self.ram.hram = {}
     self.ram.wram = {}
     self.ram.wram_bank = 0
+
+    self.dma.origin_addr = 0x00
+    self.dma.enabled = false
+    self.dma.progress = 0
 }
 
 get_access :: proc(
@@ -72,12 +76,6 @@ get_access :: proc(
     }
 }
 
-consume_system_delay :: proc(ctx: ^Bus) -> u16 {
-    cycles := ctx.extra_m_delay
-    ctx.extra_m_delay = 0
-    return cycles
-}
-
 adapter_bus_write :: proc (bus: ^c.Bus_Access, addr: u16, val: u8, force: bool) { bus_write(cast(^Bus)bus.ctx, addr, val, force) }
 bus_write :: proc(ctx: ^Bus, addr: u16, value: u8, force: bool = false) {
     if addr == 0xFF50 {
@@ -85,6 +83,8 @@ bus_write :: proc(ctx: ^Bus, addr: u16, value: u8, force: bool = false) {
         write_IO_Registers(ctx, 0xFF50, 0xFF, force = true)
         return
     }
+
+    if !force && ctx.dma.enabled && (addr < 0xFF80 || addr > 0xFFFE) do return // During DMA, everything except H-RAM is disabled
 
     switch(addr) {
         case 0x0000 ..= 0x7FFF: // Forwards write to the cartridge, cart then has to decide wether or not write is valid
@@ -113,6 +113,8 @@ bus_write :: proc(ctx: ^Bus, addr: u16, value: u8, force: bool = false) {
 adapter_bus_read :: proc (bus: ^c.Bus_Access, addr: u16, force: bool = false) -> u8 { return bus_read(cast(^Bus)bus.ctx, addr, force) }
 bus_read :: proc(ctx: ^Bus, addr: u16, force: bool = false) -> u8 {
     if !ctx.is_banked && addr <= 0xFF do return ctx.boot_rom.data[addr]
+
+    if !force && ctx.dma.enabled && (addr < 0xFF80 || addr > 0xFFFE) do return 0x00 // During DMA, everything except H-RAM is disabled
 
     switch(addr) {
         case 0x0000 ..= 0x7FFF: return ctx.cart_rom.read_rom(ctx.cart_rom, addr)

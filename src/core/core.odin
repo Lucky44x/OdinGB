@@ -49,12 +49,18 @@ make_GB_Core :: proc(
     ppu.init(&core.ppu_state, &core.bus, render_callback, render_callback_ctx)
     cpu.init(&core.cpu_state, &core.bus)
 
+    core.input_state.buttons = 0x0F
+    core.input_state.dpad = 0x0F
+
     core.is_loaded = true
 }
 
 reload_GB_Core :: proc(
     core: ^GB_Core
 ) {
+    core.input_state.buttons = 0x0F
+    core.input_state.dpad = 0x0F
+
     ppu.reset(&core.ppu_state)
     cpu.reset(&core.cpu_state)
     bus.reset(&core.bus_state)
@@ -86,7 +92,7 @@ step_emulation :: proc(
     if !core.is_loaded do return 0
 
     elapsed_m := cpu.step(&core.cpu_state, &core.bus)
-    elapsed_m += bus.consume_system_delay(&core.bus_state)
+    bus.step_dma(&core.bus_state, elapsed_m)
 
     ppu.step(&core.ppu_state, u16(elapsed_m))
     

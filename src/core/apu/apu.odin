@@ -26,6 +26,8 @@ APU :: struct {
 init :: proc(apu: ^APU, bus: ^c.Bus_Access, sample_rate: u32) {
     apu.bus = bus
     apu.sample_rate = sample_rate
+
+    apu.channel_4.lfsr = 0x7FFF
 }
 
 reset :: proc(apu: ^APU) {

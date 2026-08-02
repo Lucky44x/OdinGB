@@ -45,4 +45,6 @@ step_timer :: proc(
             c.set_interrupt(bus, .Timer)
         } else do TIMA += 1
     }
+
+    bus.write(bus, u16(c.IO_Regs.TIMA), TIMA, true)
 }

@@ -21,7 +21,7 @@ button_pressed :: proc(
     state: ^c.Input_State,
     bus: ^c.Bus_Access
 ) { 
-    was_released := state.dpad & u8(button) != 0
+    was_released := state.buttons & u8(button) != 0
     state.buttons &= ~(u8(button))
     enabled := bus.read(bus, 0xFF00, true) & 0x20 == 0
 

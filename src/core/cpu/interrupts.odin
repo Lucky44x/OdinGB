@@ -50,5 +50,6 @@ dispatch_interrupt :: proc(
     // Clear the interrupt bit
     c.clear_interrupt(cpu.bus, interrupt)
 
+    if cpu.state == .Stopped && interrupt == .Joypad do cpu.state = .Running
     return 5
 }

@@ -36,6 +36,7 @@ reset :: proc(apu: ^APU) {
     apu^ = {}
     apu.sample_rate = sample_rate
     apu.bus = bus
+    apu.channel_4.lfsr = 0x7FFF
 }
 
 step :: proc(apu: ^APU, elapsed_m: u16) {

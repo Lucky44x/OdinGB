@@ -16,6 +16,7 @@ CPU :: struct {
     // Interrupt
     ime: bool,
     ime_enable_pending: u8,
+    halt_bug: bool,
 
     state: CPU_RunState,
 
@@ -37,6 +38,7 @@ reset :: proc(
 ) {
     cpu.ime = false
     cpu.ime_enable_pending = 0
+    cpu.halt_bug = false
     cpu.last_instruction = nil
     cpu.last_instruction_length = 0
 
@@ -58,11 +60,20 @@ step :: proc(
     // TODO: Wake on specific interrupt etc...
     //TODO: Implement CGB KEY1 speed switching through STOP and separate CPU
     //TODO: timing from PPU, timer, DMA, and APU clock domains.
-    if cpu.state == .Stopped || cpu.paused do return 1 // Do not advance hardware state during STOP 
+    if cpu.paused do return 1
 
-    // Check if interrupt is pending
     pending_interrupt := is_interrupt_pending(cpu)
 
+    if cpu.state == .Stopped {
+        // DMG STOP wakes on a joypad request even when that interrupt is not
+        // enabled for dispatch. Once awake, normal interrupt rules apply.
+        joypad_requested := cpu.bus.read(cpu.bus, u16(c.IO_Regs.IF), true) & u8(1 << u8(c.InterruptSource.Joypad)) != 0
+        if !joypad_requested do return 1
+        cpu.state = .Running
+        pending_interrupt = is_interrupt_pending(cpu)
+    }
+
+    // Check if interrupt is pending
     if cpu.state == .Halted {
         if !pending_interrupt do return 1 // NOOP
         // Any Interrupt will break halt
@@ -96,7 +107,8 @@ step :: proc(
 fetch_next_u8 :: proc(cpu: ^CPU) -> u8 {
     pc := read_r16(cpu, .PC)
     val := cpu.bus.read(cpu.bus, pc)
-    inc_r16(cpu, .PC)
+    if cpu.halt_bug do cpu.halt_bug = false
+    else do inc_r16(cpu, .PC)
 
     cpu.last_instruction_bytes[cpu.last_instruction_length] = val
     cpu.last_instruction_length += 1

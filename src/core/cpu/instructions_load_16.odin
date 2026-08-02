@@ -134,7 +134,7 @@ ins_ld_a_mmem :: proc(cpu: ^CPU, opcode: u8) -> u8 {
 ins_ld_sp_hl :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     value := read_r16(cpu, .HL)
     write_r16(cpu, .SP, value)
-    return 1
+    return 2
 }
 
 /*

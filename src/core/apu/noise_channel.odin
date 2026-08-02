@@ -81,7 +81,7 @@ noise_trigger :: proc(apu: ^APU, channel: ^Noise_Channel) {
 
     channel.enabled = nr42 & 0xF8 != 0
     channel.timer = 0
-    channel.lfsr = 0
+    channel.lfsr = 0x7FFF
     channel.length_counter = 64 - (length & 0x3F)
     if channel.length_counter == 0 do channel.length_counter = 64
     channel.length_enabled = nr44 & 0x40 != 0

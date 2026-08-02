@@ -21,7 +21,7 @@ is_interrupt_pending :: #force_inline proc(
 fetch_interrupt :: proc(
     cpu: ^CPU
 ) -> (found: bool, interrupt: c.InterruptSource) {
-    reg_value := cpu.bus.read(cpu.bus, 0xFF0F)
+    reg_value := cpu.bus.read(cpu.bus, 0xFF0F) & cpu.bus.read(cpu.bus, 0xFFFF)
 
     for i in 0..<5 {
         if reg_value & (1 << u8(i)) == 0 do continue
@@ -50,6 +50,5 @@ dispatch_interrupt :: proc(
     // Clear the interrupt bit
     c.clear_interrupt(cpu.bus, interrupt)
 
-    if cpu.state == .Stopped && interrupt == .Joypad do cpu.state = .Running
     return 5
 }

@@ -51,7 +51,13 @@ ins_stop :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     Example: 0x76
 */
 ins_halt :: proc(cpu: ^CPU, opcode: u8) -> u8 {
-    cpu.state = .Halted
+    if !cpu.ime && is_interrupt_pending(cpu) {
+        // With IME clear and an interrupt already pending, HALT does not
+        // enter the halted state and the next opcode fetch repeats its byte.
+        cpu.halt_bug = true
+    } else {
+        cpu.state = .Halted
+    }
     return 1
 }
 

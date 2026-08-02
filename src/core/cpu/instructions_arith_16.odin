@@ -109,5 +109,5 @@ ins_add_sp_e :: proc(cpu: ^CPU, opcode: u8) -> u8 {
     set_flag(cpu, .H, carry_per_bit(u8(sp), imm8, 3))
     set_flag(cpu, .C, carry_per_bit(u8(sp), imm8, 7))
 
-    return 2
+    return 4
 }

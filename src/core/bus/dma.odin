@@ -9,6 +9,8 @@ DMA_State :: struct {
 }
 
 step_dma :: proc(ctx: ^Bus, elapsed_m: u16) {
+    //TODO: Add a separate CGB HDMA/GDMA controller; OAM DMA has different
+    //TODO: blocking and timing rules from VRAM DMA.
     if !ctx.dma.enabled do return
 
     for i in 0..<elapsed_m {

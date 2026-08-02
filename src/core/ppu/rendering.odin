@@ -18,6 +18,8 @@ SCANLINE_PIXEL_BUFFER: [160]u8
 render_scanline :: proc(
     ppu: ^PPU
 ) {
+    //TODO: Read CGB tile attributes from VRAM bank 1: palette, tile bank,
+    //TODO: X/Y flip, and background priority. Implement window rendering too.
     LCDC := ppu.bus.read(ppu.bus, u16(c.IO_Regs.LCDC), force=true)
     wbg_enabled := LCDC & 1 != 0
 
@@ -44,7 +46,8 @@ render_scanline :: proc(
         tile_x := realX / 8
 
         tile_index := tile_x + (tile_y * 32)
-        tile_id := ppu.bus.read(ppu.bus, u16(bg_tilemap) + tile_index , force=true)
+    tile_id := ppu.bus.read(ppu.bus, u16(bg_tilemap) + tile_index , force=true)
+    //TODO: Read the matching bank-1 attribute byte and render BGR555 colors.
 
         fb_addr := u16(x) + (u16(scanline) * 160)
         color_id := get_tile_pixel(ppu.bus, tile_id, u8(realX % 8), u8(realY % 8), adressMode)

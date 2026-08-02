@@ -45,6 +45,7 @@ ui_update_object :: proc(
     emuCore: ^core.GB_Core,
     object_id: int
 ) {
+    //TODO: Render CGB sprite bank, palette, priority, and correct 8x16 tiles.
     if !emuCore.is_loaded do return
 
     oam_addr := 0xFE00 + u16(object_id) * 4

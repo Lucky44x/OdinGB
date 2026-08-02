@@ -79,6 +79,7 @@ get_access :: proc(
 adapter_bus_write :: proc (bus: ^c.Bus_Access, addr: u16, val: u8, force: bool) { bus_write(cast(^Bus)bus.ctx, addr, val, force) }
 bus_write :: proc(ctx: ^Bus, addr: u16, value: u8, force: bool = false) {
     if addr == 0xFF50 {
+        //TODO: Implement hardware-specific FF50 behavior and CGB boot-ROM ranges.
         ctx.is_banked = true
         write_IO_Registers(ctx, 0xFF50, 0xFF, force = true)
         return
@@ -94,6 +95,7 @@ bus_write :: proc(ctx: ^Bus, addr: u16, value: u8, force: bool = false) {
         case 0xA000 ..= 0xBFFF: // Forwards write to the cartridge, cart then has to decide wether or not write is valid
             ctx.cart_rom.write_ram(ctx.cart_rom, addr, value); return
         case 0xC000 ..= 0xDFFF:
+            //TODO: Select fixed WRAM bank 0 at $C000 and SVBK-selected bank at $D000.
             write_ram(&ctx.ram, .WRAM, addr, value); return
         case 0xE000 ..= 0xFDFF:
             write_ram(&ctx.ram, .WRAM, addr - 0x2000, value); return
@@ -112,6 +114,7 @@ bus_write :: proc(ctx: ^Bus, addr: u16, value: u8, force: bool = false) {
 
 adapter_bus_read :: proc (bus: ^c.Bus_Access, addr: u16, force: bool = false) -> u8 { return bus_read(cast(^Bus)bus.ctx, addr, force) }
 bus_read :: proc(ctx: ^Bus, addr: u16, force: bool = false) -> u8 {
+    //TODO: Map the CGB BIOS at all startup ranges, not only $0000-$00FF.
     if !ctx.is_banked && addr <= 0xFF do return ctx.boot_rom.data[addr]
 
     if !force && ctx.dma.enabled && (addr < 0xFF80 || addr > 0xFFFE) do return 0x00 // During DMA, everything except H-RAM is disabled
@@ -119,8 +122,12 @@ bus_read :: proc(ctx: ^Bus, addr: u16, force: bool = false) -> u8 {
     switch(addr) {
         case 0x0000 ..= 0x7FFF: return ctx.cart_rom.read_rom(ctx.cart_rom, addr)
         case 0x8000 ..= 0x9FFF: return ctx.ppu.read(ctx.ppu, addr)
-        case 0xA000 ..= 0xBFFF: return ctx.cart_rom.read_rom(ctx.cart_rom, addr) //FIXME: Reading RAM not ROM
-        case 0xC000 ..= 0xDFFF: return read_ram(&ctx.ram, .WRAM, addr)
+        case 0xA000 ..= 0xBFFF:
+            //TODO: Route this range to mapper-controlled external cartridge RAM.
+            return ctx.cart_rom.read_rom(ctx.cart_rom, addr)
+        case 0xC000 ..= 0xDFFF:
+            //TODO: Select fixed WRAM bank 0 at $C000 and SVBK-selected bank at $D000.
+            return read_ram(&ctx.ram, .WRAM, addr)
         case 0xE000 ..= 0xFDFF: return read_ram(&ctx.ram, .WRAM, addr - 0x2000)
         case 0xFE00 ..= 0xFE9F: return ctx.ppu.read(ctx.ppu, addr)
         case 0xFEA0 ..= 0xFEFF: return 0xFF; // Nothing inside this region

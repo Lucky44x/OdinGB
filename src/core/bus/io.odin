@@ -9,6 +9,7 @@ import "../apu"
 
 IO_Registers :: struct {
     data: [128]u8
+    //TODO: Add CGB palette RAM, HDMA state, and side-effecting register state.
 }
 
 IO_READ_FALLBACK :: proc(ctx: ^Bus) -> u8
@@ -179,6 +180,9 @@ fb_write_nr44 :: proc(ctx: ^Bus, value: u8) {
     write_IO_Protected(ctx, u16(c.IO_Regs.NR44), value)
     if value & 0x80 != 0 do apu.trigger_channel_4(ctx.apu)
 }
+
+//TODO: Replace these runtime maps with static tables or switches for CGB and
+//TODO: embedded builds; add VBK, SVBK, KEY1, HDMA, and palette behavior.
 
 fb_write_nr52 :: proc(ctx: ^Bus, value: u8) {
     if value & 0x80 == 0 {

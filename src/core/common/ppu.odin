@@ -4,6 +4,8 @@ PPU_Write :: proc(ctx: ^PPU_Access, addr: u16, val: u8)
 PPU_Read :: proc(ctx: ^PPU_Access, addr: u16) -> u8
 
 PPU_ScanlineCallback :: proc(ctx: rawptr, scanline: u8, pixels: ^[160]u8)
+//TODO: Replace 2-bit scanline pixels with a BGR555 framebuffer or color-aware
+//TODO: callback so CGB palettes can reach the frontend.
 
 PPU_Callback :: struct {
     ctx: rawptr,

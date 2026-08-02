@@ -22,7 +22,8 @@ PPU :: struct {
     vram: VRAM,
     oam: OAM,
     rend: PPU_Renderer,
-    callback: c.PPU_Callback
+    callback: c.PPU_Callback,
+    //TODO: Add CGB palette/priority state and window-line tracking.
 }
 
 init :: proc(
@@ -75,6 +76,8 @@ step :: proc(
 }
 
 ppu_read :: proc(ctx: ^c.PPU_Access, addr: u16) -> u8 { 
+    //TODO: Select VRAM bank through VBK for CPU accesses while keeping renderer
+    //TODO: tile-bank selection independent of the CPU-visible bank.
     if addr >= 0xFE00 do return read_oam(cast(^PPU)ctx.ctx, addr)
     else do return read_vram(&(cast(^PPU)ctx.ctx).vram, addr) 
 }

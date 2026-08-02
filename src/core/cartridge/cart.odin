@@ -20,6 +20,8 @@ Cartridge :: struct {
     mapper: ROM_Mapper,
     rom: ROM_Source,
     //TODO: Implement external RAM
+    //TODO: Store cartridge mode, RAM/battery state, and mapper-specific state
+    //TODO: including MBC3 RTC data and MBC5 bank registers.
 }
 
 cartridge_load_buffered :: proc(
@@ -46,6 +48,8 @@ cartridge_load_direct :: proc(
 ) {
     cart.loaded = true
 
+    //TODO: Parse the header before selecting a mapper and initialize the
+    //TODO: correct ROM/RAM sizes and CGB compatibility mode.
     read_cart_header(data[0x0100:0x014F])
     cart.rom = init_bulk_rom(data)
     cart.mapper = MAPPER_Basic
@@ -107,4 +111,6 @@ cartridge_write :: proc(
     val: u8
 ) {
     //TODO: STUB implement later
+    //TODO: Implement mapper register writes, external RAM enable/banking,
+    //TODO: battery-backed saves, RTC access, and rumble state.
 }

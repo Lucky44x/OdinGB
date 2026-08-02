@@ -13,6 +13,7 @@ import "apu"
 
 GB_Core :: struct {
     is_loaded: bool,
+    //TODO: Add an explicit DMG/CGB hardware mode and pass it to all devices.
 
     bios: ^GB_Bios,
 

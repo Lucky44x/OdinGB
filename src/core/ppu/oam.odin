@@ -13,6 +13,7 @@ OAM_Entry :: struct {
     palette: u8,
     x_position: int,
     pixels: [8]u8
+    //TODO: Add CGB sprite palette number and VRAM bank attributes.
 }
 
 @(private)
@@ -95,6 +96,8 @@ collect_OAM_entry :: proc(
     scanline, obj_tile_y: u8,
     mode_16px: bool
 ) -> (out: OAM_Entry) {
+    //TODO: Decode sprite attribute bits 0-3 for CGB palette, VRAM bank, and
+    //TODO: priority; apply OAM-order priority instead of DMG X-position rules.
     pos_x := int(read_oam(ctx, obj_addr + 1)) - 8
     out.x_position = pos_x
     out.render = true

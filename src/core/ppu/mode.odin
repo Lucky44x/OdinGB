@@ -99,7 +99,8 @@ apply_ppu_io_flags :: proc(
     if lyc == ppu.rend.current_line do stat_orig |= (1 << 2) // Set bit 2
     else do stat_orig &= 0xFB // Reset bit 2
 
-    //TODO: Write 0 to ppu_mode when PPU is disabled -> LCDC.7
+    //TODO: Write mode 0 when LCDC.7 is disabled and implement LCD transitions.
+    //TODO: Keep PPU dot timing independent from the CGB double-speed CPU clock.
 
     ppu_mode := u8(ppu.rend.ppu_mode) & 0x3
     stat_orig = (stat_orig & 0xFC) | ppu_mode // Clear the two lowest bits and then set them to our ppu_mode

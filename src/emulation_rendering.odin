@@ -10,6 +10,8 @@ SCREEN_WIDTH :: 160
 SCREEN_HEIGHT :: 144
 @(private)
 GB_Palette :: distinct [4]rl.Color
+//TODO: Replace the four-color DMG palette with a BGR555 framebuffer converter
+//TODO: for CGB output while retaining DMG palette conversion for DMG mode.
 @(private)
 ACTIVE_PALETTE: ^GB_Palette
 

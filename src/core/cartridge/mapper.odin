@@ -17,6 +17,8 @@ MapperType :: enum(u8) {
 }
 
 MAPPING_FUNCTION :: proc(mapper: ^ROM_Mapper, addr: u16) -> u32
+//TODO: Add mapper implementations and a factory for MBC1, MBC3, MBC5, and
+//TODO: their external RAM, battery, RTC, and rumble variants.
 
 MAPPER_Basic :: ROM_Mapper {
     banks = 0,

@@ -22,8 +22,8 @@ TileMap :: enum(u16) {
 }
 
 VRAM :: struct {
-    //TODO: Allow banking for GBC implementation
     data: [0x2000]u8
+    //TODO: Expand to two 8 KiB banks and implement VBK-controlled CPU access.
 }
 
 read_vram :: proc(

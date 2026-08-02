@@ -56,6 +56,8 @@ step :: proc(
     cpu.last_instruction_length = 0
 
     // TODO: Wake on specific interrupt etc...
+    //TODO: Implement CGB KEY1 speed switching through STOP and separate CPU
+    //TODO: timing from PPU, timer, DMA, and APU clock domains.
     if cpu.state == .Stopped || cpu.paused do return 1 // Do not advance hardware state during STOP 
 
     // Check if interrupt is pending

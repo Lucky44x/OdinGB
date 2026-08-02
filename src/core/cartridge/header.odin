@@ -7,6 +7,8 @@ import "core:log"
 read_cart_header :: proc(
     header_data: []u8
 ) {
+    //TODO: Persist the CGB flag at $0143, mapper type, ROM size, RAM size,
+    //TODO: and other header metadata for mode selection and mapper setup.
     if len(header_data) != 79 do log.warnf("Loaded header region ws %d bytes large, not 79")
 
     rom_name, err := strings.clone_from_bytes(header_data[0x34:0x43])

@@ -34,6 +34,7 @@ ui_init_vram_tiles_viewer :: proc() {
 ui_update_vram_tiles_viewer :: proc(
     vram: []u8
 ) {
+    //TODO: Add VRAM bank selection and display CGB tile-bank/palette attributes.
     if !UI_VRAM_TILES_VIEWER_ENABLED do return
     assert(len(vram) >= TILE_COUNT * BYTES_PER_TILE)
 

@@ -50,12 +50,15 @@ IO_Regs :: enum(u16) {
     OBP0 = 0xFF48, OBP1 = 0xFF49, WY   = 0xFF4A, WX   = 0xFF4B,
 
     // Game Boy Color
+    //TODO: Implement KEY0/KEY1 mode and speed state, VBK banking, and CGB-only
+    //TODO: register read/write behavior for all entries below.
     KEY0 = 0xFF4C, KEY1 = 0xFF4D, VBK  = 0xFF4F,
 
     // Boot ROM control
     BANK = 0xFF50,
 
     // Game Boy Color VRAM DMA
+    //TODO: Implement GDMA/HDMA state and 16-byte HBlank transfer semantics.
     HDMA1 = 0xFF51, HDMA2 = 0xFF52, HDMA3 = 0xFF53,
     HDMA4 = 0xFF54, HDMA5 = 0xFF55,
 
@@ -63,6 +66,7 @@ IO_Regs :: enum(u16) {
     RP = 0xFF56,
 
     // Game Boy Color palettes
+    //TODO: Implement BCPS/BCPD and OCPS/OCPD palette RAM with auto-increment.
     BCPS = 0xFF68, BCPD = 0xFF69, OCPS = 0xFF6A, OCPD = 0xFF6B,
 
     // Game Boy Color object priority

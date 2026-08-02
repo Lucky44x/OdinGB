@@ -11,6 +11,7 @@ Bus_RAM :: struct {
     wram: [8192]u8,         // 8 KiB bytes of WRAM
     hram: [127]u8,          // 127 bytes of HRAM
     wram_bank: u8,          // Selected WRAM Bank
+    //TODO: Expand WRAM to eight 4 KiB banks and implement SVBK bank selection.
 }
 
 write_ram :: proc(

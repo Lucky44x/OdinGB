@@ -15,6 +15,8 @@ TILEMAP_PX_WIDTH :: TILEMAP_WIDTH * TILE_WIDTH
 TILEMAP_PX_HEIGHT :: TILEMAP_HEIGHT * TILE_HEIGHT
 
 VRAM_SIZE :: 0x2000
+//TODO: Add bank-1 attribute-map display, CGB palette selection, flips, and
+//TODO: tile priority controls to this DMG-only viewer.
 TILE_DATA_UNSIGNED :: 0x0000 // $8000
 TILE_DATA_SIGNED :: 0x1000 // $9000
 

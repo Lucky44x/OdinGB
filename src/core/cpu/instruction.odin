@@ -35,6 +35,7 @@ Instruction :: struct {
     name: string,
     length: u8,
     override: bool
+    //TODO: Remove names and override metadata from embedded release tables.
 }
 
 @(init)

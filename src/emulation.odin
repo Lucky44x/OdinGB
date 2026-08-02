@@ -64,6 +64,9 @@ emulation_step :: proc() {
     emulation_audio_render()
 }
 
+//TODO: Parse cartridge CGB capability and select a DMG/CGB renderer and boot
+//TODO: ROM before constructing the core.
+
 load_bios :: proc(bios: ^core.GB_Bios, file: ^os.File) {
     err: os.Error
     bios.is_loaded = true

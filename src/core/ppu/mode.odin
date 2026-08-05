@@ -83,21 +83,32 @@ switch_mode :: proc(
     if newMode == .VerticalBlank && STAT & 0x10 != 0 do c.set_interrupt(ppu.bus, .Stat)
     if newMode == .OAMScan && STAT & 0x20 != 0 do c.set_interrupt(ppu.bus, .Stat)
 
-    if ppu.rend.current_line == LYC && STAT & 0x40 != 0 do c.set_interrupt(ppu.bus, .Stat)
 }
 
 apply_ppu_io_flags :: proc(
     ppu: ^PPU,
 ) {
-    if ppu.rend.ppu_mode == .VerticalBlank && ppu.rend.line_dots == 0 do c.set_interrupt(ppu.bus, .VBlank)
+    // VBlank begins at LY=144. Do not request another VBlank interrupt for
+    // each of the remaining VBlank scanlines.
+    if ppu.rend.ppu_mode == .VerticalBlank && ppu.rend.line_dots == 0 && ppu.rend.current_line == 144 {
+        c.set_interrupt(ppu.bus, .VBlank)
+    }
 
     ppu.bus.write(ppu.bus, u16(c.IO_Regs.LY), ppu.rend.current_line, force=true) // Write LY
     lyc := ppu.bus.read(ppu.bus, u16(c.IO_Regs.LYC), force=true)
 
     stat_orig := ppu.bus.read(ppu.bus, u16(c.IO_Regs.STAT), force=true)
     
-    if lyc == ppu.rend.current_line do stat_orig |= (1 << 2) // Set bit 2
+    coincidence := lyc == ppu.rend.current_line
+    if coincidence do stat_orig |= (1 << 2) // Set bit 2
     else do stat_orig &= 0xFB // Reset bit 2
+
+    // Request the coincidence STAT interrupt only when the comparison becomes
+    // true. Re-entering another PPU mode while LY == LYC is not a new event.
+    if coincidence && !ppu.rend.lyc_coincidence && stat_orig & 0x40 != 0 {
+        c.set_interrupt(ppu.bus, .Stat)
+    }
+    ppu.rend.lyc_coincidence = coincidence
 
     //TODO: Write mode 0 when LCDC.7 is disabled and implement LCD transitions.
     //TODO: Keep PPU dot timing independent from the CGB double-speed CPU clock.

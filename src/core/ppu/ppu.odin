@@ -14,7 +14,8 @@ PPU_Mode :: enum(u8) {
 PPU_Renderer :: struct {
     ppu_mode: PPU_Mode,
     line_dots: u16,
-    current_line: u8
+    current_line: u8,
+    lyc_coincidence: bool,
 }
 
 PPU :: struct {
@@ -43,6 +44,7 @@ reset :: proc(
     self.rend.current_line = 0
     self.rend.line_dots = 0
     self.rend.ppu_mode = .OAMScan
+    self.rend.lyc_coincidence = false
 
     self.vram.data = {}
     self.oam.data = {}

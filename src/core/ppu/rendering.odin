@@ -1,6 +1,7 @@
 #+private
 package ppu
 
+import "core:mem"
 import "core:text/scanner"
 import "core:crypto/x25519"
 import c "../common"
@@ -33,28 +34,32 @@ render_scanline :: proc(
 
     realY := (u16(SCY) + u16(scanline)) & 0xFF // % 256
 
-    for x: u8 = 0; x < 160; x += 1 {
-        realX := (u16(SCX) + u16(x)) & 0xFF // % 256
+    bg_palette := ppu.bus.read(ppu.bus, u16(c.IO_Regs.BGP), force=true)
+    ob_palette_0 := ppu.bus.read(ppu.bus, u16(c.IO_Regs.OBP0), force=true)
+    ob_palette_1 := ppu.bus.read(ppu.bus, u16(c.IO_Regs.OBP1), force=true)
 
-        /* 
-            Calculation for tile in bg map: 
+    if wbg_enabled {
+        for x: u8 = 0; x < 160; x += 1 {
+            realX := (u16(SCX) + u16(x)) & 0xFF // % 256
+            tile_y := realY / 8
+            tile_x := realX / 8
 
-            tile_internal_Y := 
-            tile_internal_X := realX % 8
-        */
-        tile_y := realY / 8
-        tile_x := realX / 8
+            tile_index := tile_x + (tile_y * 32)
+            tile_id := ppu.bus.read(ppu.bus, u16(bg_tilemap) + tile_index , force=true)
+            //TODO: Read the matching bank-1 attribute byte and render BGR555 colors.
 
-        tile_index := tile_x + (tile_y * 32)
-    tile_id := ppu.bus.read(ppu.bus, u16(bg_tilemap) + tile_index , force=true)
-    //TODO: Read the matching bank-1 attribute byte and render BGR555 colors.
+            fb_addr := u16(x) + (u16(scanline) * 160)
+            color_id := get_tile_pixel(ppu.bus, tile_id, u8(realX % 8), u8(realY % 8), adressMode)
 
-        fb_addr := u16(x) + (u16(scanline) * 160)
-        color_id := get_tile_pixel(ppu.bus, tile_id, u8(realX % 8), u8(realY % 8), adressMode)
-
-        SCANLINE_PIXEL_BUFFER[x] = color_id
+            SCANLINE_PIXEL_BUFFER[x] = (bg_palette >> (color_id * 2)) & 0x03
+        
+            //TODO: Choose between background pixel and window pixel when window is enabled
+        }
+    } else {
+        mem.set(raw_data(&SCANLINE_PIXEL_BUFFER), 0x00, len(SCANLINE_PIXEL_BUFFER))
     }
 
+    // Render Objects when enabled
     if LCDC & 0x02 != 0 {
         // Render OAM objects
         objects := collect_objects(ppu, scanline, LCDC)
@@ -64,15 +69,14 @@ render_scanline :: proc(
             
             prio := obj.bg_priority
             x_base := obj.x_position
-            palette_addr: u16 = obj.palette == 0 ? u16(c.IO_Regs.OBP0) : u16(c.IO_Regs.OBP1)
-            palette := ppu.bus.read(ppu.bus, palette_addr, force=true)
+            palette := obj.palette == 0 ? ob_palette_0 : ob_palette_1
 
             for x in 0..<8 {
                 pixel_idx := x_base + x
                 if pixel_idx < 0 || pixel_idx >= 160 do continue
 
                 object_color := obj.pixels[x]
-                if object_color == 0 do continue
+                if object_color == 0 do continue // Transparent pixel
 
                 // Priority only suppresses non-zero background pixels.
                 if prio && SCANLINE_PIXEL_BUFFER[pixel_idx] != 0x00 do continue

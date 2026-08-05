@@ -51,6 +51,7 @@ emulation_step :: proc() {
     // Pace the emulated hardware from elapsed real time instead of assuming
     // that the host renders exactly one Game Boy frame per display frame.
     emulation_cycle_accumulator += f64(rl.GetFrameTime()) * f64(GB_M_CYCLES_PER_SECOND)
+    cycles_to_perform := emulation_cycle_accumulator
     cycles := int(emulation_cycle_accumulator)
     emulation_cycle_accumulator -= f64(cycles)
     for cycles > 0 {
@@ -61,6 +62,7 @@ emulation_step :: proc() {
         cycles -= steps
     }
 
+    //log.infof("Cycles performed: %f -- Frames available: %d", cycles_to_perform, core.audio_available(&emulator_core))
     emulation_audio_render()
 }
 

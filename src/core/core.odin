@@ -101,14 +101,22 @@ step_emulation :: proc(
 ) -> u16 {
     if !core.is_loaded do return 0
 
+    was_stopped := core.cpu_state.state == .Stopped
     elapsed_m := cpu.step(&core.cpu_state, &core.bus)
+
+    // STOP holds the system clock after the STOP instruction has completed.
+    // Keep returning the idle CPU step so the frontend remains paced, but do
+    // not advance DMA, PPU, timer, or APU while the CPU stays stopped.
+    if was_stopped && core.cpu_state.state == .Stopped {
+        return elapsed_m
+    }
+
     bus.step_dma(&core.bus_state, elapsed_m)
 
     ppu.step(&core.ppu_state, u16(elapsed_m))
     timer.step_timer(&core.timer_state, &core.bus, elapsed_m)
 
     apu.step(&core.apu_state, elapsed_m)
-
     return elapsed_m
 }
 

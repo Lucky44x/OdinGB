@@ -17,8 +17,11 @@ ROM_Source :: union {
 
 Cartridge :: struct {
     loaded: bool,
+    external_ram: []u8,
     mapper: ROM_Mapper,
+
     rom: ROM_Source,
+
     //TODO: Implement external RAM
     //TODO: Store cartridge mode, RAM/battery state, and mapper-specific state
     //TODO: including MBC3 RTC data and MBC5 bank registers.
@@ -40,6 +43,8 @@ cartridge_load_buffered :: proc(
 
     cart.rom = init_buffered_rom(0, file_accessor, 0)
     for i in 0..<max_buffered_banks do cart.rom.(ROM_Buffered).bank_indecies[i] = -1
+
+    read_cart_header(cart, cart.rom.(ROM_Buffered).banks[0][0x0100:0x014F])
 }
 
 cartridge_load_direct :: proc(
@@ -47,12 +52,18 @@ cartridge_load_direct :: proc(
     data: []u8
 ) {
     cart.loaded = true
-
-    //TODO: Parse the header before selecting a mapper and initialize the
-    //TODO: correct ROM/RAM sizes and CGB compatibility mode.
-    read_cart_header(data[0x0100:0x014F])
     cart.rom = init_bulk_rom(data)
-    cart.mapper = MAPPER_Basic
+    
+    read_cart_header(cart, data[0x0100:0x014F])
+}
+
+cartridge_init :: proc(
+    cart: ^Cartridge,
+    mapper: ROM_Mapper
+) {
+    cart.mapper = mapper
+    if cart.mapper.ram_size > 0 do cart.external_ram = make([]u8, cart.mapper.ram_size)
+    else do cart.external_ram = nil
 }
 
 cartridge_unload :: proc(
@@ -60,6 +71,8 @@ cartridge_unload :: proc(
 ) {
     if !cart.loaded do return
     cart.loaded = false
+
+    if cart.external_ram != nil do delete(cart.external_ram)
 
     switch type in cart.rom {
         case ROM_Buffered:
@@ -90,9 +103,9 @@ cartridge_read :: proc(
     ctx: ^Cartridge,
     addr: u16
 ) -> u8 {
-    phys_addr := ctx.mapper.map_addr(&ctx.mapper, addr)
-    value: u8
+    is_ram, phys_addr := ctx.mapper.map_addr(&ctx.mapper, addr)
 
+    if is_ram do return ctx.external_ram[phys_addr]
     switch &type in ctx.rom {
         case ROM_Buffered:
             return read_rom_buffered(&type, phys_addr)
@@ -110,7 +123,15 @@ cartridge_write :: proc(
     addr: u16,
     val: u8
 ) {
-    //TODO: STUB implement later
-    //TODO: Implement mapper register writes, external RAM enable/banking,
-    //TODO: battery-backed saves, RTC access, and rumble state.
+    // Mapper does not define a write handler, so writes are disabled by default
+    if ctx.mapper.write == nil do return
+
+    // Check if we should actually write
+    if !ctx.mapper.write(&ctx.mapper, addr, val) do return
+
+    is_ram, phys_addr := ctx.mapper.map_addr(&ctx.mapper, addr)
+    if is_ram {
+        ctx.external_ram[phys_addr] = val
+        return
+    }
 }

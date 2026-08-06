@@ -1,6 +1,7 @@
 #+private file
 package main
 
+import "vendor:stb/truetype"
 import rl "vendor:raylib"
 
 import imgui "../libs/odin-imgui"
@@ -29,6 +30,8 @@ LCD_HEIGHT :: 144
 REG_LCDC :: u16(0xff40)
 REG_SCY  :: u16(0xff42)
 REG_SCX  :: u16(0xff43)
+REG_WX :: u16(0xFF4B)
+REG_WY :: u16(0xFF4A)
 
 LCDC_BG_TILEMAP_SELECT :: u8(1 << 3)
 
@@ -167,12 +170,50 @@ draw_wrapped_viewport_outline :: proc(
     }
 }
 
+draw_window_outline :: proc(
+    scx, scy: u8,
+    window_x: u8,
+    window_y: u8,
+) {
+    x := int(window_x + scx) - 7
+    y := int(window_y + scy)
+
+    // Two-pixel outline so it remains visible when the texture is shown
+    // at its native size.
+    outer_colour := rl.Color { 255, 255, 255, 255 }
+
+    inner_colour := rl.Color { 32, 255, 32, 255 }
+
+    for thickness in 0 ..< 2 {
+        colour := inner_colour
+        if thickness == 0 {
+            colour = outer_colour
+        }
+
+        left   := x + thickness
+        right  := x + LCD_WIDTH - 1 - thickness
+        top    := y + thickness
+        bottom := y + LCD_HEIGHT - 1 - thickness
+
+        for px in left ..= right {
+            set_debug_pixel(px, top, colour)
+            set_debug_pixel(px, bottom, colour)
+        }
+
+        for py in top ..= bottom {
+            set_debug_pixel(left, py, colour)
+            set_debug_pixel(right, py, colour)
+        }
+    }
+}
+
 build_tilemap_texture :: proc(
-    vram:           []u8,
+    vram: []u8,
     tilemap_offset: int,
     show_viewport:  bool,
-    scroll_x:       u8,
-    scroll_y:       u8,
+    show_window: bool,
+    scroll_x, scroll_y: u8,
+    wx, wy: u8
 ) {
     if len(vram) < VRAM_SIZE {
         return
@@ -211,6 +252,10 @@ build_tilemap_texture :: proc(
         )
     }
 
+    if show_window {
+        draw_window_outline(scroll_x, scroll_y, wx, wy)
+    }
+
     rl.UpdateTexture(
         tilemap_texture,
         raw_data(tilemap_pixels[:]),
@@ -222,9 +267,11 @@ draw_tilemap_image :: proc(
     map_offset: int,
     map_number: int,
 ) {
-    lcdc := emuCore.bus.read(&emuCore.bus, REG_LCDC)
-    scy  := emuCore.bus.read(&emuCore.bus, REG_SCY)
-    scx  := emuCore.bus.read(&emuCore.bus, REG_SCX)
+    lcdc := emuCore.bus.read(&emuCore.bus, REG_LCDC, true)
+    scy := emuCore.bus.read(&emuCore.bus, REG_SCY, true)
+    scx := emuCore.bus.read(&emuCore.bus, REG_SCX, true)
+    wx := emuCore.bus.read(&emuCore.bus, REG_WX, true)
+    wy := emuCore.bus.read(&emuCore.bus, REG_WY, true)
 
     active_map_number := 0
     if lcdc & LCDC_BG_TILEMAP_SELECT != 0 {
@@ -232,13 +279,17 @@ draw_tilemap_image :: proc(
     }
 
     show_viewport := map_number == active_map_number
+    show_window := show_viewport && (lcdc & 0x20 != 0) 
 
     build_tilemap_texture(
         emuCore.ppu_state.vram.data[:],
         map_offset,
         show_viewport,
+        show_window,
         scx,
         scy,
+        wx,
+        wy
     )
 
     imgui.Text(
@@ -330,6 +381,21 @@ imgui_display_tilemap_viewer :: proc(
         "LCDC: $%02X  Active BG map: %s",
         lcdc,
         active_map_address,
+    )
+
+    wx := int(emuCore.bus.read(&emuCore.bus, REG_WX, true)) - 7
+    wy := emuCore.bus.read(&emuCore.bus, REG_WY, true)
+    active_map_address = (lcdc & 0x40 == 0) ? "$9800" : "$9C00"
+
+    imgui.Text(
+        "WX: %d WY: %d, Active Window map: %s",
+        wx, wy, active_map_address
+    )
+
+    window_enabled := (lcdc & 0x20) != 0 ? "True" : "False"
+    imgui.Text(
+        "Window enabled: %s",
+        window_enabled
     )
 
     if imgui.BeginTabBar("Tilemap tabs") {

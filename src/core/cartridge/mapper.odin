@@ -1,6 +1,9 @@
 #+private
 package cart
 
+ROM_BANK_SIZE :: 16384
+RAM_BANK_SIZE :: 8192
+
 MapperType :: enum(u8) {
     ROM_ONLY = 0x00,
     MBC1 = 0x01, MBC1_RAM = 0x02, MBC1_RAM_BAT = 0x03,
@@ -16,25 +19,29 @@ MapperType :: enum(u8) {
     HUC3 = 0xFE, HUC1_RAM_BAT = 0xFF
 }
 
-MAPPING_FUNCTION :: proc(mapper: ^ROM_Mapper, addr: u16) -> u32
-//TODO: Add mapper implementations and a factory for MBC1, MBC3, MBC5, and
-//TODO: their external RAM, battery, RTC, and rumble variants.
+MAPPING_FUNCTION :: proc(mapper: ^ROM_Mapper, addr: u16) -> (bool, u32)
+MAPPER_WRITE :: proc(mapper: ^ROM_Mapper, addr: u16, val: u8) -> bool
 
 MAPPER_Basic :: ROM_Mapper {
     banks = 0,
-    bank_size = 0,
-    external_ram = 0,
+    state = {},
 
-    map_addr = Mapper_Basic
+    map_addr = Mapper_Basic,
+    write = nil
+}
+
+MapperState :: struct {
+    ram_enabled: bool,
+    rom_bank, ram_bank, bank_mode: u8
 }
 
 ROM_Mapper :: struct {
-    banks: u8,
-    bank_size: u32,
-    external_ram: u32,
+    banks, rom_size, ram_banks, ram_size: u32,
+    state: MapperState,
 
-    map_addr: MAPPING_FUNCTION
+    map_addr: MAPPING_FUNCTION,
+    write: MAPPER_WRITE
 }
 
 // No Mapper -> Identical mapping between input and output
-Mapper_Basic :: proc(mapper: ^ROM_Mapper, addr: u16) -> u32 { return u32(addr) }
+Mapper_Basic :: proc(mapper: ^ROM_Mapper, addr: u16) -> (bool, u32) { return false, u32(addr) }

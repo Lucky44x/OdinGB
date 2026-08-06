@@ -28,25 +28,39 @@ render_scanline :: proc(
     scanline := ppu.rend.current_line
 
     bg_tilemap : TileMap = LCDC & 0x08 != 0 ? .high : .low
+    window_tilemap : TileMap = LCDC & 0x40 != 0 ? .high : .low
 
     SCX := ppu.bus.read(ppu.bus, u16(c.IO_Regs.SCX), force=true)
     SCY := ppu.bus.read(ppu.bus, u16(c.IO_Regs.SCY), force=true)
+    WX := int(ppu.bus.read(ppu.bus, u16(c.IO_Regs.WX), force=true)) - 7
+    WY := int(ppu.bus.read(ppu.bus, u16(c.IO_Regs.WY), force=true))
 
-    realY := (u16(SCY) + u16(scanline)) & 0xFF // % 256
+    WY_Condition := int(scanline) >= WY
+    window_enabled := (LCDC & 0x20 != 0) && WY_Condition
+    bg_realY := (u16(SCY) + u16(scanline)) & 0xFF // % 256
 
     bg_palette := ppu.bus.read(ppu.bus, u16(c.IO_Regs.BGP), force=true)
     ob_palette_0 := ppu.bus.read(ppu.bus, u16(c.IO_Regs.OBP0), force=true)
     ob_palette_1 := ppu.bus.read(ppu.bus, u16(c.IO_Regs.OBP1), force=true)
 
+    pixel_tilemap := bg_tilemap
+
     if wbg_enabled {
         for x: u8 = 0; x < 160; x += 1 {
             realX := (u16(SCX) + u16(x)) & 0xFF // % 256
+            realY := bg_realY
+            if window_enabled && int(x) >= WX {
+                realY = u16(int(scanline) - WY)
+                realX = u16(int(x) - WX)
+
+                pixel_tilemap = window_tilemap
+            }
+
             tile_y := realY / 8
             tile_x := realX / 8
 
             tile_index := tile_x + (tile_y * 32)
-            tile_id := ppu.bus.read(ppu.bus, u16(bg_tilemap) + tile_index , force=true)
-            //TODO: Read the matching bank-1 attribute byte and render BGR555 colors.
+            tile_id := ppu.bus.read(ppu.bus, u16(pixel_tilemap) + tile_index , force=true)
 
             fb_addr := u16(x) + (u16(scanline) * 160)
             color_id := get_tile_pixel(ppu.bus, tile_id, u8(realX % 8), u8(realY % 8), adressMode)

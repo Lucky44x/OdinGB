@@ -4,12 +4,12 @@ package cart
 import "core:log"
 import c "../common"
 
-ROM_BANK_SIZE :: 0x4000
+PHYS_BANK_SIZE :: 0x4000
 
 ROM_Buffered :: struct {
     backend: ^ROM_Access,
 
-    banks: [][ROM_BANK_SIZE]u8,
+    banks: [][PHYS_BANK_SIZE]u8,
     bank_indecies: []int,
     ages: []u64,
     access_counter: u64,
@@ -24,7 +24,7 @@ init_buffered_rom :: proc(
     rom_size: u32
 ) -> ROM_Buffered {
     return ROM_Buffered {
-        banks = make([][ROM_BANK_SIZE]u8, max_banks),
+        banks = make([][PHYS_BANK_SIZE]u8, max_banks),
         bank_indecies = make([]int, max_banks),
         ages = make([]u64, max_banks),
         backend = backend,
@@ -38,8 +38,8 @@ read_rom_buffered :: proc(
 ) -> u8 {
     if offset >= ctx.rom_size do return 0xFF
 
-    bank := int(offset / ROM_BANK_SIZE)
-    bank_offset := int(offset % ROM_BANK_SIZE)
+    bank := int(offset / PHYS_BANK_SIZE)
+    bank_offset := int(offset % PHYS_BANK_SIZE)
 
     slot := buffered_find_bank_slot(ctx, bank)
 
@@ -105,15 +105,15 @@ buffered_load_bank :: proc(
         return -1
     }
 
-    phys_offset := u32(bank) * ROM_BANK_SIZE
+    phys_offset := u32(bank) * PHYS_BANK_SIZE
     bytes_remaining := ctx.rom_size - phys_offset
-    read_size := min(int(bytes_remaining), ROM_BANK_SIZE)
+    read_size := min(int(bytes_remaining), PHYS_BANK_SIZE)
 
     slice := ctx.banks[slot][:]
     ok := ctx.backend.read(ctx.backend.ctx, &slice, phys_offset, read_size)
     if !ok do return -1
 
-    if read_size < ROM_BANK_SIZE do for i in read_size..<ROM_BANK_SIZE do slice[i] = 0xFF
+    if read_size < PHYS_BANK_SIZE do for i in read_size..<PHYS_BANK_SIZE do slice[i] = 0xFF
 
     ctx.bank_indecies[slot] = bank
     ctx.access_counter += 1

@@ -11,15 +11,37 @@ Mapper_MBC1 :: proc(
     mapper: ^ROM_Mapper,
     addr: u16
 ) -> (is_ram: bool, phys_addr: u32) {
+    low_bank := mapper.state.rom_bank & 0x1F
+    if low_bank == 0 do low_bank = 1
+
+    high_bank := mapper.state.ram_bank & 0x03
+    switchable_bank := (u32(high_bank) << 5) | u32(low_bank)
+    fixed_bank: u32 = 0
+    ram_bank: u32 = 0
+
+    if mapper.state.bank_mode != 0 {
+        fixed_bank = u32(high_bank) << 5
+        ram_bank = u32(high_bank)
+    }
+
+    // Limit register values to the ROM actually present in the cartridge.
+    if mapper.banks > 0 {
+        fixed_bank %= mapper.banks
+        switchable_bank %= mapper.banks
+        if switchable_bank == 0 && mapper.banks > 1 do switchable_bank = 1
+    }
+
     switch addr {
-        case 0x00..=0x3FFF: return false, u32(addr)
+        case 0x00..=0x3FFF:
+            return false, fixed_bank * ROM_BANK_SIZE + u32(addr)
         case 0x4000..=0x7FFF:
-            if mapper.state.rom_bank == 0 do mapper.state.rom_bank = 1
-            return false, u32(mapper.state.rom_bank) * ROM_BANK_SIZE + u32(addr - 0x4000);
+            return false, switchable_bank * ROM_BANK_SIZE + u32(addr - 0x4000)
 
         case 0xA000..=0xBFFF:
-            if !mapper.state.ram_enabled do return true, 0xFF
-            return true, u32(mapper.state.ram_bank) * RAM_BANK_SIZE + u32(addr - 0xA000)
+            if !mapper.state.ram_enabled || mapper.ram_size == 0 do return false, 0
+            phys_addr = ram_bank * RAM_BANK_SIZE + u32(addr - 0xA000)
+            if phys_addr >= mapper.ram_size do return false, 0
+            return true, phys_addr
     }
 
     return false, 0x00
@@ -33,8 +55,7 @@ Write_MBC1 :: proc(
     // Registers
     switch addr {
         case 0x00..=0x1FFF:
-            if val == 0xA do mapper.state.ram_enabled = true
-            else do mapper.state.ram_enabled = false
+            mapper.state.ram_enabled = (val & 0x0F) == 0x0A
             return false
 
         case 0x2000..=0x3FFF:
@@ -46,10 +67,13 @@ Write_MBC1 :: proc(
             return false
         
         case 0x6000..=0x7FFF:
-            //TODO: Implement Banking Mode
+            mapper.state.bank_mode = val & 0x01
             return false
     }
 
-    if addr >= 0xA000 && 0xBFFF <= addr do return true // Only allow writes into RAM-Bank Region
+    if addr >= 0xA000 && addr <= 0xBFFF {
+        if !mapper.state.ram_enabled || mapper.ram_size == 0 do return false
+        return true
+    }
     return false
 }

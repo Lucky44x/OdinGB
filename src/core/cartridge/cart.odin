@@ -105,7 +105,13 @@ cartridge_read :: proc(
 ) -> u8 {
     is_ram, phys_addr := ctx.mapper.map_addr(&ctx.mapper, addr)
 
-    if is_ram do return ctx.external_ram[phys_addr]
+    if addr >= 0xA000 && addr <= 0xBFFF {
+        if ctx.mapper.state.rtc_selected do return Read_MBC3_RTC(&ctx.mapper)
+        if !is_ram || phys_addr >= u32(len(ctx.external_ram)) do return 0xFF
+        value := ctx.external_ram[phys_addr]
+        if ctx.mapper.ram_nibble do return value | 0xF0
+        return value
+    }
     switch &type in ctx.rom {
         case ROM_Buffered:
             return read_rom_buffered(&type, phys_addr)
@@ -131,7 +137,10 @@ cartridge_write :: proc(
 
     is_ram, phys_addr := ctx.mapper.map_addr(&ctx.mapper, addr)
     if is_ram {
-        ctx.external_ram[phys_addr] = val
+        if phys_addr >= u32(len(ctx.external_ram)) do return
+        write_value := val
+        if ctx.mapper.ram_nibble do write_value &= 0x0F
+        ctx.external_ram[phys_addr] = write_value
         return
     }
 }

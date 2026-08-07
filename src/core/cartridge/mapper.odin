@@ -32,11 +32,14 @@ MAPPER_Basic :: ROM_Mapper {
 
 MapperState :: struct {
     ram_enabled: bool,
-    rom_bank, ram_bank, bank_mode: u8
+    rom_bank, ram_bank, bank_mode: u8,
+    rtc_selected: bool,
+    rtc_register: u8,
 }
 
 ROM_Mapper :: struct {
     banks, rom_size, ram_banks, ram_size: u32,
+    ram_nibble: bool,
     state: MapperState,
 
     map_addr: MAPPING_FUNCTION,

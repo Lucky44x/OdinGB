@@ -29,6 +29,19 @@ read_cart_header :: proc(
         case .MBC1_RAM_BAT:
             cart.mapper = MAPPER_MBC1
             break
+
+        case .MBC2: fallthrough
+        case .MBC2_BAT:
+            cart.mapper = MAPPER_MBC2
+            break
+
+        case .MBC3_TIMER_BAT: fallthrough
+        case .MBC3_TIMER_RAM_BAT: fallthrough
+        case .MBC3: fallthrough
+        case .MBC3_RAM: fallthrough
+        case .MBC3_RAM_BAT:
+            cart.mapper = MAPPER_MBC3
+            break
         
         case:
             log.infof("No registered Mapper-Implementation for %e", cart.mapper)
@@ -60,6 +73,9 @@ read_cart_header :: proc(
             break
     }
 
+    if cart_type == .MBC2 || cart_type == .MBC2_BAT {
+        ram_size = 512
+    }
     cart.external_ram = make([]u8, ram_size)
     cart.mapper.ram_size = ram_size;
 
@@ -70,7 +86,7 @@ read_cart_header :: proc(
     switch rom_size_flag {
         case 0x00:
             rom_size = 32768
-            rom_banks = 0
+            rom_banks = 2
             break
         case 0x01:
             rom_size = 65536
@@ -122,4 +138,5 @@ read_cart_header :: proc(
 
     cart.mapper.rom_size = rom_size
     cart.mapper.banks = rom_banks
+    cart.mapper.ram_banks = ram_size / RAM_BANK_SIZE
 }

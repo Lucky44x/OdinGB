@@ -92,6 +92,15 @@ imgui_display_cpu_viewer :: proc(
 
     imgui.Checkbox("Paused", &emuCore.cpu_state.paused)
     
+    state: cstring
+    switch emuCore.cpu_state.state {
+        case .Running: state = "Running"
+        case .Halted: state = "Halted"
+        case .Stopped: state = "Stopped"
+    }
+    imgui.Text("State: %s", state)
+
+
     outer_flags :=
         imgui.TableFlags_BordersInnerV |
         imgui.TableFlags_Resizable |
